@@ -182,3 +182,4 @@ dmypy.json
 # Extra
 *.db
 final_config.json
+tuning_examples/opentuner/bfs/BFS
