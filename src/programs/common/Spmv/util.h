@@ -5,7 +5,6 @@
 #include <iostream>
 #include <fstream>
 #include "OptionParser.h"
-#include "ResultDatabase.h"
 #include "PMSMemMgmt.h"
 
 
