@@ -43,9 +43,9 @@ tune_params["UNROLL_INNER_LOOP"] = [0, 1]
 
 
 params = { "BLOCK_SIZE": 1024, "CHUNK_SIZE": 32, "UNROLL_OUTER_LOOP": 0, "UNROLL_INNER_LOOP": 0 }
-results = run_kernel("BFS_kernel_warp", kernel_string, vertices, args, params)
+results = run_kernel("BFS_kernel_warp", kernel_string, vertices, args, params, block_size_names=["BLOCK_SIZE", "block_size_y", "block_size_z"])
 
 #set non-output fields to None
 answer = [results[0], None, None, None, None, None, results[6]]
 
-tune_kernel("BFS_kernel_warp", kernel_string, vertices, args, tune_params, answer=answer)
+tune_kernel("BFS_kernel_warp", kernel_string, vertices, args, tune_params, block_size_names=["BLOCK_SIZE", "block_size_y", "block_size_z"], answer=answer)
