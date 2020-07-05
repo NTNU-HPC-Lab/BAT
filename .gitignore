@@ -184,7 +184,9 @@ dmypy.json
 final_config.json
 tuning_examples/opentuner/bfs/BFS
 tuning_examples/ktt/sort/sort
+tuning_examples/cltune/sort/sort
 results.csv
+*results.json
 
 # Ignore VSCode directory
 .vscode
