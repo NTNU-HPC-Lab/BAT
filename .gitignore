@@ -184,6 +184,7 @@ dmypy.json
 final_config.json
 tuning_examples/opentuner/bfs/BFS
 tuning_examples/opentuner/spmv/spmv
+tuning_examples/opentuner/triad/triad
 tuning_examples/ktt/sort/sort
 tuning_examples/cltune/sort/sort
 results.csv

@@ -18,8 +18,8 @@ RUN pip3 install \
 # Copy content 
 COPY . .
 
-RUN make clean
-RUN make dependencies
+# RUN make clean
+# RUN make dependencies
 
 #nvidia-docker build -t bfs .
 #nvidia-docker run --rm -ti bfs
