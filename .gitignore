@@ -189,6 +189,7 @@ tuning_examples/ktt/sort/sort
 tuning_examples/cltune/sort/sort
 results.csv
 *results.json
+temp_*
 
 # Ignore VSCode directory
 .vscode
