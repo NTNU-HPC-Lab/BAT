@@ -81,11 +81,7 @@ class BFSTuner(MeasurementInterface):
         run_result = self.call_program(run_cmd)
 
         # Check that error code and error output is ok
-        if not args.parallel:
-            # MPI prints message as error for some reason
-            # So check this for serial only
-            assert run_result['stderr'] == b''
-            
+        assert run_result['stderr'] == b''
         assert run_result['returncode'] == 0
 
         return Result(time=run_result['time'])
