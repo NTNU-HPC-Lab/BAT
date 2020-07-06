@@ -220,6 +220,7 @@ void RunBenchmark(OptionParser &op)
                          << " is different from its twin element hostMem["
                          << (j+halfNumFloats) << "]: "
                          << h_mem[j+halfNumFloats] << "stopping check\n";
+                    cerr << "Error: incorrect computed result." << endl;
                     break;
                 }
             }

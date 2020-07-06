@@ -231,6 +231,7 @@ void RunTest(OptionParser &op, Graph *G)
 
         if (unmatched_verts!=0) {
             std::cout << "Failed\n";
+            cerr << "Error: incorrect computed result." << endl;
             return;
         }
 

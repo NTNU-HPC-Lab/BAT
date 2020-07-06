@@ -150,6 +150,7 @@ bool verifyResults(const floatType *cpuResults, const floatType *gpuResults,
     else
     {
         cout << "---FAILED---" << endl;
+        cerr << "Error: incorrect computed result." << endl;
     }
     return passed;
 }
