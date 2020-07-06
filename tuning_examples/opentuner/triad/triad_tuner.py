@@ -20,8 +20,6 @@ class TriadTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        # TODO: python triad_tuner.py --no-dups
-
         gpu = cuda.get_current_device()        
         max_size = gpu.MAX_THREADS_PER_BLOCK
         # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK`
@@ -43,32 +41,33 @@ class TriadTuner(MeasurementInterface):
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
-        make_command = 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/triad/triad.cu'.format(cc, start_path)
-        make_command += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
-        make_command += 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/triad/triad_kernel.cu\n'.format(cc, start_path)
+        make_program = 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/triad/triad.cu'.format(cc, start_path)
+        make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
+        make_program += 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/triad/triad_kernel.cu\n'.format(cc, start_path)
 
         if args.parallel:
-            make_paralell_start = 'mpicxx -I ' + start_path + '/common/ -I ' + start_path + '/cuda-common/ -I /usr/local/cuda/include -DPARALLEL  -I ' + start_path + '/mpi-common/ -g -O2 -c -o main.o ' + start_path + '/cuda-common/main.cpp \n'
-            make_paralell_end = 'mpicxx -L ' + start_path + '/cuda-common -L ' + start_path + '/common -o triad main.o triad.o triad_kernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
-            compile_cmd = make_paralell_start + make_command + make_paralell_end
+            make_paralell_start = 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
+            make_paralell_end = 'mpicxx -L {0}/cuda-common -L {0}/common -o triad main.o triad.o triad_kernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
+            compile_cmd = make_paralell_start + make_program + make_paralell_end
         else:
-            make_serial_start = 'nvcc -I ' + start_path + '/common/ -I ' + start_path + '/cuda-common/ -g -O2 -c -o main.o ' + start_path + '/cuda-common/main.cpp \n'
-            make_serial_end = 'nvcc -L ' + start_path + '/cuda-common -L ' + start_path + '/common -o triad main.o triad.o triad_kernel.o -lSHOCCommon'
-            compile_cmd = make_serial_start + make_command + make_serial_end
+            make_serial_start = 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
+            make_serial_end = 'nvcc -L {0}/cuda-common -L {0}/common -o triad main.o triad.o triad_kernel.o -lSHOCCommon'.format(start_path)
+            compile_cmd = make_serial_start + make_program + make_serial_end
         
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        triad_command = './triad -s ' + str(args.problem_size)
+        # TODO: change this as size is not present in triad benchmark code
+        program_command = './triad -s ' + str(args.problem_size)
         if args.parallel: 
             chosen_gpu_number = args.gpu_num
             if chosen_gpu_number > len(cuda.gpus):
                 chosen_gpu_number = len(cuda.gpus)
       
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
-            run_cmd = 'mpirun -np ' + str(chosen_gpu_number) + ' --allow-run-as-root ' + triad_command + ' -d ' + devices
+            run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(str(chosen_gpu_number), program_command, devices)
         else:
-                run_cmd = triad_command
+                run_cmd = program_command
 
         run_result = self.call_program(run_cmd)
         assert run_result['returncode'] == 0
