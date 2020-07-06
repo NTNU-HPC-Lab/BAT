@@ -1,3 +1,32 @@
+//Sungpack Hong, Sang Kyun Kim, Tayo Oguntebi, and Kunle Olukotun. 2011.
+//Accelerating CUDA graph algorithms at maximum warp.
+//In Proceedings of the 16th ACM symposium on Principles and practice of
+//parallel programming (PPoPP '11). ACM, New York, NY, USA, 267-276.
+// ****************************************************************************
+// Function: BFS_kernel_warp
+//
+// Purpose:
+//   Perform BFS on the given graph
+//
+// Arguments:
+//   levels: array that stores the level of vertices
+//   edgeArray: array that gives offset of a vertex in edgeArrayAux
+//   edgeArrayAux: array that gives the edge list of a vertex
+//   W_SZ: the warp size to use to process vertices
+//   CHUNK_SZ: the number of vertices each warp processes
+//   numVertices: number of vertices in the given graph
+//   curr: the current BFS level
+//   flag: set when more vertices remain to be traversed
+//
+// Returns:  nothing
+//
+// Programmer: Aditya Sarwade
+// Creation: June 16, 2011
+//
+// Modifications:
+//
+// ****************************************************************************
+
 __global__ void BFS_kernel_warp(
     unsigned int *levels,
     unsigned int *edgeArray,
