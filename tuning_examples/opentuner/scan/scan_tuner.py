@@ -52,9 +52,9 @@ class ScanTuner(MeasurementInterface):
 
         if args.parallel:
             make_paralell_start = 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_paralell_end = 'mpicxx -L {0}/cuda-common -L {0}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
+            make_paralell_end = 'mpicxx -L {0}/cuda-common -L {0}/common -o scan main.o scan.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
             compile_cmd = make_paralell_start + make_program + make_paralell_end
-        else: 
+        else:
             make_serial_start = 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
             make_serial_end = 'nvcc -L {0}/cuda-common -L {0}/common -o scan main.o scan.o -lSHOCCommon'.format(start_path)
             compile_cmd = make_serial_start + make_program + make_serial_end
@@ -64,20 +64,23 @@ class ScanTuner(MeasurementInterface):
         assert compile_result['returncode'] == 0
 
         program_command = './scan -s ' + str(args.problem_size)
-        if args.parallel: 
-            chosen_gpu_number = args.gpu_num
-            if chosen_gpu_number > len(cuda.gpus):
-                chosen_gpu_number = len(cuda.gpus)
-      
+        if args.parallel:
+            # Select number below max connected GPUs
+            chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
+
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
-            run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(str(chosen_gpu_number), program_command, devices)
+            run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(chosen_gpu_number, program_command, devices)
         else: 
             run_cmd = program_command
 
         run_result = self.call_program(run_cmd)
 
         # Check that error code and error output is ok
-        assert run_result['stderr'] == b''
+        if not args.parallel:
+            # MPI prints message as error for some reason
+            # So check this for serial only
+            assert run_result['stderr'] == b''
+            
         assert run_result['returncode'] == 0
 
         return Result(time=run_result['time'])
