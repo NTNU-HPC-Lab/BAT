@@ -1,6 +1,6 @@
 CC=g++
-KTT_PATH=~/Desktop/parametrisering/KTT/source
-KTT_LIBRARY=~/Desktop/parametrisering/KTT/build/x86_64_Release/
+KTT_PATH=/usr/local/KTT/source
+KTT_LIBRARY=/usr/local/KTT/build/x86_64_Release/
 
 default:
 	@$(CC) sort.cpp -o sort -I $(KTT_PATH) -L $(KTT_LIBRARY) -lktt
