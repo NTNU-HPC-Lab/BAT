@@ -81,6 +81,9 @@ class BFSTuner(MeasurementInterface):
             run_cmd = program_command
 
         run_result = self.call_program(run_cmd)
+
+        # Check that error code and error output is ok
+        assert run_result['stderr'] == b''
         assert run_result['returncode'] == 0
 
         return Result(time=run_result['time'])

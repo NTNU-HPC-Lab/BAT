@@ -67,9 +67,12 @@ class TriadTuner(MeasurementInterface):
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
             run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(str(chosen_gpu_number), program_command, devices)
         else:
-                run_cmd = program_command
+            run_cmd = program_command
 
         run_result = self.call_program(run_cmd)
+
+        # Check that error code and error output is ok
+        assert run_result['stderr'] == b''
         assert run_result['returncode'] == 0
 
         return Result(time=run_result['time'])
