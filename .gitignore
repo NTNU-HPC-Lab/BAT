@@ -187,6 +187,7 @@ tuning_examples/opentuner/scan/scan
 tuning_examples/opentuner/spmv/spmv
 tuning_examples/opentuner/md5hash/md5hash
 tuning_examples/opentuner/triad/triad
+tuning_examples/opentuner/reduction/reduction
 tuning_examples/ktt/sort/sort
 tuning_examples/cltune/sort/sort
 results.csv
