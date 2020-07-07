@@ -58,55 +58,6 @@ void tuneRadixSortBlocks() {
     auto_tuner.PrintJSON(kernelName + "-results.json", {{"sample", kernelName}});
 }
 
-void tuneVectorAddUniform4() {
-    // Tuning "vectorAddUniform4" kernel
-    string kernelName("vectorAddUniform4");
-    // Set the tuning kernel to run on device id 0 and platform 0
-    cltune::Tuner auto_tuner(0, 0);
-
-    const size_t reorderFindGlobalWorkSize = size / 2;
-    const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
-    int numElements = 16 * reorderBlocks;
-    unsigned int numBlocks = max(1, (int) ceil((float) numElements / (4.f * SCAN_BLOCK_SIZE)));
-
-    // Add kernel
-    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
-
-    // Add parameter for kernel
-    auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
-
-    vector<int> scanOutput(0);
-    vector<int> blockSums(0);
-
-    // Read input data from files
-    ifstream scanOutputFile(dataDirectory + "uniform/" + to_string(inputProblemSize) + "-scanOutput");
-    ifstream blockSumsFile(dataDirectory + "uniform/" + to_string(inputProblemSize) + "-blockSums");
-
-    // Initialize scanOutput data
-    for (istream_iterator<int> it(scanOutputFile), end; it != end; ++it) {
-        scanOutput.push_back(*it);
-    }
-
-    // Initialize blockSums data
-    for (istream_iterator<int> it(blockSumsFile), end; it != end; ++it) {
-        blockSums.push_back(*it);
-    }
-
-    // Add arguments for kernel
-    auto_tuner.AddArgumentOutput(scanOutput);
-    auto_tuner.AddArgumentInput(blockSums);
-    auto_tuner.AddArgumentScalar(size);
-
-    // Set reference kernel for correctness verification and compare to the computed result
-    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
-
-    auto_tuner.Tune();
-
-    // Print the results to cout and save it as a JSON file
-    auto_tuner.PrintToScreen();
-    auto_tuner.PrintJSON(kernelName + "-results.json", {{"sample", kernelName}});
-}
-
 void tuneScan() {
     // Tuning "scan" kernel
     string kernelName("scan");
@@ -155,6 +106,55 @@ void tuneScan() {
     auto_tuner.AddArgumentScalar(numElements);
     auto_tuner.AddArgumentScalar(1); // fullBlock = true
     auto_tuner.AddArgumentScalar(1); // storeSum = true
+
+    // Set reference kernel for correctness verification and compare to the computed result
+    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
+
+    auto_tuner.Tune();
+
+    // Print the results to cout and save it as a JSON file
+    auto_tuner.PrintToScreen();
+    auto_tuner.PrintJSON(kernelName + "-results.json", {{"sample", kernelName}});
+}
+
+void tuneVectorAddUniform4() {
+    // Tuning "vectorAddUniform4" kernel
+    string kernelName("vectorAddUniform4");
+    // Set the tuning kernel to run on device id 0 and platform 0
+    cltune::Tuner auto_tuner(0, 0);
+
+    const size_t reorderFindGlobalWorkSize = size / 2;
+    const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
+    int numElements = 16 * reorderBlocks;
+    unsigned int numBlocks = max(1, (int) ceil((float) numElements / (4.f * SCAN_BLOCK_SIZE)));
+
+    // Add kernel
+    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
+
+    // Add parameter for kernel
+    auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
+
+    vector<int> scanOutput(0);
+    vector<int> blockSums(0);
+
+    // Read input data from files
+    ifstream scanOutputFile(dataDirectory + "uniform/" + to_string(inputProblemSize) + "-scanOutput");
+    ifstream blockSumsFile(dataDirectory + "uniform/" + to_string(inputProblemSize) + "-blockSums");
+
+    // Initialize scanOutput data
+    for (istream_iterator<int> it(scanOutputFile), end; it != end; ++it) {
+        scanOutput.push_back(*it);
+    }
+
+    // Initialize blockSums data
+    for (istream_iterator<int> it(blockSumsFile), end; it != end; ++it) {
+        blockSums.push_back(*it);
+    }
+
+    // Add arguments for kernel
+    auto_tuner.AddArgumentOutput(scanOutput);
+    auto_tuner.AddArgumentInput(blockSums);
+    auto_tuner.AddArgumentScalar(size);
 
     // Set reference kernel for correctness verification and compare to the computed result
     auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
