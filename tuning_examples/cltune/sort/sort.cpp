@@ -44,9 +44,9 @@ void tuneRadixSortBlocks() {
     }
 
     // Add arguments for kernel
-    auto_tuner.AddArgumentScalar(4);
-    auto_tuner.AddArgumentScalar(0);
-    auto_tuner.AddArgumentOutput(keysIn);
+    auto_tuner.AddArgumentScalar(4); // nbits
+    auto_tuner.AddArgumentScalar(0); // startbit
+    auto_tuner.AddArgumentOutput(keysOut);
     auto_tuner.AddArgumentOutput(valuesOut);
     auto_tuner.AddArgumentInput(keysIn);
     auto_tuner.AddArgumentInput(valuesIn);
