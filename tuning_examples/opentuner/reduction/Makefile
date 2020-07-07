@@ -22,5 +22,5 @@ clean:
 	@$(RM) *.o
 	@$(RM) ./src/common/*.o
 	@$(RM) ./src/common/libSHOCCommon.a
-	@$(RM) ./triad
+	@$(RM) ./reduction
 	@echo "\033[92m[✓]\033[0m Done cleaning up! 🎉🗑️"

@@ -28,5 +28,5 @@ clean:
 	@$(RM) *.o
 	@$(RM) ./src/common/*.o
 	@$(RM) ./src/common/libSHOCCommon.a
-	@$(RM) ./Spmv
+	@$(RM) ./Stencil2D
 	@echo "\033[92m[✓]\033[0m Done cleaning up! 🎉🗑️"
