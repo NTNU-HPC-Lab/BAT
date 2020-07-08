@@ -29,7 +29,7 @@ class SPMVTuner(MeasurementInterface):
         # 0: ellpackr, 1: csr-normal-scalar, 2: csr-normal-vector, 3: csr-padded-scalar, 4: csr-padded-vector
         manipulator.add_parameter(EnumParameter('FORMAT', [0, 1, 2, 3, 4]))
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP', [0, 1]))
+        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
 
         return manipulator
@@ -50,7 +50,7 @@ class SPMVTuner(MeasurementInterface):
         make_program += ' -D{0}={1}'.format('FORMAT',cfg['FORMAT'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
         make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/spmv/spmv_kernel.cu'
-        make_program += ' -D{0}={1}'.format('UNROLL_LOOP',cfg['UNROLL_LOOP'])
+        make_program += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
         make_program += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
 

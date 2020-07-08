@@ -41,7 +41,7 @@ spmv_csr_scalar_kernel(const fpType * __restrict__ val,
         fpType t = 0.0f;
         int start = rowDelimiters[myRow];
         int end = rowDelimiters[myRow+1];
-        #if UNROLL_LOOP
+        #if UNROLL_LOOP_1
         #pragma unroll
         #endif
         for (int j = start; j < end; j++)
@@ -102,7 +102,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         int warpStart = rowDelimiters[myRow];
         int warpEnd = rowDelimiters[myRow+1];
         fpType mySum = 0;
-        #if UNROLL_LOOP
+        #if UNROLL_LOOP_1
         #pragma unroll
         #endif
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
@@ -170,7 +170,7 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
         fpType result = 0.0f;
         int max = rowLengths[t];
 
-        #if UNROLL_LOOP
+        #if UNROLL_LOOP_1
         #pragma unroll
         #endif
         for (int i = 0; i < max; i++)
