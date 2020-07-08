@@ -1,0 +1,7 @@
+{
+    "build": [
+        "make clean",
+        "make dependencies"
+    ],
+    "run": "python3 sort_tuner.py --no-dups --stop-after=30"
+}
