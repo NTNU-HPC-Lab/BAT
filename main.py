@@ -46,7 +46,7 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
         print(f"{print_helpers['error']} You have to specify at least one of `benchmark_name` and `auto_tuner`")
         return
 
-    print(f"{print_helpers['info']} Running {'benchmark `' + benchmark_name + '`' if not benchmark_name is None else 'all benchmarks'}` for {auto_tuner if not auto_tuner is None else 'all auto-tuners'}")
+    print(f"{print_helpers['info']} Running {'benchmark `' + benchmark_name + '`' if not benchmark_name is None else 'all benchmarks'} for {'`' + auto_tuner + '`' if not auto_tuner is None else 'all auto-tuners'}")
 
     auto_tuner_dirs = get_subdirectories(start_directory)
 
@@ -108,7 +108,7 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                     print(f"{print_helpers['success']} Finished benchmark `{current_benchmark}` for `{os.path.basename(directory)}`")
                     # TODO: parse results
 
-    print(f"{print_helpers['success']} Finished running all benchmark!")
+    print(f"{print_helpers['success']} Finished running all benchmarks")
 
 if __name__ == "__main__":
     # Setup CLI parser
@@ -117,8 +117,6 @@ if __name__ == "__main__":
     parser.add_argument("--auto-tuner", "-a", type=str, default=None, help="auto-tuner to benchmark (e.g.: opentuner)")
     parser.add_argument("--verbose", "-v", action="store_true", help="print stdout and stderr from building of benchmarks")
     arguments = parser.parse_args()
-
-    print(arguments.verbose)
     
     # Run benchmark given inputs
     run_benchmark(benchmark_name=arguments.benchmark, auto_tuner=arguments.auto_tuner, verbose=arguments.verbose)

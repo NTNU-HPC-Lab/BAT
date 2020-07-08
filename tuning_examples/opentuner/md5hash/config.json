@@ -3,5 +3,5 @@
         "make clean",
         "make dependencies"
     ],
-    "run": "python3 bfs_tuner.py --no-dups --stop-after=30"
+    "run": "python3 md5hash_tuner.py --no-dups --stop-after=30"
 }
