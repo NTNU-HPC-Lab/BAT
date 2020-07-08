@@ -27,6 +27,9 @@
 //
 // ****************************************************************************
 
+texture<int, 1> textureEA;
+texture<int, 1> textureEAA;
+
 __global__ void BFS_kernel_warp(
     unsigned int *levels,
     unsigned int *edgeArray,
@@ -54,17 +57,26 @@ __global__ void BFS_kernel_warp(
     #endif
     for(int v=v1; v< chk_sz-1+v1; v++) {
         if(levels[v] == curr) {
-            unsigned int num_nbr = edgeArray[v+1]-edgeArray[v];
-            unsigned int nbr_off = edgeArray[v];
-            
+            #if TEXTURE_MEMORY_EA1
+                unsigned int num_nbr = tex1D(textureEA,(v+1)) - tex1D(textureEA, v);
+                unsigned int nbr_off = tex1D(textureEA, v);
+            #else
+                unsigned int num_nbr = edgeArray[v+1]-edgeArray[v];
+                unsigned int nbr_off = edgeArray[v];
+            #endif
+
             #if UNROLL_INNER_LOOP
             #pragma unroll
             #endif
             for(int i=W_OFF; i<num_nbr; i+=W_SZ) {
-                int v = edgeArrayAux[i + nbr_off];
+                #if TEXTURE_MEMORY_EAA
+                    int v = tex1D(textureEAA, (i + nbr_off));
+                #else
+                    int v = edgeArrayAux[i + nbr_off];
+                #endif
                 if(levels[v]==UINT_MAX) {
-                        levels[v] = curr + 1;
-                        *flag = 1;
+                    levels[v] = curr + 1;
+                    *flag = 1;
                 }
             }
         }
