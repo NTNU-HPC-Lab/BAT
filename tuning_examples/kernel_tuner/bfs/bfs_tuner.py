@@ -50,7 +50,6 @@ tune_params["TEXTURE_MEMORY_EAA"] = [0, 1]
 tune_params["UNROLL_OUTER_LOOP"] = [0, 1]
 tune_params["UNROLL_INNER_LOOP"] = [0, 1]
 
-
 params = { "BLOCK_SIZE": 1024, "CHUNK_SIZE": 32, "TEXTURE_MEMORY_EA1": 0, "TEXTURE_MEMORY_EAA": 0, "UNROLL_OUTER_LOOP": 0, "UNROLL_INNER_LOOP": 0 }
 results = run_kernel("BFS_kernel_warp", kernel_string, vertices, args, params,
     texmem_args={ 'textureEA': { 'array': texEA, 'address_mode': 'clamp' }, 'textureEAA': { 'array': texEAA, 'address_mode': 'clamp' } },  

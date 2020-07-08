@@ -1,3 +1,24 @@
+template <typename fpType, typename texReader>
+__device__ void
+spmv_csr_scalar_kernel(const fpType * __restrict__ val,
+                       const int    * __restrict__ cols,
+                       const int    * __restrict__ rowDelimiters,
+                       const int dim, fpType * __restrict__ out);
+
+template <typename fpType, typename texReader>
+__device__ void
+spmv_csr_vector_kernel(const fpType * __restrict__ val,
+                        const int    * __restrict__ cols,
+                        const int    * __restrict__ rowDelimiters,
+                        const int dim, fpType * __restrict__ out);
+
+template <typename fpType, typename texReader>
+__device__ void
+spmv_ellpackr_kernel(const fpType * __restrict__ val,
+                        const int    * __restrict__ cols,
+                        const int    * __restrict__ rowLengths,
+                        const int dim, fpType * __restrict__ out);
+
 #if PRECISION == 32 
     // Texture Readers
     texture<float, 1> vecTex;    
@@ -19,6 +40,45 @@
      };
 #endif
 
+
+
+/**
+ * Helper function for tuners that can not use templated kernels directly
+ * This function also chooses format based on a parameter
+ */
+extern "C" __global__ void
+spmv_kernel(float * valSP_csr,
+            double * valDP_csr,
+            float * valSP_ellpackr,
+            double * valDP_ellpackr,
+            const int    * __restrict__ cols_csr,
+            const int    * __restrict__ cols_ellpackr,
+            const int    * __restrict__ rowDelimiters,
+            const int    * __restrict__ rowLengths,
+            const int dim, 
+            float * outSP_csr,
+            double * outDP_csr,
+            float * outSP_ellpackr,
+            double * outDP_ellpackr) {
+
+    #if PRECISION == 32
+        #if (FORMAT == 1 || FORMAT == 2)
+            spmv_csr_scalar_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, dim, outSP_csr);
+        #elif (FORMAT == 3 || FORMAT == 4)
+            spmv_csr_vector_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, dim, outSP_csr);
+        #else
+            spmv_ellpackr_kernel<float, texReader>(valSP_ellpackr, cols_ellpackr, rowLengths, dim, outSP_ellpackr);
+        #endif
+    #else 
+        #if (FORMAT == 1 || FORMAT == 2)
+            spmv_csr_scalar_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, dim, outDP_csr);
+        #elif (FORMAT == 3 || FORMAT == 4)
+            spmv_csr_vector_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, dim, outDP_csr);
+        #else
+            spmv_ellpackr_kernel<double, texReader>(valDP_ellpackr, cols_ellpackr, rowLengths, dim, outDP_ellpackr);
+        #endif
+    #endif
+}
 
 // ****************************************************************************
 // Function: spmv_csr_scalar_kernel
@@ -46,47 +106,30 @@
 // Modifications:
 //
 // ****************************************************************************
-// template <typename fpType, typename texReader>
-extern "C" __global__ void
-spmv_csr_scalar_kernel( float * valSP,
-                         double * valDP,
+template <typename fpType, typename texReader>
+__device__ void
+spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       const int dim, float * outSP,
-                       double * outDP)
+                       const int dim, fpType * __restrict__ out)
 {
     int myRow = blockIdx.x * BLOCK_SIZE + threadIdx.x;
     texReader vecTexReader;
 
     if (myRow < dim)
     {
-        #if PRECISION == 32
-            float t = 0.0f;
-        #else 
-            double t = 0.0;
-        #endif
+        fpType t = 0.0f;
         int start = rowDelimiters[myRow];
         int end = rowDelimiters[myRow+1];
-        #if UNROLL_LOOP
+        #if UNROLL_LOOP_1
         #pragma unroll
         #endif
-
         for (int j = start; j < end; j++)
         {
             int col = cols[j];
-
-            #if PRECISION == 32
-                t += valSP[j] * vecTexReader(col);
-            #else 
-                t += valDP[j]* vecTexReader(col);
-            #endif
+            t += val[j] * vecTexReader(col);
         }
-        #if PRECISION == 32
-            outSP[myRow] = t;
-        #else 
-            outDP[myRow] = t;
-        #endif
-        
+        out[myRow] = t;
     }
 }
 
@@ -117,7 +160,7 @@ spmv_csr_scalar_kernel( float * valSP,
 //
 // ****************************************************************************
 template <typename fpType, typename texReader>
-__global__ void
+__device__ void
 spmv_csr_vector_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
@@ -127,7 +170,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
     int t = threadIdx.x;
     // Thread ID within warp
     int id = t & (warpSize-1);
-    int warpsPerBlock = blockDim.x / warpSize;
+    int warpsPerBlock = BLOCK_SIZE / warpSize;
     // One row per warp
     int myRow = (blockIdx.x * warpsPerBlock) + (t / warpSize);
     // Texture reader for the dense vector
@@ -139,7 +182,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         int warpStart = rowDelimiters[myRow];
         int warpEnd = rowDelimiters[myRow+1];
         fpType mySum = 0;
-        #if UNROLL_LOOP
+        #if UNROLL_LOOP_1
         #pragma unroll
         #endif
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
@@ -193,13 +236,13 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
 //
 // ****************************************************************************
 template <typename fpType, typename texReader>
-__global__ void
+__device__ void
 spmv_ellpackr_kernel(const fpType * __restrict__ val,
                      const int    * __restrict__ cols,
                      const int    * __restrict__ rowLengths,
                      const int dim, fpType * __restrict__ out)
 {
-    int t = blockIdx.x * blockDim.x + threadIdx.x;
+    int t = blockIdx.x * BLOCK_SIZE + threadIdx.x;
     texReader vecTexReader;
 
     if (t < dim)
@@ -207,7 +250,7 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
         fpType result = 0.0f;
         int max = rowLengths[t];
 
-        #if UNROLL_LOOP
+        #if UNROLL_LOOP_1
         #pragma unroll
         #endif
         for (int i = 0; i < max; i++)
