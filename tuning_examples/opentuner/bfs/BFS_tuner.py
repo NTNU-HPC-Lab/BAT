@@ -46,22 +46,22 @@ class BFSTuner(MeasurementInterface):
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
-        make_program = 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/bfs/BFS.cu'.format(cc, start_path)
+        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/bfs/BFS.cu'
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
-        make_program += 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/bfs/bfs_kernel.cu'.format(cc, start_path)
+        make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/bfs/bfs_kernel.cu'
         make_program += ' -D{0}={1}'.format('UNROLL_OUTER_LOOP',cfg['UNROLL_OUTER_LOOP'])
         make_program += ' -D{0}={1}'.format('UNROLL_INNER_LOOP',cfg['UNROLL_INNER_LOOP'])
         make_program += ' -D{0}={1} \n'.format('CHUNK_SIZE',cfg['CHUNK_SIZE'])
 
         if args.parallel:
-            make_paralell_start = 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o Graph.o {0}/common/Graph.cpp \n'.format(start_path)
-            make_paralell_start += 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_paralell_end = 'mpicxx -L {0}/cuda-common -L {0}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
+            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o Graph.o {start_path}/common/Graph.cpp \n'
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         else:
-            make_serial_start = 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o Graph.o {0}/common/Graph.cpp \n'.format(start_path)
-            make_serial_start += 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_serial_end = 'nvcc -L {0}/cuda-common -L {0}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon'.format(start_path)
+            make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o Graph.o {start_path}/common/Graph.cpp \n'
+            make_serial_start += f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
     
         compile_result = self.call_program(compile_cmd)
@@ -73,7 +73,7 @@ class BFSTuner(MeasurementInterface):
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
       
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
-            run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(chosen_gpu_number, program_command, devices)
+            run_cmd = f'mpirun -np {chosen_gpu_number} --allow-run-as-root {program_command} -d {devices}'
         else:
             run_cmd = program_command
 

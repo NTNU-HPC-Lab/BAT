@@ -41,26 +41,26 @@ class ReductionTuner(MeasurementInterface):
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
-        make_program = 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/reduction/reduction.cu'.format(cc, start_path)
+        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/reduction/reduction.cu'
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
 
         if args.parallel == 1:
             # If parallel
-            make_paralell_start = 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_paralell_end = 'mpicxx -L {0}/cuda-common -L {0}/common -o -o reduction main.o reduction.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
+            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o reduction main.o reduction.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         elif args.parallel == 2:
             # If true parallel
-            compile_cmd = 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            compile_cmd += 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o tpReduction.o {0}/reduction/tpReduction.cpp'.format(start_path)
+            compile_cmd = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            compile_cmd += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o tpReduction.o {start_path}/reduction/tpReduction.cpp'
             compile_cmd += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
-            compile_cmd += 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/reduction/tpRedLaunchKernel.cu'.format(cc, start_path)
+            compile_cmd += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/reduction/tpRedLaunchKernel.cu'
             compile_cmd += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
-            compile_cmd += 'mpicxx -L {0}/cuda-common -L {0}/common -o reduction main.o tpReduction.o tpRedLaunchKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
+            compile_cmd += f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o reduction main.o tpReduction.o tpRedLaunchKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
         else:
             # If serial
-            make_serial_start = 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_serial_end = 'nvcc -L {0}/cuda-common -L {0}/common -o reduction main.o reduction.o -lSHOCCommon'.format(start_path)
+            make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o reduction main.o reduction.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
 
         compile_result = self.call_program(compile_cmd)
@@ -74,7 +74,7 @@ class ReductionTuner(MeasurementInterface):
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
       
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
-            run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(chosen_gpu_number, program_command, devices)
+            run_cmd = f'mpirun -np {chosen_gpu_number} --allow-run-as-root {program_command} -d {devices}'
 
         run_result = self.call_program(run_cmd)
 

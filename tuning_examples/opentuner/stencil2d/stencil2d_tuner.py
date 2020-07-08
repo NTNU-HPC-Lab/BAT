@@ -36,25 +36,26 @@ class Stencil2DTuner(MeasurementInterface):
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
-        make_program = 'nvcc -gencode=arch=compute_{0},code=sm_{0} -I {1}/cuda-common -I {1}/common -g -O2 -c {1}/stencil2d/CUDAStencilKernel.cu \n'.format(cc, start_path)
+        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/stencil2d/CUDAStencilKernel.cu \n'
 
         if args.parallel:
-            make_paralell_start = 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o CUDAStencil.o {0}/stencil2d/CUDAStencil.cpp \n'.format(start_path)
-            make_paralell_start += 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o CommonCUDAStencilFactory.o {0}/stencil2d/CommonCUDAStencilFactory.cpp \n'.format(start_path)
-            make_paralell_start += 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o Stencil2Dmain.o {0}/stencil2d/Stencil2Dmain.cpp \n'.format(start_path)
-            make_paralell_start += 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o CUDAStencilFactory.o {0}/stencil2d/CUDAStencilFactory.cpp \n'.format(start_path)
-            make_paralell_start += 'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {0}/mpi-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_paralell_end = 'mpicxx -L {0}/cuda-common -L {0}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'.format(start_path)
+            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CUDAStencil.o {start_path}/stencil2d/CUDAStencil.cpp \n'
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CommonCUDAStencilFactory.o {start_path}/stencil2d/CommonCUDAStencilFactory.cpp \n'.format(start_path)
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o Stencil2Dmain.o {start_path}/stencil2d/Stencil2Dmain.cpp \n'.format(start_path)
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CUDAStencilFactory.o {start_path}/stencil2d/CUDAStencilFactory.cpp \n'.format(start_path)
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'.format(start_path)
+            make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         else:
-            make_serial_start = 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o CUDAStencil.o {0}/stencil2d/CUDAStencil.cpp \n'.format(start_path)
-            make_serial_start += 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o CommonCUDAStencilFactory.o {0}/stencil2d/CommonCUDAStencilFactory.cpp \n'.format(start_path)
-            make_serial_start += 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o Stencil2Dmain.o {0}/stencil2d/Stencil2Dmain.cpp \n'.format(start_path)
-            make_serial_start += 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o CUDAStencilFactory.o {0}/stencil2d/CUDAStencilFactory.cpp \n'.format(start_path)
-            make_serial_start += 'nvcc -I {0}/common/ -I {0}/cuda-common/ -g -O2 -c -o main.o {0}/cuda-common/main.cpp \n'.format(start_path)
-            make_serial_end = 'nvcc -L {0}/cuda-common -L {0}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon'.format(start_path)
+            make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o CUDAStencil.o {start_path}/stencil2d/CUDAStencil.cpp \n'
+            make_serial_start += f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o CommonCUDAStencilFactory.o {start_path}/stencil2d/CommonCUDAStencilFactory.cpp \n'
+            make_serial_start += f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o Stencil2Dmain.o {start_path}/stencil2d/Stencil2Dmain.cpp \n'
+            make_serial_start += f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o CUDAStencilFactory.o {start_path}/stencil2d/CUDAStencilFactory.cpp \n'
+            make_serial_start += f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
-    
+
+        print(compile_cmd)
 
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
@@ -67,7 +68,7 @@ class Stencil2DTuner(MeasurementInterface):
             # Select number below max connected GPUs
       
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
-            run_cmd = 'mpirun -np {0} --allow-run-as-root {1} -d {2}'.format(chosen_gpu_number, program_command, devices)
+            run_cmd = f'mpirun -np {chosen_gpu_number} --allow-run-as-root {program_command} -d {devices}'
         else:
             run_cmd = program_command
 
