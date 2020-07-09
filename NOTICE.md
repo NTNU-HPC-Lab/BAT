@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-### CUDA Data Parallel Primitives Library
+### [CUDA Data Parallel Primitives Library](https://github.com/cudpp/cudpp)
 
 Some portions of the SHOC source code are based on the CUDA Data Parallel Primitives
 Library and are subject to the following. 
