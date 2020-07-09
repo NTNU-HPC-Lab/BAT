@@ -86,6 +86,10 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
             if "build" in benchmark_config and isinstance(benchmark_config["build"], list) and len(benchmark_config["build"]) > 0:
                 # Run build commands and print results if verbose is set
                 for build_command in benchmark_config["build"]:
+                    # Just continue if commmand is empty
+                    if build_command == "":
+                        continue
+
                     build_result = subprocess.run(build_command.split(), cwd=current_benchmark_dir, stdout=subprocess.DEVNULL if not verbose else None, stderr=subprocess.DEVNULL if not verbose else None)
 
                     # Ensure the building is ok
