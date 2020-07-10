@@ -89,5 +89,5 @@ if __name__ == '__main__':
     argparser = opentuner.default_argparser()
     argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
-    argparser.add_argument('--parallel', type=bool, default=False, help='run on multiple GPUs')
+    argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
     SortTuner.main(argparser.parse_args())
