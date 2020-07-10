@@ -19,3 +19,10 @@ RUN cd /usr/local \
 
 # Copy content 
 COPY . .
+
+# Build all CLTune benchmarks
+RUN cd tuning_examples/cltune/ \
+    && cd sort && make
+
+# Set the environment variable so other sources can use CLTune
+ENV CLTUNE_PATH=/usr/local/CLTune

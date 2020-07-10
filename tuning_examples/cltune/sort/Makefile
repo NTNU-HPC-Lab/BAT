@@ -1,10 +1,11 @@
 CC=g++
-CLTUNE_PATH=/usr/local/CLTune/include
-CLTUNE_LIBRARY=/usr/local/CLTune/build
+CLTUNE_PATH?=/usr/local/CLTune
+CLTUNE_INCLUDE?=$(CLTUNE_PATH)/include
+CLTUNE_LIBRARY?=$(CLTUNE_PATH)/build
 
 default:
 	@echo "\033[93m[i]\033[0m Compiling... 🔨"
-	@$(CC) -Wall -Wextra -Werror sort.cpp -o sort -I $(CLTUNE_PATH) -L $(CLTUNE_LIBRARY) -lcltune
+	@$(CC) -Wall -Wextra -Werror sort.cpp -o sort -I $(CLTUNE_INCLUDE) -Wl,-rpath $(CLTUNE_LIBRARY)  -L $(CLTUNE_LIBRARY) -lcltune
 	@echo "\033[92m[✓]\033[0m Done compiling program! 🎉"
 
 clean:

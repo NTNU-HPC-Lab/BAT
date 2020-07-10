@@ -37,12 +37,15 @@ RUN cd /usr/local \
 # Copy content 
 COPY . .
 
-# Build all benchmarks
+# Build all KTT benchmarks
 RUN cd tuning_examples/ktt/ \
     && cd sort && make
 
 # Remove the symbolic link for the CUDA libraries as it is not needed anymore
 RUN rm /usr/local/cuda/lib64/stubs/libcuda.so.1
 
+# Reset the LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=${TEMP_LD_LIBRARY_PATH}
+
 # Set the environment variable so other sources can use KTT
-ENV LD_LIBRARY_PATH=${TEMP_LD_LIBRARY_PATH}:/usr/local/KTT/build/x86_64_Release
+ENV KTT_PATH=/usr/local/KTT
