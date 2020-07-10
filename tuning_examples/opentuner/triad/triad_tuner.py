@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 import opentuner
 from opentuner import ConfigurationManipulator
 from opentuner import IntegerParameter
@@ -21,9 +20,11 @@ class TriadTuner(MeasurementInterface):
         """
 
         gpu = cuda.get_current_device()        
-        max_size = gpu.MAX_THREADS_PER_BLOCK
+        max_block_size = gpu.MAX_THREADS_PER_BLOCK
         # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK`
-        block_sizes = list(filter(lambda x: x <= max_size, [2**i for i in range(0, 11)]))
+        # TODO: fix program code to be usable for all sizes:
+        # TODO: [i for i in range(1, gpu.MAX_THREADS_PER_BLOCK + 1)]
+        block_sizes = list(filter(lambda x: x <= max_block_size, [2**i for i in range(0, 11)]))
 
         manipulator = ConfigurationManipulator()
         manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))

@@ -1,0 +1,3 @@
+{
+    "run": "python3 triad_tuner.py"
+}

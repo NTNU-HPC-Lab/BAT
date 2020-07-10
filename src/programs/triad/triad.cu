@@ -63,8 +63,7 @@ void RunBenchmark(OptionParser &op)
 
     // 256k through 8M bytes
     const int nSizes = 9;
-    const size_t blockSizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192,
-            16384 };
+    const size_t blockSizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384 };
     const size_t memSize = 16384;
     const size_t numMaxFloats = 1024 * memSize / 4;
     const size_t halfNumFloats = numMaxFloats / 2;
@@ -101,9 +100,9 @@ void RunBenchmark(OptionParser &op)
         for (int i = 0; i < nSizes; ++i)
         {
             int elemsInBlock = blockSizes[i] * 1024 / sizeof(float);
-            for (int j = 0; j < halfNumFloats; ++j)
-                h_mem[j] = h_mem[halfNumFloats + j]
-                                 = (float) (drand48() * 10.0);
+            for (int j = 0; j < halfNumFloats; ++j) {
+                h_mem[j] = h_mem[halfNumFloats + j] = (float) (drand48() * 10.0);
+            }
 
             // Copy input memory to the device
             if (verbose)
@@ -227,8 +226,9 @@ void RunBenchmark(OptionParser &op)
             if (verbose) cout << ">> finish!" << endl;
 
             // Zero out the test host memory
-            for (int j=0; j<numMaxFloats; ++j)
+            for (int j=0; j<numMaxFloats; ++j) {
                 h_mem[j] = 0.0f;
+            }
         }
     }
     CHECK_CUDA_ERROR();
