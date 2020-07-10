@@ -44,7 +44,7 @@ class SortTuner(MeasurementInterface):
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort.cu\n'
-        make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {1}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort_kernel.cu'
+        make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort_kernel.cu'
         make_program += ' -D{0}={1}'.format('LOOP_UNROLL_LSB', cfg['LOOP_UNROLL_LSB'])
         make_program += ' -D{0}={1}'.format('LOOP_UNROLL_LOCAL_MEMORY', cfg['LOOP_UNROLL_LOCAL_MEMORY'])
         make_program += ' -D{0}={1} \n'.format('LOOP_UNROLL_ADD_UNIFORM', cfg['LOOP_UNROLL_ADD_UNIFORM'])
