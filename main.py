@@ -59,6 +59,8 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
         print(f"{print_helpers['error']} No auto-tuner directories were found with the name `{auto_tuner}`")
         return
 
+    found_benchmarks = False
+
     # Find all benchmarks for all auto-tuners
     for directory in auto_tuner_dirs:
         auto_tuner_name = os.path.basename(directory)
@@ -80,6 +82,7 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                 print(f"{print_helpers['error']} No benchmark found for `{os.path.basename(current_benchmark_dir)}` in `{auto_tuner_name}`")
                 continue
 
+            found_benchmarks = True
             build_successful = True
 
             # Run the `build` commands in the benchmark directory if its present, array and not empty
@@ -112,7 +115,11 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                     print(f"{print_helpers['success']} Finished benchmark `{current_benchmark}` for `{os.path.basename(directory)}`")
                     # TODO: parse results
 
-    print(f"{print_helpers['success']} Finished running all benchmarks")
+    if found_benchmarks:
+        print(f"{print_helpers['success']} Finished running all benchmarks")
+    else:
+        print(f"{print_helpers['error']} Did not find any benchmarks")
+
 
 if __name__ == "__main__":
     # Setup CLI parser
