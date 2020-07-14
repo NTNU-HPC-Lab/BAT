@@ -1,7 +1,9 @@
-#include <iostream>
+#include <iostream> // For terminal output
+#include <fstream> // For file saving
 #include "tuner_api.h" // KTT API
 #include "tunable_sort.h" // To help with the launch of kernels
 #include "reference_sort.h" // To check the correctness of the computed kernels
+#include "ktt_json_saver.hpp" // Custom JSON KTT results saver
 
 using namespace std;
 
@@ -132,9 +134,12 @@ int main(int argc, char* argv[]) {
     // Tune the composition of kernels
     auto_tuner.tuneKernel(compositionId);
 
+    // Get the best computed result and save it as a JSON to file
+    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(compositionId), "best-sort-results.json");
+
     // Print the results to cout and save it as a CSV file
     auto_tuner.printResult(compositionId, cout, ktt::PrintFormat::Verbose);
-    auto_tuner.printResult(compositionId, "results.csv", ktt::PrintFormat::CSV);
+    auto_tuner.printResult(compositionId, "sort-results.csv", ktt::PrintFormat::CSV);
 
     return 0;
 }

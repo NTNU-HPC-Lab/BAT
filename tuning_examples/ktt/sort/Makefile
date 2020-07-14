@@ -5,7 +5,7 @@ KTT_LIBRARY?=$(KTT_PATH)/build/x86_64_Release
 
 default:
 	@echo "\033[93m[i]\033[0m Compiling... 🔨"
-	@$(CC) sort_tuner.cpp -o sort -I $(KTT_INCLUDE) -Wl,-rpath $(KTT_LIBRARY) -L $(KTT_LIBRARY) -lktt
+	@$(CC) ../ktt_json_saver.cpp sort_tuner.cpp -o sort -I .. -I $(KTT_INCLUDE) -Wl,-rpath $(KTT_LIBRARY) -L $(KTT_LIBRARY) -lktt
 	@echo "\033[92m[✓]\033[0m Done compiling program! 🎉"
 
 clean:
