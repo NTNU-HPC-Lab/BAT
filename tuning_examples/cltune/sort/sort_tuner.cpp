@@ -3,6 +3,7 @@
 #include <iterator>
 #include <math.h>
 #include "cltune.h" // CLTune API
+#include "cltune_json_saver.hpp" // Custom JSON CLTune results saver
 
 using namespace std;
 
@@ -52,6 +53,9 @@ void tuneRadixSortBlocks() {
     auto_tuner.AddArgumentInput(valuesIn);
 
     auto_tuner.Tune();
+
+    // Get the best computed result and save it as a JSON to file
+    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json");
 
     // Print the results to cout and save it as a JSON file
     auto_tuner.PrintToScreen();
@@ -112,6 +116,9 @@ void tuneScan() {
 
     auto_tuner.Tune();
 
+    // Get the best computed result and save it as a JSON to file
+    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json");
+
     // Print the results to cout and save it as a JSON file
     auto_tuner.PrintToScreen();
     auto_tuner.PrintJSON(kernelName + "-results.json", {{"sample", kernelName}});
@@ -160,6 +167,9 @@ void tuneVectorAddUniform4() {
     auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
 
     auto_tuner.Tune();
+
+    // Get the best computed result and save it as a JSON to file
+    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json");
 
     // Print the results to cout and save it as a JSON file
     auto_tuner.PrintToScreen();
