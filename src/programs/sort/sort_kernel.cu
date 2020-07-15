@@ -385,8 +385,7 @@ vectorAddUniform4(uint *d_vector, const uint *d_uniforms, const int n)
         uni[0] = d_uniforms[blockIdx.x];
     }
 
-    unsigned int address = threadIdx.x + (blockIdx.x *
-            blockDim.x * 4);
+    unsigned int address = threadIdx.x + (blockIdx.x * blockDim.x * 4);
 
     __syncthreads();
 

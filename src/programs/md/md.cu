@@ -281,12 +281,10 @@ RunBenchmark(OptionParser &op)
 
     cout << "Running single precision test" << endl;
     runTest<float, float3, float4, true, texReader_sp>("MD-LJ", op);
-    if ((deviceProp.major == 1 && deviceProp.minor >= 3) ||
-               (deviceProp.major >= 2))
+    if ((deviceProp.major == 1 && deviceProp.minor >= 3) || (deviceProp.major >= 2))
     {
         cout << "Running double precision test" << endl;
-        runTest<double, double3, double4, true, texReader_dp>
-            ("MD-LJ-DP", op);
+        runTest<double, double3, double4, true, texReader_dp>("MD-LJ-DP", op);
     } else {
         cout << "Skipping double precision test" << endl;
     }
@@ -356,8 +354,7 @@ void runTest(const string& testName, OptionParser& op)
 
     // Keep track of how many atoms are within the cutoff distance to
     // accurately calculate FLOPS later
-    int totalPairs = buildNeighborList<T, posVecType>(nAtom, position,
-            neighborList);
+    int totalPairs = buildNeighborList<T, posVecType>(nAtom, position, neighborList);
 
     cout << "Finished.\n";
     cout << totalPairs << " of " << nAtom*maxNeighbors <<

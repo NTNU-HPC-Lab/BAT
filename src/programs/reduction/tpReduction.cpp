@@ -249,15 +249,15 @@ void RunTest(string test_name, OptionParser &op)
 
         if (diff > threshold)
         {
-            cout << "Error in local reduction detected in rank "
-                 << rank << "\n";
+            cout << "Error in local reduction detected in rank " << rank << "\n";
             cout << "Diff: " << diff << endl;
+            cerr << "Error: incorrect computed result." << endl;
         }
 
         if (global_result != (comm_size * local_result))
         {
-            cout << "Test Failed, error in global all reduce detected in rank "
-                 << rank << endl;
+            cout << "Test Failed, error in global all reduce detected in rank " << rank << endl;
+            cerr << "Error: incorrect computed result." << endl;
         }
         else
         {
