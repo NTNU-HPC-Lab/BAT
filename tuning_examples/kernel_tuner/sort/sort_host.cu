@@ -30,6 +30,26 @@ void scanArrayRecursive(uint* outArray, uint* inArray, int numElements, int leve
 
 bool verifySort(uint *keys, uint* vals, const size_t size);
 
+// ****************************************************************************
+// Originated from the SHOC benchmark
+// Function: RunBenchmark
+//
+// Purpose:
+//   Executes the radix sort benchmark
+//
+// Arguments:
+//   resultDB: results from the benchmark are stored in this db
+//   op: the options parser / parameter database
+//
+// Returns:  nothing, results are stored in resultDB
+//
+// Programmer: Kyle Spafford
+// Creation: August 13, 2009
+//
+// Modifications:
+//
+// ****************************************************************************
+
 // Return the time used in float to help choosing the best configuration
 float sort() {
     //Number of key-value pairs to sort, must be a multiple of 1024
