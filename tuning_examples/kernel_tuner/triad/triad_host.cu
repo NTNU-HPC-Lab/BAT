@@ -1,37 +1,18 @@
-#include "cudacommon.h"
+#include <iostream>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "OptionParser.h"
-#include "Utility.h"
-#include "triad_kernel.h"
+extern "C" {
+
+#include "triad_kernel.cu"
+
+using namespace std;
 
 // ****************************************************************************
-// Function: addBenchmarkSpecOptions
-//
-// Purpose:
-//   Add benchmark specific options parsing
-//
-// Arguments:
-//   op: the options parser / parameter database
-//
-// Returns:  nothing
-//
-// Programmer: Kyle Spafford
-// Creation: December 15, 2009
-//
-// Modifications:
-//
-// ****************************************************************************
-void addBenchmarkSpecOptions(OptionParser &op)
-{
-    ;
-}
-
-// ****************************************************************************
+// Originated from the SHOC benchmark
 // Function: RunBenchmark
 //
 // Purpose:
@@ -56,10 +37,12 @@ void addBenchmarkSpecOptions(OptionParser &op)
 // Modifications:
 //
 // ****************************************************************************
-void RunBenchmark(OptionParser &op)
-{
-    const bool verbose = op.getOptionBool("verbose");
-    const int n_passes = op.getOptionInt("passes");
+
+// Return the time used in float to help choosing the best configuration
+float triad_host() {
+    // TODO implement verbose?
+    const bool verbose = false;
+    const int n_passes = 10;
 
     // 256k through 8M bytes
     const int nSizes = 9;
@@ -72,24 +55,27 @@ void RunBenchmark(OptionParser &op)
     srand48(8650341L);
     float *h_mem;
     cudaMallocHost((void**) &h_mem, sizeof(float) * numMaxFloats);
-    CHECK_CUDA_ERROR();
 
     // Allocate some device memory
     float* d_memA0, *d_memB0, *d_memC0;
     cudaMalloc((void**) &d_memA0, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memB0, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memC0, blockSizes[nSizes - 1] * 1024);
-    CHECK_CUDA_ERROR();
 
     float* d_memA1, *d_memB1, *d_memC1;
     cudaMalloc((void**) &d_memA1, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memB1, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memC1, blockSizes[nSizes - 1] * 1024);
-    CHECK_CUDA_ERROR();
 
     float scalar = 1.75f;
 
     const size_t blockSize = BLOCK_SIZE;
+
+    // For measuring the time
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float totalElapsedTime = 0.0;
 
     // Number of passes. Use a large number for stress testing.
     // A small value is sufficient for computing sustained performance.
@@ -121,17 +107,17 @@ void RunBenchmark(OptionParser &op)
             cudaStream_t streams[2];
             cudaStreamCreate(&streams[0]);
             cudaStreamCreate(&streams[1]);
-            CHECK_CUDA_ERROR();
+
+            // Start the timing
+            cudaEventRecord(start, 0);
 
             cudaMemcpyAsync(d_memA0, h_mem, blockSizes[i] * 1024,
                     cudaMemcpyHostToDevice, streams[0]);
             cudaMemcpyAsync(d_memB0, h_mem, blockSizes[i] * 1024,
                     cudaMemcpyHostToDevice, streams[0]);
-            CHECK_CUDA_ERROR();
 
             triad<<<globalWorkSize, blockSize, 0, streams[0]>>>
                     (d_memA0, d_memB0, d_memC0, scalar);
-            CHECK_CUDA_ERROR();
 
             if (elemsInBlock < numMaxFloats)
             {
@@ -140,7 +126,6 @@ void RunBenchmark(OptionParser &op)
                     * 1024, cudaMemcpyHostToDevice, streams[1]);
                 cudaMemcpyAsync(d_memB1, h_mem + elemsInBlock, blockSizes[i]
                     * 1024, cudaMemcpyHostToDevice, streams[1]);
-                CHECK_CUDA_ERROR();
             }
 
             int blockIdx = 1;
@@ -159,7 +144,6 @@ void RunBenchmark(OptionParser &op)
                     cudaMemcpyAsync(h_mem + crtIdx, d_memC1, elemsInBlock
                         * sizeof(float), cudaMemcpyDeviceToHost, streams[1]);
                 }
-                CHECK_CUDA_ERROR();
 
                 crtIdx += elemsInBlock;
 
@@ -176,7 +160,6 @@ void RunBenchmark(OptionParser &op)
                         triad<<<globalWorkSize, blockSize, 0, streams[0]>>>
                                 (d_memA0, d_memB0, d_memC0, scalar);
                     }
-                    CHECK_CUDA_ERROR();
                 }
 
                 if (crtIdx+elemsInBlock < numMaxFloats)
@@ -200,13 +183,18 @@ void RunBenchmark(OptionParser &op)
                                 blockSizes[i]*1024, cudaMemcpyHostToDevice,
                                 streams[1]);
                     }
-                    CHECK_CUDA_ERROR();
                 }
                 blockIdx += 1;
                 currStream = !currStream;
             }
 
             cudaDeviceSynchronize();
+            // Stop the events and save elapsed time
+            cudaEventRecord(stop, 0);
+            cudaEventSynchronize(stop);
+            float elapsedTime;
+            cudaEventElapsedTime(&elapsedTime, start, stop);
+            totalElapsedTime += elapsedTime;
 
             // Checking memory for correctness. The two halves of the array
             // should have the same results.
@@ -220,7 +208,7 @@ void RunBenchmark(OptionParser &op)
                          << (j+halfNumFloats) << "]: "
                          << h_mem[j+halfNumFloats] << "stopping check\n";
                     cerr << "Error: incorrect computed result." << endl;
-                    break;
+                    throw "Correctness verification failed";
                 }
             }
             if (verbose) cout << ">> finish!" << endl;
@@ -231,7 +219,6 @@ void RunBenchmark(OptionParser &op)
             }
         }
     }
-    CHECK_CUDA_ERROR();
 
     // Cleanup
     cudaFree(d_memA0);
@@ -241,4 +228,7 @@ void RunBenchmark(OptionParser &op)
     cudaFree(d_memB1);
     cudaFree(d_memC1);
     cudaFreeHost(h_mem);
+
+    return totalElapsedTime;
+}
 }

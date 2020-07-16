@@ -123,10 +123,12 @@ float sort() {
     cudaMalloc((void**)&dBlockOffsets, WARP_SIZE * numSortGroups * sizeof(uint));
 
     int iterations = 10;
+
+    // For measuring the time
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    float totalElapsedTime;
+    float totalElapsedTime = 0.0;
 
     for (int it = 0; it < iterations; it++)
     {

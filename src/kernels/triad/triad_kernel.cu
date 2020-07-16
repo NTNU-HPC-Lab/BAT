@@ -19,7 +19,7 @@
 // Modifications:
 //
 // ****************************************************************************
-__global__ void triad(float* A, float* B, float* C, float s)
+extern "C" __global__ void triad(float* A, float* B, float* C, float s)
 {
     int gid = threadIdx.x + (blockIdx.x * BLOCK_SIZE);
     C[gid] = A[gid] + s*B[gid];
