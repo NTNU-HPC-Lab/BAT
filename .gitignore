@@ -193,6 +193,7 @@ tuning_examples/opentuner/md/md
 tuning_examples/opentuner/sort/sort
 tuning_examples/ktt/sort/sort
 tuning_examples/cltune/sort/sort
+tuning_examples/cltune/triad/triad
 results.csv
 *results.json
 *results.csv
