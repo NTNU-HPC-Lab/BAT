@@ -248,8 +248,7 @@ bool checkResults(forceVecType* d_force, posVecType *position,
 void
 addBenchmarkSpecOptions(OptionParser &op)
 {
-    op.addOption("iterations", OPT_INT, "1",
-                     "specify MD kernel iterations", 'r');
+    op.addOption("iterations", OPT_INT, "1", "specify MD kernel iterations", 'r');
 }
 
 // ********************************************************

@@ -81,8 +81,7 @@ void RunBenchmark(OptionParser &op)
 
     do
     {
-        uint numBlocks = max(1, (int) ceil((float) numScanElts / (4
-                * SCAN_BLOCK_SIZE)));
+        uint numBlocks = max(1, (int) ceil((float) numScanElts / (4 * SCAN_BLOCK_SIZE)));
         if (numBlocks > 1)
         {
             level++;
@@ -99,21 +98,18 @@ void RunBenchmark(OptionParser &op)
 
     do
     {
-        uint numBlocks = max(1, (int) ceil((float) numScanElts / (4
-                * SCAN_BLOCK_SIZE)));
+        uint numBlocks = max(1, (int) ceil((float) numScanElts / (4 * SCAN_BLOCK_SIZE)));
         if (numBlocks > 1)
         {
             // Malloc device mem for block sums
-            CUDA_SAFE_CALL(cudaMalloc((void**)&(scanBlockSums[level]),
-                    numBlocks*sizeof(uint)));
+            CUDA_SAFE_CALL(cudaMalloc((void**)&(scanBlockSums[level]), numBlocks*sizeof(uint)));
             level++;
         }
         numScanElts = numBlocks;
     }
     while (numScanElts > 1);
 
-    CUDA_SAFE_CALL(cudaMalloc((void**)&(scanBlockSums[level]),
-            sizeof(uint)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&(scanBlockSums[level]), sizeof(uint)));
 
     // Allocate device mem for sorting kernels
     uint* dKeys, *dVals, *dTempKeys, *dTempVals;
@@ -127,12 +123,9 @@ void RunBenchmark(OptionParser &op)
     size_t numSortGroups = size / (4 * SORT_BLOCK_SIZE);
 
     uint* dCounters, *dCounterSums, *dBlockOffsets;
-    CUDA_SAFE_CALL(cudaMalloc((void**)&dCounters, WARP_SIZE
-            * numSortGroups * sizeof(uint)));
-    CUDA_SAFE_CALL(cudaMalloc((void**)&dCounterSums, WARP_SIZE
-            * numSortGroups * sizeof(uint)));
-    CUDA_SAFE_CALL(cudaMalloc((void**)&dBlockOffsets, WARP_SIZE
-            * numSortGroups * sizeof(uint)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&dCounters, WARP_SIZE * numSortGroups * sizeof(uint)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&dCounterSums, WARP_SIZE * numSortGroups * sizeof(uint)));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&dBlockOffsets, WARP_SIZE * numSortGroups * sizeof(uint)));
 
     int iterations = op.getOptionInt("passes");
 
@@ -161,7 +154,7 @@ void RunBenchmark(OptionParser &op)
         CUDA_SAFE_CALL(cudaMemcpy(hVals, dVals, bytes, cudaMemcpyDeviceToHost));
 
         // Test to make sure data was sorted properly, if not, return
-        if (! verifySort(hKeys, hVals, size))
+        if (!verifySort(hKeys, hVals, size))
         {
             return;
         }
@@ -250,8 +243,7 @@ void scanArrayRecursive(uint* outArray, uint* inArray, int numElements,
         int level, uint** blockSums)
 {
     // Kernels handle 8 elems per thread
-    unsigned int numBlocks = max(1,
-            (unsigned int)ceil((float)numElements/(4.f*SCAN_BLOCK_SIZE)));
+    unsigned int numBlocks = max(1, (unsigned int)ceil((float)numElements / (4.f * SCAN_BLOCK_SIZE)));
     unsigned int sharedEltsPerBlock = SCAN_BLOCK_SIZE * 2;
     unsigned int sharedMemSize = sizeof(uint) * sharedEltsPerBlock;
 
@@ -308,8 +300,7 @@ bool verifySort(uint *keys, uint* vals, const size_t size)
 #ifdef VERBOSE_OUTPUT
             cout << "Failure: at idx: " << i << endl;
             cout << "Key: " << keys[i] << " Val: " << vals[i] << endl;
-            cout << "Idx: " << i + 1 << " Key: " << keys[i + 1] << " Val: "
-                    << vals[i + 1] << endl;
+            cout << "Idx: " << i + 1 << " Key: " << keys[i + 1] << " Val: " << vals[i + 1] << endl;
 #endif
         }
     }
