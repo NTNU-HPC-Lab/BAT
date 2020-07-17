@@ -10,7 +10,7 @@ using namespace std;
 int main(int argc, char* argv[]) {
     // Problem sizes used in the SHOC benchmark
     uint problemSizes[9] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384 };
-    uint inputProblemSize = 8; // Default to the last problem size if no input
+    uint inputProblemSize = 9; // Default to the last problem size if no input
 
     // If only one extra argument and the flag is set for size
     if (argc == 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
@@ -56,10 +56,10 @@ int main(int argc, char* argv[]) {
     // Set reference kernel for correctness verification and compare to the computed result
     auto_tuner.SetReference({referenceKernelFile}, kernelName, {globalWorkSize}, {1});
 
-    // Use the same seed for random as in the SHOC benchmark
+    // Use the same seed for random number as in the SHOC benchmark
     srand48(8650341L);
 
-    const size_t numMaxFloats = 1024 * problemSizes[inputProblemSize] / 4;
+    const size_t numMaxFloats = 1024 * problemSizes[inputProblemSize - 1] / 4;
     const size_t halfNumFloats = numMaxFloats / 2;
 
     vector<float> A(numMaxFloats);
