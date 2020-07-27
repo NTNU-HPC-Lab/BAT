@@ -53,7 +53,14 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
 /// we need to start the padding in the first byte following the message,
 /// and we only have two words to work with here....
 /// It also assumes words[] has all zero bits except the chars of interest.
-__host__ __device__ inline void md5_2words(unsigned int *words,
+
+__host__ __device__ 
+#if INLINE_1
+__forceinline__
+#else
+__noinline__ 
+#endif
+void md5_2words(unsigned int *words,
                                            unsigned int len,
                                            unsigned int *digest)
 {
@@ -184,39 +191,27 @@ __host__ __device__ inline void md5_2words(unsigned int *words,
 //
 // Modifications:
 // ****************************************************************************
-__host__ __device__ void IndexToKey(unsigned int index,
+
+__host__ __device__ 
+#if INLINE_2
+__forceinline__
+#else
+__noinline__  
+#endif
+void IndexToKey(unsigned int index,
                                     int byteLength, int valsPerByte,
                                     unsigned char vals[8])
 {
-    // loop pointlessly unrolled to avoid CUDA compiler complaints
-    // about unaligned accesses (!?) on older compute capabilities
-    vals[0] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[1] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[2] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[3] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[4] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[5] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[6] = index % valsPerByte;
-    index /= valsPerByte;
-
-    vals[7] = index % valsPerByte;
-    index /= valsPerByte;
+    #if UNROLL_LOOP_1
+    #pragma unroll
+    #else
+    #pragma unroll(1)
+    #endif
+    for (int i = 0; i < 8; i++) {
+        vals[i] = index % valsPerByte;
+        index /= valsPerByte;
+    }
 }
-
-
-
 
 // ****************************************************************************
 // Function:  FindKeyWithDigest_Kernel
@@ -249,33 +244,41 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
     unsigned char *foundKey,
     unsigned int *foundDigest)
 {
-    int threadid = blockIdx.x*blockDim.x + threadIdx.x;
-    int startindex = threadid * valsPerByte;
-    unsigned char key[8] = {0,0,0,0, 0,0,0,0};
-    IndexToKey(startindex, byteLength, valsPerByte, key);
+    for (int k = 0; k < WORK_PER_THREAD_FACTOR; k++) {
+        int threadid = (blockIdx.x*blockDim.x + threadIdx.x) * WORK_PER_THREAD_FACTOR + k;
+        int startindex = threadid * valsPerByte;
+        unsigned char key[8] = {0,0,0,0, 0,0,0,0};
+        IndexToKey(startindex, byteLength, valsPerByte, key);
 
-    for (int j=0; j < valsPerByte && startindex+j < keyspace; ++j) {
-        unsigned int digest[4];
-        md5_2words((unsigned int*)key, byteLength, digest);
-        if (digest[0] == searchDigest0 &&
-            digest[1] == searchDigest1 &&
-            digest[2] == searchDigest2 &&
-            digest[3] == searchDigest3) {
-                
-            *foundIndex = startindex + j;
-            foundKey[0] = key[0];
-            foundKey[1] = key[1];
-            foundKey[2] = key[2];
-            foundKey[3] = key[3];
-            foundKey[4] = key[4];
-            foundKey[5] = key[5];
-            foundKey[6] = key[6];
-            foundKey[7] = key[7];
-            foundDigest[0] = digest[0];
-            foundDigest[1] = digest[1];
-            foundDigest[2] = digest[2];
-            foundDigest[3] = digest[3];
+        for (int j=0; j < valsPerByte && startindex+j < keyspace; ++j) {
+            unsigned int digest[4];
+            md5_2words((unsigned int*)key, byteLength, digest);
+            if (digest[0] == searchDigest0 &&
+                digest[1] == searchDigest1 &&
+                digest[2] == searchDigest2 &&
+                digest[3] == searchDigest3) {
+                    
+                *foundIndex = startindex + j;
+
+                #if UNROLL_LOOP_2
+                #pragma unroll
+                #else
+                #pragma unroll(1)
+                #endif
+                for (int i = 0; i < 8; i++) {
+                    foundKey[i] = key[i];
+                }
+
+                #if UNROLL_LOOP_3
+                #pragma unroll
+                #else
+                #pragma unroll(1)
+                #endif
+                for (int i = 0; i < 4; i++) {
+                    foundDigest[i] = digest[i];
+                }
+            }
+            ++key[0];
         }
-        ++key[0];
     }
 }

@@ -19,20 +19,16 @@ class MD5HashTuner(MeasurementInterface):
         Define the search space by creating a
         ConfigurationManipulator
         """
-        """
         gpu = cuda.get_current_device()
-        sizes = [1000, 10000, 100000, 1000000, 10000000]
-        numVerts = sizes[argparser.parse_args().problem_size - 1]
-
-        min_size = 1
-        max_size = min(numVerts, gpu.MAX_THREADS_PER_BLOCK)
-        """
         manipulator = ConfigurationManipulator()
-        #manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
-        #manipulator.add_parameter(EnumParameter('CHUNK_SIZE', [32, 64, 128, 256]))
-        manipulator.add_parameter(EnumParameter('BLOCK_SIZE', [252, 384]))
+        manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, gpu.MAX_THREADS_PER_BLOCK))
         manipulator.add_parameter(EnumParameter('ROUND_STYLE', [0, 1]))
-
+        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
+        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
+        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_3', [0, 1]))
+        manipulator.add_parameter(EnumParameter('INLINE_1', [0, 1]))
+        manipulator.add_parameter(EnumParameter('INLINE_2', [0, 1]))
+        manipulator.add_parameter(EnumParameter('WORK_PER_THREAD_FACTOR', [1, 2, 3, 4]))
 
         return manipulator
 
@@ -49,6 +45,12 @@ class MD5HashTuner(MeasurementInterface):
 
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/md5hash/md5hash.cu'
         make_program += ' -D{0}={1}'.format('ROUND_STYLE',cfg['ROUND_STYLE'])
+        make_program += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
+        make_program += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
+        make_program += ' -D{0}={1}'.format('UNROLL_LOOP_3',cfg['UNROLL_LOOP_3'])
+        make_program += ' -D{0}={1}'.format('INLINE_1',cfg['INLINE_1'])
+        make_program += ' -D{0}={1}'.format('INLINE_2',cfg['INLINE_2'])
+        make_program += ' -D{0}={1}'.format('WORK_PER_THREAD_FACTOR',cfg['WORK_PER_THREAD_FACTOR'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
 
         if args.parallel:
