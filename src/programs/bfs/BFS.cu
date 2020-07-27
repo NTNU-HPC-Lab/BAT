@@ -168,7 +168,44 @@ void RunTest(OptionParser &op, Graph *G)
                    sizeof(unsigned int)*(numVerts+1),cudaMemcpyHostToDevice));
     CUDA_SAFE_CALL(cudaMemcpy(d_edgeArrayAux,edgeArrayAux,
                  sizeof(unsigned int)*adj_list_length,cudaMemcpyHostToDevice));
-
+    
+    cudaTextureObject_t textureObjEA=0;
+    #if TEXTURE_MEMORY_EA1 == 2
+        cudaResourceDesc resDesc;
+        memset(&resDesc, 0, sizeof(resDesc));
+        resDesc.resType = cudaResourceTypeLinear;
+        resDesc.res.linear.devPtr = d_edgeArray;
+        resDesc.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+        resDesc.res.linear.desc.x = 32;
+        resDesc.res.linear.sizeInBytes = sizeof(unsigned int)*(numVerts+1);
+        cudaTextureDesc texDesc;
+        memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.readMode = cudaReadModeElementType;
+        texDesc.addressMode = cudaAddressModeWrap;
+        CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEA, &resDesc, &texDesc, NULL));
+    #elif TEXTURE_MEMORY_EA1 == 1
+        //Bind a 1D texture to the edgeArray array
+        CUDA_SAFE_CALL(cudaBindTexture(0, textureRefEA, d_edgeArray, sizeof(unsigned int)*(numVerts+1)));
+    #endif
+    
+    cudaTextureObject_t textureObjEAA=0;
+    #if TEXTURE_MEMORY_EAA == 2
+        cudaResourceDesc resDesc;
+        memset(&resDesc, 0, sizeof(resDesc));
+        resDesc.resType = cudaResourceTypeLinear;
+        resDesc.res.linear.devPtr = d_edgeArrayAux;
+        resDesc.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+        resDesc.res.linear.desc.x = 32;
+        resDesc.res.linear.sizeInBytes = adj_list_length*sizeof(unsigned int);
+        cudaTextureDesc texDesc;
+        memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.readMode = cudaReadModeElementType;        
+        CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEAA, &resDesc, &texDesc, NULL));
+    #elif TEXTURE_MEMORY_EAA == 1
+        // Bind a 1D texture to the position array
+        CUDA_SAFE_CALL(cudaBindTexture(0, textureRefEAA, d_edgeArrayAux, adj_list_length*sizeof(unsigned int)));
+    #endif
+            
     // Get the device properties for kernel configuration
     int device;
     cudaGetDevice(&device);
@@ -176,9 +213,10 @@ void RunTest(OptionParser &op, Graph *G)
     cudaGetDeviceProperties(&devProp,device);
 
     // Set the kernel configuration
+    int chunkFactor = CHUNK_SIZE/32;
     int numThreads = BLOCK_SIZE;
     int numBlocks = 0;
-    numBlocks = (int)ceil((double)numVerts/(double)numThreads);
+    numBlocks = (int)ceil((double)numVerts/(double)numThreads/(double)chunkFactor);
     
     if (numBlocks > devProp.maxGridSize[0]) {
         std::cout << "Max number of blocks exceeded";
@@ -205,7 +243,7 @@ void RunTest(OptionParser &op, Graph *G)
             CUDA_SAFE_CALL(cudaMemcpy(d_flag, flag, sizeof(int), cudaMemcpyHostToDevice));
 
             BFS_kernel_warp<<<numBlocks,numThreads>>>
-                (d_costArray, d_edgeArray, d_edgeArrayAux, W_SZ, numVerts, iters, d_flag);
+                (d_costArray, d_edgeArray, textureObjEA, d_edgeArrayAux, textureObjEAA, W_SZ, numVerts, iters, d_flag);
             CHECK_CUDA_ERROR();
 
             // Read flag
@@ -253,6 +291,16 @@ void RunTest(OptionParser &op, Graph *G)
     // Clean up
     delete[] cpu_cost;
     CUDA_SAFE_CALL(cudaFreeHost(costArray));
+    #if TEXTURE_MEMORY_EA1 == 2
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(textureObjEA));
+    #elif TEXTURE_MEMORY_EA1 == 1
+    CUDA_SAFE_CALL(cudaUnbindTexture(textureRefEA));
+    #endif
+    #if TEXTURE_MEMORY_EAA == 2
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(textureObjEAA));
+    #elif TEXTURE_MEMORY_EAA == 1
+    CUDA_SAFE_CALL(cudaUnbindTexture(textureRefEA));
+    #endif
     CUDA_SAFE_CALL(cudaFree(d_costArray));
     CUDA_SAFE_CALL(cudaFree(d_edgeArray));
     CUDA_SAFE_CALL(cudaFree(d_edgeArrayAux));

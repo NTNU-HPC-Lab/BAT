@@ -32,6 +32,8 @@ class BFSTuner(MeasurementInterface):
         manipulator.add_parameter(EnumParameter('CHUNK_SIZE', [32, 64, 128, 256]))
         manipulator.add_parameter(EnumParameter('UNROLL_OUTER_LOOP', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_INNER_LOOP', [0, 1]))
+        manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY_EA1', [0, 1, 2]))
+        manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY_EAA', [0, 1, 2]))
 
         return manipulator
 
@@ -47,21 +49,22 @@ class BFSTuner(MeasurementInterface):
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/bfs/BFS.cu'
-        make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
-        make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/bfs/bfs_kernel.cu'
+        make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY_EA1',cfg['TEXTURE_MEMORY_EA1'])
+        make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY_EAA',cfg['TEXTURE_MEMORY_EAA'])
         make_program += ' -D{0}={1}'.format('UNROLL_OUTER_LOOP',cfg['UNROLL_OUTER_LOOP'])
         make_program += ' -D{0}={1}'.format('UNROLL_INNER_LOOP',cfg['UNROLL_INNER_LOOP'])
-        make_program += ' -D{0}={1} \n'.format('CHUNK_SIZE',cfg['CHUNK_SIZE'])
+        make_program += ' -D{0}={1}'.format('CHUNK_SIZE',cfg['CHUNK_SIZE'])
+        make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
 
         if args.parallel:
             make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o Graph.o {start_path}/common/Graph.cpp \n'
             make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
-            make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
+            make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o BFS Graph.o main.o BFS.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         else:
             make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o Graph.o {start_path}/common/Graph.cpp \n'
             make_serial_start += f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
-            make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o BFS Graph.o main.o BFS.o bfs_kernel.o -lSHOCCommon'
+            make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o BFS Graph.o main.o BFS.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
     
         compile_result = self.call_program(compile_cmd)
