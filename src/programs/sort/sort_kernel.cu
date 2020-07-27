@@ -84,7 +84,7 @@ __global__ void radixSortBlocks(const uint nbits, const uint startbit,
     value = valuesIn[i];
 
     // For each of the 4 bits
-    for(uint shift = startbit; shift < (startbit + nbits); ++shift)
+    for (uint shift = startbit; shift < (startbit + nbits); ++shift)
     {
         // Check if the LSB is 0
         uint4 lsb;
@@ -188,6 +188,7 @@ __global__ void findRadixOffsets(uint2* keys, uint* counters,
     {
         sStartPointers[sRadix1[localId]] = localId;
     }
+
     if(sRadix1[localId + groupSize] != sRadix1[localId + groupSize - 1])
     {
         sStartPointers[sRadix1[localId + groupSize]] = localId + groupSize;
@@ -203,20 +204,17 @@ __global__ void findRadixOffsets(uint2* keys, uint* counters,
     // Compute the sizes of each block.
     if((localId > 0) && (sRadix1[localId] != sRadix1[localId - 1]) )
     {
-        sStartPointers[sRadix1[localId - 1]] =
-            localId - sStartPointers[sRadix1[localId - 1]];
+        sStartPointers[sRadix1[localId - 1]] = localId - sStartPointers[sRadix1[localId - 1]];
     }
+
     if(sRadix1[localId + groupSize] != sRadix1[localId + groupSize - 1] )
     {
-        sStartPointers[sRadix1[localId + groupSize - 1]] =
-            localId + groupSize - sStartPointers[sRadix1[localId +
-                                                         groupSize - 1]];
+        sStartPointers[sRadix1[localId + groupSize - 1]] = localId + groupSize - sStartPointers[sRadix1[localId + groupSize - 1]];
     }
 
     if(localId == groupSize - 1)
     {
-        sStartPointers[sRadix1[2 * groupSize - 1]] =
-            2 * groupSize - sStartPointers[sRadix1[2 * groupSize - 1]];
+        sStartPointers[sRadix1[2 * groupSize - 1]] = 2 * groupSize - sStartPointers[sRadix1[2 * groupSize - 1]];
     }
     __syncthreads();
 
@@ -258,8 +256,7 @@ __global__ void reorderData(uint  startbit,
 
     if(threadIdx.x < 16)
     {
-        sOffsets[threadIdx.x]      = offsets[threadIdx.x * totalBlocks +
-                                             blockId];
+        sOffsets[threadIdx.x]      = offsets[threadIdx.x * totalBlocks + blockId];
         sBlockOffsets[threadIdx.x] = blockOffsets[blockId * 16 + threadIdx.x];
     }
     __syncthreads();
@@ -271,12 +268,10 @@ __global__ void reorderData(uint  startbit,
     outValues[globalOffset] = sValues1[threadIdx.x];
 
     radix = (sKeys1[threadIdx.x + GROUP_SIZE] >> startbit) & 0xF;
-    globalOffset = sOffsets[radix] + threadIdx.x + GROUP_SIZE -
-                   sBlockOffsets[radix];
+    globalOffset = sOffsets[radix] + threadIdx.x + GROUP_SIZE - sBlockOffsets[radix];
 
     outKeys[globalOffset]   = sKeys1[threadIdx.x + GROUP_SIZE];
     outValues[globalOffset] = sValues1[threadIdx.x + GROUP_SIZE];
-
 }
 
 __device__ uint scanLocalMem(const uint val, uint* s_data)

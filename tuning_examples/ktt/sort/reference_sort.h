@@ -6,7 +6,7 @@ using namespace std;
 
 class ReferenceSort : public ktt::ReferenceClass {
 public:
-    ReferenceSort(const vector<uint>& input) :
+    ReferenceSort(const vector<uint> &input) :
         input(input)
     {}
 
