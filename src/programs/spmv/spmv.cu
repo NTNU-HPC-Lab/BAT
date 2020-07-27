@@ -8,10 +8,6 @@
 #include "Spmv/util.h"
 #include "spmv_kernel.cu"
 
-// #define PRECISION "SP"
-// #define FORMAT "ellpackr"
-// #define CSR_STRATEGY "scalar"
-
 using namespace std;
 
 texture<float, 1> vecTex;  // vector textures
@@ -207,8 +203,8 @@ void csrTest(OptionParser& op, floatType* h_val,
     prefix += (padded) ? "Padded_" : "";
     double gflop = 2 * (double) numNonZeroes / 1e9;
     
-    // 0: ellpackr, 1: csr-normal-scalar, 2: csr-normal-vector, 3: csr-padded-scalar, 4: csr-padded-vector
-    #if (FORMAT == 1 || FORMAT == 3)
+    // 0: ellpackr, 1: csr-normal-scalar, 2: csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
+    #if (FORMAT == 1 || FORMAT == 2)
         // Setup thread configuration
         int nBlocksScalar = (int) ceil((floatType) numRows / BLOCK_SIZE);
         
@@ -231,7 +227,7 @@ void csrTest(OptionParser& op, floatType* h_val,
                 return;  // If results don't match, don't report performance
             }
         }
-    #else // CSR_STRATEGY = "vector"
+    #else // FORMAT == 3 || FORMAT == 4
         // Setup thread configuration
         int new_block_size = 0;
         if (BLOCK_SIZE < 32) {
@@ -446,15 +442,13 @@ void RunTest(OptionParser &op, int nRows=0)
     // Compute reference solution
     spmvCpu(h_val, h_cols, h_rowDelimiters, h_vec, numRows, refOut);
 
-    // 0: ellpackr, 1: csr-normal-scalar, 2: csr-normal-vector, 3: csr-padded-scalar, 4: csr-padded-vector
-    #if (FORMAT == 1 || FORMAT == 2)
-        // FORMAT == "csr-normal"
+    // 0: ellpackr, 1: csr-normal-scalar, 2: csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
+    #if (FORMAT == 1 || FORMAT == 3)
         // Test CSR kernels on normal data
         cout << "CSR Test\n";
         csrTest<floatType, texReader>(op, h_val, h_cols,
                 h_rowDelimiters, h_vec, h_out, numRows, nItems, refOut, false);
-    #elif (FORMAT == 3 || FORMAT == 4)
-        // FORMAT == "csr-padded"
+    #elif (FORMAT == 2 || FORMAT == 4)
         // Test CSR kernels on padded data
         cout << "CSR Test -- Padded Data\n";
         csrTest<floatType, texReader>(op, h_valPad, h_colsPad,

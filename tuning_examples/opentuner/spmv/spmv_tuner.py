@@ -25,10 +25,10 @@ class SPMVTuner(MeasurementInterface):
         max_size = gpu.MAX_THREADS_PER_BLOCK
 
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
-        # 0: ellpackr, 1: csr-normal-scalar, 2: csr-normal-vector, 3: csr-padded-scalar, 4: csr-padded-vector
-        manipulator.add_parameter(EnumParameter('FORMAT', [0, 1, 2, 3, 4]))
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
+        manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
+        # 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
+        manipulator.add_parameter(EnumParameter('FORMAT', [0, 1, 2, 3, 4]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
 

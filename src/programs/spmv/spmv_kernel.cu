@@ -104,6 +104,8 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         fpType mySum = 0;
         #if UNROLL_LOOP_1
         #pragma unroll
+        #else
+        #pragma unroll(1)
         #endif
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
         {
@@ -116,6 +118,8 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         if (id < 16) {
             #if UNROLL_LOOP_2
             #pragma unroll
+            #else
+            #pragma unroll(1)
             #endif
             for (int i = 4; i >= 0; i--) {
                 int l = 1<<i;
@@ -172,6 +176,8 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
 
         #if UNROLL_LOOP_1
         #pragma unroll
+        #else
+        #pragma unroll(1)
         #endif
         for (int i = 0; i < max; i++)
         {
