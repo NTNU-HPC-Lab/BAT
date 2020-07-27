@@ -14,8 +14,7 @@ radixSortStep(uint nbits, uint startbit, uint4* keys, uint4* values,
         uint numElements);
 
 void
-scanArrayRecursive(uint* outArray, uint* inArray, int numElements, int level,
-        uint** blockSums);
+scanArrayRecursive(uint* outArray, uint* inArray, int numElements, int level, uint** blockSums);
 
 bool
 verifySort(uint *keys, uint* vals, const size_t size);

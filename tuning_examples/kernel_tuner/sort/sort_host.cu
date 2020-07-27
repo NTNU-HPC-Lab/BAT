@@ -243,8 +243,7 @@ void radixSortStep(uint nbits, uint startbit, uint4* keys, uint4* values,
         ((uint2*)tempKeys, counters, blockOffsets, startbit, numElements,
          findBlocks);
 
-    scanArrayRecursive(countersSum, counters, 16*reorderBlocks, 0,
-            scanBlockSums);
+    scanArrayRecursive(countersSum, counters, 16*reorderBlocks, 0, scanBlockSums);
 
     reorderData<<<reorderBlocks, SCAN_BLOCK_SIZE>>>
         (startbit, (uint*)keys, (uint*)values, (uint2*)tempKeys,
@@ -252,8 +251,7 @@ void radixSortStep(uint nbits, uint startbit, uint4* keys, uint4* values,
         reorderBlocks);
 }
 
-void scanArrayRecursive(uint* outArray, uint* inArray, int numElements,
-    int level, uint** blockSums)
+void scanArrayRecursive(uint* outArray, uint* inArray, int numElements, int level, uint** blockSums)
 {
     // Kernels handle 8 elems per thread
     unsigned int numBlocks = max(1,
