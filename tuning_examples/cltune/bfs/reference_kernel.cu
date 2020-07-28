@@ -27,9 +27,6 @@
 //
 // ****************************************************************************
 
-texture<int, 1> textureEA;
-texture<int, 1> textureEAA;
-
 extern "C" __global__ void BFS_kernel_warp(
     unsigned int *levels,
     unsigned int *edgeArray,
@@ -40,7 +37,7 @@ extern "C" __global__ void BFS_kernel_warp(
     int *flag)
 {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
-    int CHUNK_SZ = CHUNK_FACTOR*32;
+    int CHUNK_SZ = 32;
     int W_OFF = tid % W_SZ;
     int W_ID = tid / W_SZ;
     int v1= W_ID * CHUNK_SZ;
@@ -52,32 +49,13 @@ extern "C" __global__ void BFS_kernel_warp(
             chk_sz=0;
     }
 
-    #if UNROLL_OUTER_LOOP
-    #pragma unroll
-    #else
-    #pragma unroll(1)
-    #endif
     for(int v=v1; v< chk_sz-1+v1; v++) {
         if(levels[v] == curr) {
-            #if TEXTURE_MEMORY_EA1
-                unsigned int num_nbr = tex1D(textureEA,(v+1)) - tex1D(textureEA, v);
-                unsigned int nbr_off = tex1D(textureEA, v);
-            #else
-                unsigned int num_nbr = edgeArray[v+1]-edgeArray[v];
-                unsigned int nbr_off = edgeArray[v];
-            #endif
+            unsigned int num_nbr = edgeArray[v+1]-edgeArray[v];
+            unsigned int nbr_off = edgeArray[v];
 
-            #if UNROLL_INNER_LOOP
-            #pragma unroll
-            #else
-            #pragma unroll(1)
-            #endif
             for(int i=W_OFF; i<num_nbr; i+=W_SZ) {
-                #if TEXTURE_MEMORY_EAA
-                    int v = tex1D(textureEAA, (i + nbr_off));
-                #else
-                    int v = edgeArrayAux[i + nbr_off];
-                #endif
+                int v = edgeArrayAux[i + nbr_off];
                 if(levels[v]==4294967295U) {
                     levels[v] = curr + 1;
                     *flag = 1;
