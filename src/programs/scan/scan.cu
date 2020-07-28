@@ -15,8 +15,6 @@
 
 using namespace std;
 
-#define PRECISION 64
-#define BLOCK_SIZE 256
 
 // ****************************************************************************
 // Function: addBenchmarkSpecOptions
@@ -105,10 +103,9 @@ void RunTest(string testName, OptionParser &op)
 
     // Thread configuration
     // Note: changing this may require updating the kernel calls below
-    int num_blocks  = 32;
-    int num_threads = 256;
-    // int num_blocks  = 32;
-    // int num_threads = 512;
+    int num_blocks  = BLOCK_SIZE/GRID_SIZE_PART;
+    int num_threads = BLOCK_SIZE;
+
     int smem_size = sizeof(T) * num_threads;
 
     // Allocate device memory
@@ -209,6 +206,6 @@ bool scanCPU(T *data, T* reference, T* dev_result, const size_t size)
     if (passed)
         cout << "Passed" << endl;
     else
-        cout << "---FAILED---" << endl;
+        cerr << "---FAILED---" << endl;
     return passed;
 }

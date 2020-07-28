@@ -154,45 +154,29 @@ __device__ T scanLocalMem(const T val, volatile T* s_data)
 
     // Now, perform Kogge-Stone scan
     T t;
-    t = s_data[idx -  1];  __syncthreads();
-    s_data[idx] += t;      __syncthreads();
-
-    t = s_data[idx -  2];  __syncthreads();
-    s_data[idx] += t;      __syncthreads();
-
-    t = s_data[idx -  4];  __syncthreads();
-    s_data[idx] += t;      __syncthreads();
-
-    t = s_data[idx -  8];  __syncthreads();
-    s_data[idx] += t;      __syncthreads();
-
-    t = s_data[idx -  16]; __syncthreads();
-    s_data[idx] += t;      __syncthreads();
-
-    if (blockSize > 32)
-    {
-        t = s_data[idx -  32];  __syncthreads();
-        s_data[idx] += t;       __syncthreads();
+    #if UNROLL_LOOP_1
+    #pragma unroll
+    #else
+    #pragma unroll(1)
+    #endif
+    for(int i = 0; i < 5; i++) {
+        t = s_data[idx - (1<<i)];  __syncthreads();
+        s_data[idx] += t;          __syncthreads();
     }
-    if (blockSize > 64)
-    {
-        t = s_data[idx -  64];  __syncthreads();
-        s_data[idx] += t;       __syncthreads();
-    }
-    if (blockSize > 128)
-    {
-        t = s_data[idx -  128]; __syncthreads();
-        s_data[idx] += t;       __syncthreads();
-    }
-    if (blockSize > 256)
-    {
-        t = s_data[idx -  256]; __syncthreads();
-        s_data[idx] += t;       __syncthreads();
-    }
-    if (blockSize > 512)
-    {
-        t = s_data[idx -  512]; __syncthreads();
-        s_data[idx] += t;       __syncthreads();
+    
+    if (blockSize > 32) {
+        #if UNROLL_LOOP_2
+        #pragma unroll
+        #else
+        #pragma unroll(1)
+        #endif
+        for(int i = 5; i < 10; i++) {
+            int num = 1<<i;
+            if (blockSize > num) {
+                t = s_data[idx - num];  __syncthreads();
+                s_data[idx] += t;       __syncthreads();
+            }
+        }
     }
 
     return s_data[idx-1]; // exclusive
