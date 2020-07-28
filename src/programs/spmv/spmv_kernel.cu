@@ -43,6 +43,8 @@ spmv_csr_scalar_kernel(const fpType * __restrict__ val,
         int end = rowDelimiters[myRow+1];
         #if UNROLL_LOOP_1
         #pragma unroll
+        #else
+        #pragma unroll(1)
         #endif
         for (int j = start; j < end; j++)
         {

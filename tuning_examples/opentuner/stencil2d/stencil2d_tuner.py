@@ -21,7 +21,7 @@ class Stencil2DTuner(MeasurementInterface):
         """
 
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(IntegerParameter('GPUS', 1, 1)) #len(cuda.gpus)
+        manipulator.add_parameter(IntegerParameter('GPUS', 1, len(cuda.gpus)))
 
         return manipulator
 
