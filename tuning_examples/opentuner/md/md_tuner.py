@@ -19,13 +19,14 @@ class MDTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        gpu = cuda.get_current_device()        
-        max_size = gpu.MAX_THREADS_PER_BLOCK
-        # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK`
-        block_sizes = list(filter(lambda x: x <= max_size, [2**i for i in range(0, 11)]))
-
+        gpu = cuda.get_current_device()
+        max_block_size = gpu.MAX_THREADS_PER_BLOCK
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
+        # Using block size less than `gpu.MAX_THREADS_PER_BLOCK`
+        manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, max_block_size))
+        manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
+        manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('WORK_PER_THREAD', 1, 5))
 
         return manipulator
 
@@ -41,7 +42,10 @@ class MDTuner(MeasurementInterface):
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/md/md.cu'
-        make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
+        make_program += ' -D{0}={1}'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
+        make_program += ' -D{0}={1}'.format('PRECISION', cfg['PRECISION'])
+        make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY', cfg['TEXTURE_MEMORY'])
+        make_program += ' -D{0}={1} \n'.format('WORK_PER_THREAD', cfg['WORK_PER_THREAD'])
 
         if args.parallel:
             make_paralell_start = f'mpicxx -I {0}/common/ -I {0}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
@@ -51,7 +55,7 @@ class MDTuner(MeasurementInterface):
             make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o md main.o md.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
-        
+
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
@@ -59,7 +63,7 @@ class MDTuner(MeasurementInterface):
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
-      
+
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
             run_cmd = f'mpirun -np {chosen_gpu_number} --allow-run-as-root {program_command} -d {devices}'
         else:
