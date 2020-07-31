@@ -8,7 +8,6 @@ default: dependencies
 	@nvcc -L $(START_PATH)/cuda-common -L $(START_PATH)/common -o scan main.o scan.o -lSHOCCommon
 	@echo "\033[92m[✓]\033[0m Done compiling program! 🎉"
 
-
 dependencies:
 	@echo "\033[93m[i]\033[0m Compiling dependencies... 🔨"
 	@$(CC) -o $(START_PATH)/common/OptionParser.o -c $(START_PATH)/common/OptionParser.cpp
@@ -20,7 +19,7 @@ dependencies:
 clean:
 	@echo "\033[93m[i]\033[0m Cleaning up... 🗑️"
 	@$(RM) *.o
-	@$(RM) ./src/common/*.o
-	@$(RM) ./src/common/libSHOCCommon.a
+	@$(RM) $(START_PATH)/common/*.o
+	@$(RM) $(START_PATH)/common/libSHOCCommon.a
 	@$(RM) ./scan
 	@echo "\033[92m[✓]\033[0m Done cleaning up! 🎉"

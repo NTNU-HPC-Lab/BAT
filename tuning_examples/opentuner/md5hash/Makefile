@@ -19,7 +19,7 @@ dependencies:
 clean:
 	@echo "\033[93m[i]\033[0m Cleaning up... 🗑️"
 	@$(RM) *.o
-	@$(RM) ./src/common/*.o
-	@$(RM) ./src/common/libSHOCCommon.a
+	@$(RM) $(START_PATH)/common/*.o
+	@$(RM) $(START_PATH)/common/libSHOCCommon.a
 	@$(RM) ./md5hash
 	@echo "\033[92m[✓]\033[0m Done cleaning up! 🎉"
