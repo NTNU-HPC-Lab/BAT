@@ -3,9 +3,7 @@ __device__ void
 spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       #if NOT_TEXTURE_MEMORY
                        fpType * vec,
-                       #endif
                        const int dim, fpType * __restrict__ out);
 
 template <typename fpType, typename texReader>
@@ -13,9 +11,7 @@ __device__ void
 spmv_csr_vector_kernel(const fpType * __restrict__ val,
                         const int    * __restrict__ cols,
                         const int    * __restrict__ rowDelimiters,
-                        #if NOT_TEXTURE_MEMORY
                         fpType * vec,
-                        #endif
                         const int dim, fpType * __restrict__ out);
 
 template <typename fpType, typename texReader>
@@ -23,32 +19,19 @@ __device__ void
 spmv_ellpackr_kernel(const fpType * __restrict__ val,
                         const int    * __restrict__ cols,
                         const int    * __restrict__ rowLengths,
-                        #if NOT_TEXTURE_MEMORY
                         fpType * vec,
-                        #endif
                         const int dim, fpType * __restrict__ out);
 
+// Texture Readers
+texture<float, 1> vecTex;    
 
-#if PRECISION == 32 
-    // Texture Readers
-    texture<float, 1> vecTex;    
+struct texReader {
+    __device__ __forceinline__ float operator()(const int idx) const
+    {
+        return tex1D(vecTex, idx);
+    }
+};
 
-    struct texReader {
-        __device__ __forceinline__ float operator()(const int idx) const
-        {
-            return tex1D(vecTex, idx);
-        }
-    };
-#elif PRECISION == 64
-    // Texture Readers
-    texture<float, 1> vecTex;
-    struct texReader {
-        __device__ __forceinline__ double operator()(const int idx) const
-        {
-            return tex1D(vecTex, idx);
-        }
-    };
-#endif
 
 /**
  * Helper function for tuners that can not use templated kernels directly
@@ -67,10 +50,8 @@ spmv_kernel(float * valSP_csr,
             const int    * __restrict__ rowDelimiters,
             const int    * __restrict__ rowDelimiters_pad,
             const int    * __restrict__ rowLengths,
-            #if NOT_TEXTURE_MEMORY
             float * vecSP,
             double * vecDP,
-            #endif
             const int dim, 
             const int dim_pad, 
             float * outSP,
@@ -83,43 +64,25 @@ spmv_kernel(float * valSP_csr,
         // CSR scalar
             #if (FORMAT == 1) 
             // Normal
-                spmv_csr_scalar_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecSP, 
-                    #endif
-                    dim, outSP);
+                spmv_csr_scalar_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, vecSP, dim, outSP);
             #else 
             // Padded
-                spmv_csr_scalar_kernel<float, texReader>(valSP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecSP, 
-                    #endif
-                    dim_pad, outSP);
+                spmv_csr_scalar_kernel<float, texReader>(valSP_csr_pad, cols_csr_pad, rowDelimiters_pad, vecSP, dim_pad, outSP);
             #endif
         #elif (FORMAT == 3 || FORMAT == 4)
         // CSR vector
             #if (FORMAT == 3)
             // Normal
-                spmv_csr_vector_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecSP, 
-                    #endif
-                    dim, outSP);
+                spmv_csr_vector_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, vecSP, dim, outSP);
             #else  
             // Padded
-                spmv_csr_vector_kernel<float, texReader>(valSP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecSP, 
-                    #endif 
-                    dim_pad, outSP);
+                spmv_csr_vector_kernel<float, texReader>(valSP_csr_pad, cols_csr_pad, rowDelimiters_pad, vecSP, dim_pad, outSP);
             #endif
         #else
         // Ellpackr
-            spmv_ellpackr_kernel<float, texReader>(valSP_ellpackr, cols_ellpackr, rowLengths, 
-                #if NOT_TEXTURE_MEMORY
-                vecSP, 
-                #endif
-                dim, outSP);
+    //    spmv_ellpackr_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, vecSP, dim, outSP);
+
+           spmv_ellpackr_kernel<float, texReader>(valSP_ellpackr, cols_ellpackr, rowLengths, vecSP, dim, outSP);
         #endif
     #else 
     // Double precision
@@ -127,43 +90,23 @@ spmv_kernel(float * valSP_csr,
         // CSR scalar
             #if (FORMAT == 1) 
             // Normal
-                spmv_csr_scalar_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecDP, 
-                    #endif 
-                    dim, outDP);
+                spmv_csr_scalar_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, vecDP, dim, outDP);
             #else 
             // Padded
-                spmv_csr_scalar_kernel<double, texReader>(valDP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecDP, 
-                    #endif
-                    dim_pad, outDP);
+                spmv_csr_scalar_kernel<double, texReader>(valDP_csr_pad, cols_csr_pad, rowDelimiters_pad, vecDP, dim_pad, outDP);
             #endif
         #elif (FORMAT == 3 || FORMAT == 4)
         // CSR vector
             #if (FORMAT == 3)
             // Normal
-                spmv_csr_vector_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecDP, 
-                    #endif 
-                    dim, outDP);
+                spmv_csr_vector_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, vecDP, dim, outDP);
             #else  
             // Padded
-                spmv_csr_vector_kernel<double, texReader>(valDP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
-                    vecDP, 
-                    #endif 
-                    dim_pad, outDP);
+                spmv_csr_vector_kernel<double, texReader>(valDP_csr_pad, cols_csr_pad, rowDelimiters_pad, vecDP, dim_pad, outDP);
             #endif
         #else
         // Ellpackr
-            spmv_ellpackr_kernel<double, texReader>(valDP_ellpackr, cols_ellpackr, rowLengths, 
-                #if NOT_TEXTURE_MEMORY
-                vecDP, 
-                #endif 
-                dim, outDP);
+            spmv_ellpackr_kernel<double, texReader>(valDP_ellpackr, cols_ellpackr, rowLengths, vecDP, dim, outDP);
         #endif
     #endif
 }
@@ -199,35 +142,22 @@ __device__ void
 spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       #if NOT_TEXTURE_MEMORY
-                       fpType * vec,
-                       #endif
+                       fpType * vecSP,
                        const int dim, fpType * __restrict__ out)
 {
     int myRow = blockIdx.x * blockDim.x + threadIdx.x;
-    #if NOT_TEXTURE_MEMORY
-    #else
-    texReader vecTexReader;
-    #endif
+    //texReader vecTexReader;
 
     if (myRow < dim)
     {
         fpType t = 0.0f;
         int start = rowDelimiters[myRow];
         int end = rowDelimiters[myRow+1];
-        #if UNROLL_LOOP_1
-        #pragma unroll
-        #else
-        #pragma unroll(1)
-        #endif
+
         for (int j = start; j < end; j++)
         {
             int col = cols[j];
-            #if NOT_TEXTURE_MEMORY
-            t += val[j] * vec[col];
-            #else 
-            t += val[j] * vecTexReader(col);
-            #endif
+            t += val[j] * vecSP[col];//vecTexReader(col);
         }
         out[myRow] = t;
     }
@@ -264,9 +194,7 @@ __device__ void
 spmv_csr_vector_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       #if NOT_TEXTURE_MEMORY
                        fpType * vec,
-                       #endif
                        const int dim, fpType * __restrict__ out)
 {
     // Thread ID in block
@@ -277,40 +205,22 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
     // One row per warp
     int myRow = (blockIdx.x * warpsPerBlock) + (t / warpSize);
     // Texture reader for the dense vector
-    #if NOT_TEXTURE_MEMORY
-    #else
-    texReader vecTexReader;
-    #endif
-
-    __shared__ volatile fpType partialSums[BLOCK_SIZE];
+    //texReader vecTexReader;
+    __shared__ volatile fpType partialSums[128];
 
     if (myRow < dim) {
         int warpStart = rowDelimiters[myRow];
         int warpEnd = rowDelimiters[myRow+1];
         fpType mySum = 0;
-        #if UNROLL_LOOP_1
-        #pragma unroll
-        #else
-        #pragma unroll(1)
-        #endif
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
         {
             int col = cols[j];
-            #if NOT_TEXTURE_MEMORY
-            mySum += val[j] * vec[col]; 
-            #else 
-            mySum += val[j] * vecTexReader(col);
-            #endif
+            mySum += val[j] * vec[col]; //vecTexReader(col);
         }
         partialSums[t] = mySum;
 
         // Reduce partial sums
         if (id < 16) {
-            #if UNROLL_LOOP_2
-            #pragma unroll
-            #else
-            #pragma unroll(1)
-            #endif
             for (int i = 4; i >= 0; i--) {
                 int l = 1<<i;
                 if (id < l) partialSums[t] += partialSums[t+l];
@@ -354,35 +264,21 @@ __device__ void
 spmv_ellpackr_kernel(const fpType * __restrict__ val,
                      const int    * __restrict__ cols,
                      const int    * __restrict__ rowLengths,
-                     #if NOT_TEXTURE_MEMORY
                      fpType * vec,
-                     #endif
                      const int dim, fpType * __restrict__ out)
 {
     int t = blockIdx.x * blockDim.x + threadIdx.x;
-    #if NOT_TEXTURE_MEMORY
-    #else
-    texReader vecTexReader;
-    #endif
+    //texReader vecTexReader;
 
     if (t < dim)
     {
         fpType result = 0.0f;
         int max = rowLengths[t];
 
-        #if UNROLL_LOOP_1
-        #pragma unroll
-        #else
-        #pragma unroll(1)
-        #endif
         for (int i = 0; i < max; i++)
         {
             int ind = i*dim+t;
-            #if NOT_TEXTURE_MEMORY
-            result += val[ind] * vec[cols[ind]];
-            #else
-            result += val[ind] * vecTexReader(cols[ind]);
-            #endif
+            result += val[ind] * vec[cols[ind]];//vecTexReader(cols[ind]);
         }
         out[t] = result;
     }
