@@ -21,13 +21,13 @@ class TriadTuner(MeasurementInterface):
 
         gpu = cuda.get_current_device()        
         max_block_size = gpu.MAX_THREADS_PER_BLOCK
-        # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK`
-        # TODO: fix program code to be usable for all sizes:
-        # TODO: [i for i in range(1, gpu.MAX_THREADS_PER_BLOCK + 1)]
-        block_sizes = list(filter(lambda x: x <= max_block_size, [2**i for i in range(0, 11)]))
-
+        
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
+        # Using block size less than `gpu.MAX_THREADS_PER_BLOCK`
+        manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, max_block_size))
+        manipulator.add_parameter(IntegerParameter('WORK_PER_THREAD', 1, 10))
+        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_TRIAD', [0, 1]))
+        manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
 
         return manipulator
 
@@ -43,8 +43,13 @@ class TriadTuner(MeasurementInterface):
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/triad/triad.cu'
-        make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
-        make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/triad/triad_kernel.cu\n'
+        make_program += ' -D{0}={1}'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
+        make_program += ' -D{0}={1}'.format('WORK_PER_THREAD', cfg['WORK_PER_THREAD'])
+        make_program += ' -D{0}={1} \n'.format('PRECISION', cfg['PRECISION'])
+        make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/triad/triad_kernel.cu'
+        make_program += ' -D{0}={1}'.format('WORK_PER_THREAD', cfg['WORK_PER_THREAD'])
+        make_program += ' -D{0}={1}'.format('LOOP_UNROLL_TRIAD', cfg['LOOP_UNROLL_TRIAD'])
+        make_program += ' -D{0}={1} \n'.format('PRECISION', cfg['PRECISION'])
 
         if args.parallel:
             make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
@@ -54,7 +59,7 @@ class TriadTuner(MeasurementInterface):
             make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o triad main.o triad.o triad_kernel.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
-        
+
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 

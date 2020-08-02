@@ -9,6 +9,13 @@
 #include "Utility.h"
 #include "triad_kernel.h"
 
+// Select which precision that are used in the calculations
+#if PRECISION == 32
+    #define DATA_TYPE float
+#elif PRECISION == 64
+    #define DATA_TYPE double
+#endif
+
 // ****************************************************************************
 // Function: addBenchmarkSpecOptions
 //
@@ -70,24 +77,24 @@ void RunBenchmark(OptionParser &op)
 
     // Create some host memory pattern
     srand48(8650341L);
-    float *h_mem;
-    cudaMallocHost((void**) &h_mem, sizeof(float) * numMaxFloats);
+    DATA_TYPE *h_mem;
+    cudaMallocHost((void**) &h_mem, sizeof(DATA_TYPE) * numMaxFloats);
     CHECK_CUDA_ERROR();
 
     // Allocate some device memory
-    float* d_memA0, *d_memB0, *d_memC0;
+    DATA_TYPE* d_memA0, *d_memB0, *d_memC0;
     cudaMalloc((void**) &d_memA0, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memB0, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memC0, blockSizes[nSizes - 1] * 1024);
     CHECK_CUDA_ERROR();
 
-    float* d_memA1, *d_memB1, *d_memC1;
+    DATA_TYPE* d_memA1, *d_memB1, *d_memC1;
     cudaMalloc((void**) &d_memA1, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memB1, blockSizes[nSizes - 1] * 1024);
     cudaMalloc((void**) &d_memC1, blockSizes[nSizes - 1] * 1024);
     CHECK_CUDA_ERROR();
 
-    float scalar = 1.75f;
+    DATA_TYPE scalar = 1.75f;
 
     const size_t blockSize = BLOCK_SIZE;
 
@@ -99,9 +106,9 @@ void RunBenchmark(OptionParser &op)
         // Step through sizes forward
         for (int i = 0; i < nSizes; ++i)
         {
-            int elemsInBlock = blockSizes[i] * 1024 / sizeof(float);
+            int elemsInBlock = blockSizes[i] * 1024 / sizeof(DATA_TYPE);
             for (int j = 0; j < halfNumFloats; ++j) {
-                h_mem[j] = h_mem[halfNumFloats + j] = (float) (drand48() * 10.0);
+                h_mem[j] = h_mem[halfNumFloats + j] = (DATA_TYPE) (drand48() * 10.0);
             }
 
             // Copy input memory to the device
@@ -116,30 +123,26 @@ void RunBenchmark(OptionParser &op)
             // download for the next block and the results upload for
             // the previous block
             int crtIdx = 0;
-            size_t globalWorkSize = elemsInBlock / blockSize;
+            size_t globalWorkSize = ceil((double)elemsInBlock / (double)blockSize / (double) WORK_PER_THREAD);
 
             cudaStream_t streams[2];
             cudaStreamCreate(&streams[0]);
             cudaStreamCreate(&streams[1]);
             CHECK_CUDA_ERROR();
 
-            cudaMemcpyAsync(d_memA0, h_mem, blockSizes[i] * 1024,
-                    cudaMemcpyHostToDevice, streams[0]);
-            cudaMemcpyAsync(d_memB0, h_mem, blockSizes[i] * 1024,
-                    cudaMemcpyHostToDevice, streams[0]);
+            cudaMemcpyAsync(d_memA0, h_mem, blockSizes[i] * 1024, cudaMemcpyHostToDevice, streams[0]);
+            cudaMemcpyAsync(d_memB0, h_mem, blockSizes[i] * 1024, cudaMemcpyHostToDevice, streams[0]);
             CHECK_CUDA_ERROR();
 
             triad<<<globalWorkSize, blockSize, 0, streams[0]>>>
-                    (d_memA0, d_memB0, d_memC0, scalar);
+                    (d_memA0, d_memB0, d_memC0, scalar, elemsInBlock);
             CHECK_CUDA_ERROR();
 
             if (elemsInBlock < numMaxFloats)
             {
                 // start downloading data for next block
-                cudaMemcpyAsync(d_memA1, h_mem + elemsInBlock, blockSizes[i]
-                    * 1024, cudaMemcpyHostToDevice, streams[1]);
-                cudaMemcpyAsync(d_memB1, h_mem + elemsInBlock, blockSizes[i]
-                    * 1024, cudaMemcpyHostToDevice, streams[1]);
+                cudaMemcpyAsync(d_memA1, h_mem + elemsInBlock, blockSizes[i] * 1024, cudaMemcpyHostToDevice, streams[1]);
+                cudaMemcpyAsync(d_memB1, h_mem + elemsInBlock, blockSizes[i] * 1024, cudaMemcpyHostToDevice, streams[1]);
                 CHECK_CUDA_ERROR();
             }
 
@@ -151,13 +154,11 @@ void RunBenchmark(OptionParser &op)
                 // Start copying back the answer from the last kernel
                 if (currStream)
                 {
-                    cudaMemcpyAsync(h_mem + crtIdx, d_memC0, elemsInBlock
-                        * sizeof(float), cudaMemcpyDeviceToHost, streams[0]);
+                    cudaMemcpyAsync(h_mem + crtIdx, d_memC0, elemsInBlock * sizeof(DATA_TYPE), cudaMemcpyDeviceToHost, streams[0]);
                 }
                 else
                 {
-                    cudaMemcpyAsync(h_mem + crtIdx, d_memC1, elemsInBlock
-                        * sizeof(float), cudaMemcpyDeviceToHost, streams[1]);
+                    cudaMemcpyAsync(h_mem + crtIdx, d_memC1, elemsInBlock * sizeof(DATA_TYPE), cudaMemcpyDeviceToHost, streams[1]);
                 }
                 CHECK_CUDA_ERROR();
 
@@ -169,12 +170,12 @@ void RunBenchmark(OptionParser &op)
                     if (currStream)
                     {
                         triad<<<globalWorkSize, blockSize, 0, streams[1]>>>
-                                (d_memA1, d_memB1, d_memC1, scalar);
+                                (d_memA1, d_memB1, d_memC1, scalar, elemsInBlock);
                     }
                     else
                     {
                         triad<<<globalWorkSize, blockSize, 0, streams[0]>>>
-                                (d_memA0, d_memB0, d_memC0, scalar);
+                                (d_memA0, d_memB0, d_memC0, scalar, elemsInBlock);
                     }
                     CHECK_CUDA_ERROR();
                 }
@@ -184,21 +185,13 @@ void RunBenchmark(OptionParser &op)
                     // Download data for next block
                     if (currStream)
                     {
-                        cudaMemcpyAsync(d_memA0, h_mem+crtIdx+elemsInBlock,
-                                blockSizes[i]*1024, cudaMemcpyHostToDevice,
-                                streams[0]);
-                        cudaMemcpyAsync(d_memB0, h_mem+crtIdx+elemsInBlock,
-                                blockSizes[i]*1024, cudaMemcpyHostToDevice,
-                                streams[0]);
+                        cudaMemcpyAsync(d_memA0, h_mem+crtIdx+elemsInBlock, blockSizes[i]*1024, cudaMemcpyHostToDevice, streams[0]);
+                        cudaMemcpyAsync(d_memB0, h_mem+crtIdx+elemsInBlock, blockSizes[i]*1024, cudaMemcpyHostToDevice, streams[0]);
                     }
                     else
                     {
-                        cudaMemcpyAsync(d_memA1, h_mem+crtIdx+elemsInBlock,
-                                blockSizes[i]*1024, cudaMemcpyHostToDevice,
-                                streams[1]);
-                        cudaMemcpyAsync(d_memB1, h_mem+crtIdx+elemsInBlock,
-                                blockSizes[i]*1024, cudaMemcpyHostToDevice,
-                                streams[1]);
+                        cudaMemcpyAsync(d_memA1, h_mem+crtIdx+elemsInBlock, blockSizes[i]*1024, cudaMemcpyHostToDevice, streams[1]);
+                        cudaMemcpyAsync(d_memB1, h_mem+crtIdx+elemsInBlock, blockSizes[i]*1024, cudaMemcpyHostToDevice, streams[1]);
                     }
                     CHECK_CUDA_ERROR();
                 }
