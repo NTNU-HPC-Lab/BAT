@@ -1,4 +1,11 @@
 
+// Select which precision that are used in the calculations
+#if PRECISION == 32
+    #define DATA_TYPE float
+#elif PRECISION == 64
+    #define DATA_TYPE double
+#endif
+
 // ****************************************************************************
 // Function: triad
 //
@@ -19,8 +26,29 @@
 // Modifications:
 //
 // ****************************************************************************
-extern "C" __global__ void triad(float* A, float* B, float* C, float s)
+extern "C" __global__ void triad(DATA_TYPE* A, DATA_TYPE* B, DATA_TYPE* C, DATA_TYPE s, int numberOfElements)
 {
-    int gid = threadIdx.x + (blockIdx.x * BLOCK_SIZE);
-    C[gid] = A[gid] + s*B[gid];
+    int gid = (threadIdx.x + (blockIdx.x * blockDim.x)) * WORK_PER_THREAD;
+
+    #if LOOP_UNROLL_TRIAD
+    #pragma unroll
+    #else
+    #pragma unroll(1)
+    #endif
+    for (int i = 0; i < WORK_PER_THREAD; i++) {
+        int threadId = gid + i;
+
+        // Ensure that the current thread id is less than total number of elements
+        if (threadId < numberOfElements) {
+            C[threadId] = A[threadId] + s*B[threadId];
+        }
+    }
+}
+
+extern "C" __global__ void triad_helper(float* Af, float* Bf, float* Cf, float sf, double* Ad, double* Bd, double* Cd, double sd, int numberOfElements) {
+    #if PRECISION == 32
+        triad(Af, Bf, Cf, sf, numberOfElements);
+    #elif PRECISION == 64
+        triad(Ad, Bd, Cd, sd, numberOfElements);
+    #endif
 }
