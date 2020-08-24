@@ -18,11 +18,12 @@ kernel_files = ['triad_host.cu', '../../../src/kernels/triad/triad_kernel.cu']
 
 # Add parameters to tune
 tune_params = dict()
-# Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK`
-# TODO: fix program code to be usable for all sizes:
-# TODO: [i for i in range(1, gpu.MAX_THREADS_PER_BLOCK + 1)]
-tune_params["BLOCK_SIZE"] = list(filter(lambda x: x <= max_block_size, [2**i for i in range(0, 11)]))
+tune_params["BLOCK_SIZE"] = [i for i in range(1, max_block_size + 1)] # Range: [1, ..., max_block_size]
+tune_params["WORK_PER_THREAD"] = [i for i in range(1, 11)] # Range: [1, ..., 10]
+tune_params["LOOP_UNROLL_TRIAD"] = [False, True]
+tune_params["PRECISION"] = [32, 64]
 
+# Tune kernel and correctness verify by throwing error if verification failed
 tuning_results = tune_kernel("triad_host", kernel_files, size, [], tune_params, lang="C", block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/triad/"])
 
 # Save the results as a JSON file
