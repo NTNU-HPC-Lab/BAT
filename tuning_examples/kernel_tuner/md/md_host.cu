@@ -6,159 +6,50 @@
 #include <list>
 #include <math.h>
 #include <stdlib.h>
-#include "cudacommon.h"
-#include "md.h"
-#include "OptionParser.h"
-#include "Utility.h"
+
+extern "C" {
+
+#include "md_kernel.cu"
 
 using namespace std;
 
-// Forward Declarations
-template <class T, class forceVecType, class posVecType, bool useTexture, typename texReader>
-void runTest(const string& testName, OptionParser& op);
+// Problem Constants
+static const float  cutsq        = 16.0f; // Square of cutoff distance
+static const int    maxNeighbors = 128;  // Max number of nearest neighbors
+static const double domainEdge   = 20.0; // Edge length of the cubic domain
+static const float  lj1          = 1.5;  // LJ constants
+static const float  lj2          = 2.0;
+static const float  EPSILON      = 0.1f; // Relative Error between CPU/GPU
 
-template <class T, class posVecType>
+// Select which precision that are used in the calculations
+// And define the replacements for the template inputs
+#if PRECISION == 32
+    #define T float
+    #define forceVecType float3
+    #define posVecType float4
+    #define texReader texReader_sp
+#elif PRECISION == 64
+    #define T double
+    #define forceVecType double3
+    #define posVecType double4
+    #define texReader texReader_dp
+#endif
+
+#define useTexture TEXTURE_MEMORY
+
+// Forward Declarations
+float runTest(const string& testName);
+
 inline T distance(const posVecType* position, const int i, const int j);
 
-template <class T>
 inline void insertInOrder(std::list<T>& currDist, std::list<int>& currList,
         const int j, const T distIJ, const int maxNeighbors);
 
-template <class T, class posVecType>
 inline int buildNeighborList(const int nAtom, const posVecType* position, int* neighborList);
 
-template <class T>
 inline int populateNeighborList(std::list<T>& currDist,
         std::list<int>& currList, const int j, const int nAtom,
         int* neighborList);
-
-// Texture caches for position info
-texture<float4, 1, cudaReadModeElementType> posTexture;
-texture<int4, 1, cudaReadModeElementType> posTexture_dp;
-
-struct texReader_sp {
-   __device__ __forceinline__ float4 operator()(int idx) const
-   {
-       return tex1Dfetch(posTexture, idx);
-   }
-};
-
-// CUDA doesn't support double4 textures, so we have to do some conversion
-// here, resulting in a bit of overhead, but it's still faster than
-// an uncoalesced read
-struct texReader_dp {
-   __device__ __forceinline__ double4 operator()(int idx) const
-   {
-#if (__CUDA_ARCH__ < 130)
-       // Devices before arch 130 don't support DP, and having the
-       // __hiloint2double() intrinsic will cause compilation to fail.
-       // This return statement added as a workaround -- it will compile,
-       // but since the arch doesn't support DP, it will never be called
-       return make_double4(0., 0., 0., 0.);
-#else
-       int4 v = tex1Dfetch(posTexture_dp, idx*2);
-       double2 a = make_double2(__hiloint2double(v.y, v.x),
-                                __hiloint2double(v.w, v.z));
-
-       v = tex1Dfetch(posTexture_dp, idx*2 + 1);
-       double2 b = make_double2(__hiloint2double(v.y, v.x),
-                                __hiloint2double(v.w, v.z));
-
-       return make_double4(a.x, a.y, b.x, b.y);
-#endif
-   }
-};
-
-// ****************************************************************************
-// Function: compute_lj_force
-//
-// Purpose:
-//   GPU kernel to calculate Lennard Jones force
-//
-// Arguments:
-//      force3:     array to store the calculated forces
-//      position:   positions of atoms
-//      neighCount: number of neighbors for each atom to consider
-//      neighList:  atom neighbor list
-//      cutsq:      cutoff distance squared
-//      lj1, lj2:   LJ force constants
-//      inum:       total number of atoms
-//
-// Returns: nothing
-//
-// Programmer: Kyle Spafford
-// Creation: July 26, 2010
-//
-// Modifications:
-//
-// ****************************************************************************
-template <class T, class forceVecType, class posVecType, bool useTexture, typename texReader>
-__global__ void compute_lj_force(forceVecType* __restrict__ force3,
-                                 const posVecType* __restrict__ position,
-                                 const int neighCount,
-                                 const int* __restrict__ neighList,
-                                 const T cutsq,
-                                 const T lj1,
-                                 const T lj2,
-                                 const int inum)
-{
-    // Global ID - "WORK_PER_THREAD" atoms per thread
-    int idx = (blockIdx.x*blockDim.x + threadIdx.x) * WORK_PER_THREAD;
-
-    for (int i = 0; i < WORK_PER_THREAD; i++) {
-        int threadId = idx + i;
-
-        // Ensure that the current thread id is less than total number of elements
-        if (threadId < inum) {
-            // Position of this thread's atom
-            posVecType ipos = position[threadId];
-        
-            // Force accumulator
-            forceVecType f = {0.0f, 0.0f, 0.0f};
-        
-            texReader positionTexReader;
-        
-            int j = 0;
-            while (j < neighCount)
-            {
-                int jidx = neighList[j*inum + threadId];
-                posVecType jpos;
-                if (useTexture)
-                {
-                    // Use texture mem as a cache
-                    jpos = positionTexReader(jidx);
-                }
-                else
-                {
-                    jpos = position[jidx];
-                }
-        
-                // Calculate distance
-                T delx = ipos.x - jpos.x;
-                T dely = ipos.y - jpos.y;
-                T delz = ipos.z - jpos.z;
-                T r2inv = delx*delx + dely*dely + delz*delz;
-        
-                // If distance is less than cutoff, calculate force
-                // and add to accumulator
-                if (r2inv < cutsq)
-                {
-                    r2inv = 1.0f/r2inv;
-                    T r6inv = r2inv * r2inv * r2inv;
-                    T force = r2inv*r6inv*(lj1*r6inv - lj2);
-        
-                    f.x += delx * force;
-                    f.y += dely * force;
-                    f.z += delz * force;
-                }
-                j++;
-            }
-        
-            // store the results
-            force3[threadId] = f;
-        }
-    }
-}
 
 // ****************************************************************************
 // Function: checkResults
@@ -179,7 +70,6 @@ __global__ void compute_lj_force(forceVecType* __restrict__ force3,
 // Modifications:
 //
 // ****************************************************************************
-template <class T, class forceVecType, class posVecType>
 bool checkResults(forceVecType* d_force, posVecType *position, int *neighList, int nAtom)
 {
     for (int i = 0; i < nAtom; i++)
@@ -230,31 +120,8 @@ bool checkResults(forceVecType* d_force, posVecType *position, int *neighList, i
     return true;
 }
 
-
 // ********************************************************
-// Function: addBenchmarkSpecOptions
-//
-// Purpose:
-//   Add benchmark specific options parsing
-//
-// Arguments:
-//   op: the options parser / parameter database
-//
-// Returns:  nothing
-//
-// Programmer: Kyle Spafford
-// Creation: August 13, 2009
-//
-// Modifications:
-//
-// ********************************************************
-void
-addBenchmarkSpecOptions(OptionParser &op)
-{
-    op.addOption("iterations", OPT_INT, "1", "specify MD kernel iterations", 'r');
-}
-
-// ********************************************************
+// Originated from the SHOC benchmark
 // Function: RunBenchmark
 //
 // Purpose:
@@ -272,24 +139,23 @@ addBenchmarkSpecOptions(OptionParser &op)
 // Modifications:
 //
 // ********************************************************
-void
-RunBenchmark(OptionParser &op)
-{
+
+// Return the time used in float to help choosing the best configuration
+float md_host() {
     #if PRECISION == 32
         cout << "Running single precision test" << endl;
-        runTest<float, float3, float4, TEXTURE_MEMORY, texReader_sp>("MD-LJ", op);
+        return runTest("MD-LJ");
     #elif PRECISION == 64
         cout << "Running double precision test" << endl;
-        runTest<double, double3, double4, TEXTURE_MEMORY, texReader_dp>("MD-LJ-DP", op);
+        return runTest("MD-LJ-DP");
     #endif
 }
 
-template <class T, class forceVecType, class posVecType, bool useTexture, typename texReader>
-void runTest(const string& testName, OptionParser& op)
+float runTest(const string& testName)
 {
     // Problem Parameters
     const int probSizes[4] = { 12288, 24576, 36864, 73728 };
-    int sizeClass = op.getOptionInt("size");
+    int sizeClass = 1; // TODO: change this?
     assert(sizeClass >= 0 && sizeClass < 5);
     int nAtom = probSizes[sizeClass - 1];
 
@@ -298,19 +164,19 @@ void runTest(const string& testName, OptionParser& op)
     forceVecType* force;
     int* neighborList;
 
-    CUDA_SAFE_CALL(cudaMallocHost((void**)&position, nAtom*sizeof(posVecType)));
-    CUDA_SAFE_CALL(cudaMallocHost((void**)&force,    nAtom*sizeof(forceVecType)));
-    CUDA_SAFE_CALL(cudaMallocHost((void**)&neighborList, nAtom*maxNeighbors*sizeof(int)));
+    cudaMallocHost((void**)&position, nAtom*sizeof(posVecType));
+    cudaMallocHost((void**)&force,    nAtom*sizeof(forceVecType));
+    cudaMallocHost((void**)&neighborList, nAtom*maxNeighbors*sizeof(int));
 
     // Allocate device memory for position and force
     forceVecType* d_force;
     posVecType*   d_position;
-    CUDA_SAFE_CALL(cudaMalloc((void**)&d_force,    nAtom*sizeof(forceVecType)));
-    CUDA_SAFE_CALL(cudaMalloc((void**)&d_position, nAtom*sizeof(posVecType)));
+    cudaMalloc((void**)&d_force,    nAtom*sizeof(forceVecType));
+    cudaMalloc((void**)&d_position, nAtom*sizeof(posVecType));
 
     // Allocate device memory for neighbor list
     int* d_neighborList;
-    CUDA_SAFE_CALL(cudaMalloc((void**)&d_neighborList, nAtom*maxNeighbors*sizeof(int)));
+    cudaMalloc((void**)&d_neighborList, nAtom*maxNeighbors*sizeof(int));
 
     cout << "Initializing test problem (this can take several minutes for large problems)" << endl;
 
@@ -332,17 +198,17 @@ void runTest(const string& testName, OptionParser& op)
         cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float4>();
 
         // Bind a 1D texture to the position array
-        CUDA_SAFE_CALL(cudaBindTexture(0, posTexture, d_position, channelDesc, nAtom*sizeof(float4)));
+        cudaBindTexture(0, posTexture, d_position, channelDesc, nAtom*sizeof(float4));
 
         cudaChannelFormatDesc channelDesc2 = cudaCreateChannelDesc<int4>();
 
         // Bind a 1D texture to the position array
-        CUDA_SAFE_CALL(cudaBindTexture(0, posTexture_dp, d_position, channelDesc2, nAtom*sizeof(double4)));
+        cudaBindTexture(0, posTexture_dp, d_position, channelDesc2, nAtom*sizeof(double4));
     }
 
     // Keep track of how many atoms are within the cutoff distance to
     // accurately calculate FLOPS later
-    int totalPairs = buildNeighborList<T, posVecType>(nAtom, position, neighborList);
+    int totalPairs = buildNeighborList(nAtom, position, neighborList);
 
     cout << "Finished.\n";
     cout << totalPairs << " of " << nAtom*maxNeighbors << " pairs within cutoff distance = " <<
@@ -355,11 +221,11 @@ void runTest(const string& testName, OptionParser& op)
 
     cudaEventRecord(inputTransfer_start, 0);
     // Copy neighbor list data to GPU
-    CUDA_SAFE_CALL(cudaMemcpy(d_neighborList, neighborList, maxNeighbors*nAtom*sizeof(int), cudaMemcpyHostToDevice));
+    cudaMemcpy(d_neighborList, neighborList, maxNeighbors*nAtom*sizeof(int), cudaMemcpyHostToDevice);
     // Copy position to GPU
-    CUDA_SAFE_CALL(cudaMemcpy(d_position, position, nAtom*sizeof(posVecType), cudaMemcpyHostToDevice));
+    cudaMemcpy(d_position, position, nAtom*sizeof(posVecType), cudaMemcpyHostToDevice);
     cudaEventRecord(inputTransfer_stop, 0);
-    CUDA_SAFE_CALL(cudaEventSynchronize(inputTransfer_stop));
+    cudaEventSynchronize(inputTransfer_stop);
 
     // Get elapsed time
     float inputTransfer_time = 0.0f;
@@ -370,76 +236,61 @@ void runTest(const string& testName, OptionParser& op)
     int gridSize  = ceil((double)nAtom / (double)blockSize / (double) WORK_PER_THREAD);
 
     // Warm up the kernel and check correctness
-    compute_lj_force<T, forceVecType, posVecType, useTexture, texReader>
-                    <<<gridSize, blockSize>>>
+    compute_lj_force<<<gridSize, blockSize>>>
                     (d_force, d_position, maxNeighbors, d_neighborList, cutsq, lj1, lj2, nAtom);
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    cudaDeviceSynchronize();
 
     // Copy back forces
-    cudaEvent_t outputTransfer_start, outputTransfer_stop;
-    cudaEventCreate(&outputTransfer_start);
-    cudaEventCreate(&outputTransfer_stop);
-
-    cudaEventRecord(outputTransfer_start, 0);
-    CUDA_SAFE_CALL(cudaMemcpy(force, d_force, nAtom*sizeof(forceVecType), cudaMemcpyDeviceToHost));
-    cudaEventRecord(outputTransfer_stop, 0);
-    CUDA_SAFE_CALL(cudaEventSynchronize(outputTransfer_stop));
-
-    // Get elapsed time
-    float outputTransfer_time = 0.0f;
-    cudaEventElapsedTime(&outputTransfer_time, outputTransfer_start, outputTransfer_stop);
-    outputTransfer_time *= 1.e-3;
+    cudaMemcpy(force, d_force, nAtom*sizeof(forceVecType), cudaMemcpyDeviceToHost);
 
     // If results are incorrect, skip the performance tests
     cout << "Performing Correctness Check (can take several minutes)\n";
-    if (!checkResults<T, forceVecType, posVecType>(force, position, neighborList, nAtom))
+    if (!checkResults(force, position, neighborList, nAtom))
     {
-        return;
+        throw "Correctness verification failed";
     }
 
-    // Begin performance tests
-    cudaEvent_t kernel_start, kernel_stop;
-    cudaEventCreate(&kernel_start);
-    cudaEventCreate(&kernel_stop);
-    int passes = op.getOptionInt("passes");
-    int iter   = op.getOptionInt("iterations");
+    // For measuring the time
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float totalElapsedTime = 0.0;
 
+    int passes = 10;
+    int iter   = 1;
+    
     for (int i = 0; i < passes; i++)
     {
+        // Start the timing
+        cudaEventRecord(start, 0);
+
         // Other kernels will be involved in true parallel versions
-        cudaEventRecord(kernel_start, 0);
         for (int j = 0; j < iter; j++)
         {
-            compute_lj_force<T, forceVecType, posVecType, useTexture, texReader>
-                <<<gridSize, blockSize>>>
+            compute_lj_force<<<gridSize, blockSize>>>
                 (d_force, d_position, maxNeighbors, d_neighborList, cutsq, lj1, lj2, nAtom);
         }
-        cudaEventRecord(kernel_stop, 0);
-        CUDA_SAFE_CALL(cudaEventSynchronize(kernel_stop));
-
-        // get elapsed time
-        float kernel_time = 0.0f;
-        cudaEventElapsedTime(&kernel_time, kernel_start, kernel_stop);
-        kernel_time /= (float)iter;
-        kernel_time *= 1.e-3; // Convert to seconds
+        
+        // Stop the events and save elapsed time
+        cudaEventRecord(stop, 0);
+        cudaEventSynchronize(stop);
+        float elapsedTime;
+        cudaEventElapsedTime(&elapsedTime, start, stop);
+        totalElapsedTime += elapsedTime;
     }
 
     // Clean up
     // Host
-    CUDA_SAFE_CALL(cudaFreeHost(position));
-    CUDA_SAFE_CALL(cudaFreeHost(force));
-    CUDA_SAFE_CALL(cudaFreeHost(neighborList));
+    cudaFreeHost(position);
+    cudaFreeHost(force);
+    cudaFreeHost(neighborList);
     // Device
-    CUDA_SAFE_CALL(cudaUnbindTexture(posTexture));
-    CUDA_SAFE_CALL(cudaFree(d_position));
-    CUDA_SAFE_CALL(cudaFree(d_force));
-    CUDA_SAFE_CALL(cudaFree(d_neighborList));
-    CUDA_SAFE_CALL(cudaEventDestroy(inputTransfer_start));
-    CUDA_SAFE_CALL(cudaEventDestroy(inputTransfer_stop));
-    CUDA_SAFE_CALL(cudaEventDestroy(outputTransfer_start));
-    CUDA_SAFE_CALL(cudaEventDestroy(outputTransfer_stop));
-    CUDA_SAFE_CALL(cudaEventDestroy(kernel_start));
-    CUDA_SAFE_CALL(cudaEventDestroy(kernel_stop));
+    cudaUnbindTexture(posTexture);
+    cudaFree(d_position);
+    cudaFree(d_force);
+    cudaFree(d_neighborList);
+
+    return totalElapsedTime;
 }
 
 // ********************************************************
@@ -460,7 +311,6 @@ void runTest(const string& testName, OptionParser& op)
 // Modifications:
 //
 // ********************************************************
-template <class T, class posVecType>
 inline T distance(const posVecType* position, const int i, const int j)
 {
     posVecType ipos = position[i];
@@ -495,7 +345,6 @@ inline T distance(const posVecType* position, const int i, const int j)
 // Modifications:
 //
 // ********************************************************
-template <class T>
 inline void insertInOrder(list<T>& currDist, list<int>& currList, const int j, const T distIJ, const int maxNeighbors)
 {
 
@@ -550,7 +399,6 @@ inline void insertInOrder(list<T>& currDist, list<int>& currList, const int j, c
 //   percentage so they don't give up.
 //
 // ********************************************************
-template <class T, class posVecType>
 inline int buildNeighborList(const int nAtom, const posVecType* position, int* neighborList)
 {
     int totalPairs = 0;
@@ -573,8 +421,8 @@ inline int buildNeighborList(const int nAtom, const posVecType* position, int* n
             if (i == j) continue; // An atom cannot be its own neighbor
 
             // Calculate distance and insert in order into the current lists
-            T distIJ = distance<T, posVecType>(position, i, j);
-            insertInOrder<T>(currDist, currList, j, distIJ, maxNeighbors);
+            T distIJ = distance(position, i, j);
+            insertInOrder(currDist, currList, j, distIJ, maxNeighbors);
         }
         // We should now have the closest maxNeighbors neighbors and their
         // distances to atom i. Populate the neighbor list data structure
@@ -582,7 +430,7 @@ inline int buildNeighborList(const int nAtom, const posVecType* position, int* n
         // The populate method returns how many of the maxNeighbors closest
         // neighbors are within the cutoff distance.  This will be used to
         // calculate GFLOPS later.
-        totalPairs += populateNeighborList<T>(currDist, currList, i, nAtom, neighborList);
+        totalPairs += populateNeighborList(currDist, currList, i, nAtom, neighborList);
     }
     return totalPairs;
 }
@@ -611,7 +459,6 @@ inline int buildNeighborList(const int nAtom, const posVecType* position, int* n
 // Modifications:
 //
 // ********************************************************
-template <class T>
 inline int populateNeighborList(list<T>& currDist,
         list<int>& currList, const int i, const int nAtom,
         int* neighborList)
@@ -635,4 +482,5 @@ inline int populateNeighborList(list<T>& currDist,
         distanceIter++;
     }
     return validPairs;
+}
 }
