@@ -214,23 +214,10 @@ float runTest(const string& testName)
     cout << totalPairs << " of " << nAtom*maxNeighbors << " pairs within cutoff distance = " <<
             100.0 * ((double)totalPairs / (nAtom*maxNeighbors)) << " %" << endl;
 
-    // Time the transfer of input data to the GPU
-    cudaEvent_t inputTransfer_start, inputTransfer_stop;
-    cudaEventCreate(&inputTransfer_start);
-    cudaEventCreate(&inputTransfer_stop);
-
-    cudaEventRecord(inputTransfer_start, 0);
     // Copy neighbor list data to GPU
     cudaMemcpy(d_neighborList, neighborList, maxNeighbors*nAtom*sizeof(int), cudaMemcpyHostToDevice);
     // Copy position to GPU
     cudaMemcpy(d_position, position, nAtom*sizeof(posVecType), cudaMemcpyHostToDevice);
-    cudaEventRecord(inputTransfer_stop, 0);
-    cudaEventSynchronize(inputTransfer_stop);
-
-    // Get elapsed time
-    float inputTransfer_time = 0.0f;
-    cudaEventElapsedTime(&inputTransfer_time, inputTransfer_start, inputTransfer_stop);
-    inputTransfer_time *= 1.e-3;
 
     int blockSize = BLOCK_SIZE;
     int gridSize  = ceil((double)nAtom / (double)blockSize / (double) WORK_PER_THREAD);
