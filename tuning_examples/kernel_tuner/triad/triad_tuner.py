@@ -20,7 +20,7 @@ kernel_files = ['triad_host.cu', '../../../src/kernels/triad/triad_kernel.cu']
 tune_params = dict()
 tune_params["BLOCK_SIZE"] = [i for i in range(1, max_block_size + 1)] # Range: [1, ..., max_block_size]
 tune_params["WORK_PER_THREAD"] = [i for i in range(1, 11)] # Range: [1, ..., 10]
-tune_params["LOOP_UNROLL_TRIAD"] = [False, True]
+tune_params["LOOP_UNROLL_TRIAD"] = [0, 1]
 tune_params["PRECISION"] = [32, 64]
 
 # Tune kernel and correctness verify by throwing error if verification failed
