@@ -201,5 +201,8 @@ results.csv
 *results.csv
 temp_*
 
+# Ignore directory with results from benchmarks
+/results
+
 # Ignore VSCode directory
 .vscode
