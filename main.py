@@ -62,9 +62,9 @@ def retrieve_parameter_results(benchmark_dir, results_file_name):
 
     return parameter_results
 
-def copy_benchmark_result_files(benchmark_dir):
+def copy_benchmark_result_files(auto_tuner_name, benchmark_dir):
     # Copy all JSON and CSV files to results directory for this benchmark
-    current_results_dir = os.path.join(results_dir, os.path.basename(benchmark_dir))
+    current_results_dir = os.path.join(results_dir, auto_tuner_name, os.path.basename(benchmark_dir))
 
     # Create the results directory
     os.makedirs(current_results_dir, exist_ok=True)
@@ -172,7 +172,7 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                                 print(f"\t* {parameter}: \033[93m{value}\033[0m")
 
                     # Copy all JSON and CSV files to benchmark results directory
-                    copy_benchmark_result_files(current_benchmark_dir)
+                    copy_benchmark_result_files(auto_tuner_name, current_benchmark_dir)
 
     if found_benchmarks:
         print(f"{print_helpers['success']} Finished running all benchmarks")
