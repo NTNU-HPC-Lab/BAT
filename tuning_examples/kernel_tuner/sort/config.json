@@ -1,3 +1,6 @@
 {
-    "run": "python3 sort_tuner.py"
+    "run": "python3 sort_tuner.py",
+    "results": [
+        "sort-results.json"
+    ]
 }
