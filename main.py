@@ -4,9 +4,14 @@ import os
 import subprocess
 import json
 import argparse
+import time
+import shutil
+import glob
 
 project_dir = os.path.dirname(os.path.abspath(__file__))
 benchmark_dir = os.path.join(project_dir, "tuning_examples")
+benchmark_start_time = str(int(time.time()))
+results_dir = os.path.join(project_dir, "results", benchmark_start_time)
 
 print_helpers = {
     "info": "\033[93m[i]\033[0m",
@@ -56,6 +61,21 @@ def retrieve_parameter_results(benchmark_dir, results_file_name):
         return None
 
     return parameter_results
+
+def copy_benchmark_result_files(benchmark_dir):
+    # Copy all JSON and CSV files to results directory for this benchmark
+    current_results_dir = os.path.join(results_dir, os.path.basename(benchmark_dir))
+
+    # Create the results directory
+    os.makedirs(current_results_dir, exist_ok=True)
+
+    current_json_results = [f for f in os.listdir(benchmark_dir) if os.path.isfile(os.path.join(benchmark_dir, f)) and f.endswith(".json") and f != "config.json"]
+    current_csv_results = [f for f in os.listdir(benchmark_dir) if os.path.isfile(os.path.join(benchmark_dir, f)) and f.endswith(".csv")]
+
+    for file in current_json_results + current_csv_results:
+        shutil.copy2(os.path.join(benchmark_dir, os.path.basename(file)), current_results_dir)
+    
+    print(f"{print_helpers['success']} Copied benchmark results to: {current_results_dir}")
 
 # By default benchmark=None and auto_tuner=None. Either of them is required to be specified in order to run the benchmark
 def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_directory=benchmark_dir):
@@ -151,7 +171,8 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                             for parameter, value in parsed_parameters.items():
                                 print(f"\t* {parameter}: \033[93m{value}\033[0m")
 
-                    # TODO: Copy all JSON and CSV files to benchmark results directory
+                    # Copy all JSON and CSV files to benchmark results directory
+                    copy_benchmark_result_files(current_benchmark_dir)
 
     if found_benchmarks:
         print(f"{print_helpers['success']} Finished running all benchmarks")
