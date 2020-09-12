@@ -159,7 +159,7 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                                 continue
                             
                             # Read current results file and parse results
-                            print(f"{print_helpers['info']} Best parameters from '{results_file_name.split('.json')[0]}':")
+                            print(f"{print_helpers['info']} Best parameters from `{results_file_name.split('.json')[0]}`:")
                             parsed_parameters = retrieve_parameter_results(current_benchmark_dir, results_file_name)
 
                             # Check if any results found
