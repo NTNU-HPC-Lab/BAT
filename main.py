@@ -40,6 +40,23 @@ def retrieve_benchmark_config(benchmark_dir):
 
     return config_data
 
+def retrieve_parameter_results(benchmark_dir, results_file_name):
+    results_file = os.path.join(benchmark_dir, results_file_name)
+
+    # Check if the parameter results file exists in the directory
+    if not os.path.isfile(results_file):
+        return None
+
+    # Parse the results JSON file
+    with open(results_file, 'r') as f:
+        parameter_results = json.load(f)
+
+    # Check if there are no parameters in the results file
+    if len(parameter_results.items()) == 0:
+        return None
+
+    return parameter_results
+
 # By default benchmark=None and auto_tuner=None. Either of them is required to be specified in order to run the benchmark
 def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_directory=benchmark_dir):
     if not benchmark_name and not auto_tuner:
@@ -113,7 +130,28 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
                     print(f"{print_helpers['error']} Benchmark `{current_benchmark}` failed for `{os.path.basename(directory)}`")
                 else:
                     print(f"{print_helpers['success']} Finished benchmark `{current_benchmark}` for `{os.path.basename(directory)}`")
-                    # TODO: parse results
+                    
+                    # Parse created JSONs with results and print them
+                    if "results" in benchmark_config and isinstance(benchmark_config["results"], list) and len(benchmark_config["results"]) > 0:
+                        for results_file_name in benchmark_config["results"]:
+                            # Just continue if file name is empty or isn't a JSON file
+                            if results_file_name == "" and ".json" not in results_file_name:
+                                continue
+                            
+                            # Read current results file and parse results
+                            print(f"{print_helpers['info']} Best parameters from '{results_file_name.split('.json')[0]}':")
+                            parsed_parameters = retrieve_parameter_results(current_benchmark_dir, results_file_name)
+
+                            # Check if any results found
+                            if parsed_parameters is None:
+                                print(f"{print_helpers['error']} No parameters found in {results_file_name}")
+                                continue
+
+                            # Print each parameter line-by-line
+                            for parameter, value in parsed_parameters.items():
+                                print(f"\t* {parameter}: \033[93m{value}\033[0m")
+
+                    # TODO: Copy all JSON and CSV files to benchmark results directory
 
     if found_benchmarks:
         print(f"{print_helpers['success']} Finished running all benchmarks")
