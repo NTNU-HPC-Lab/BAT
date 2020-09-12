@@ -3,5 +3,8 @@
         "make clean",
         "make"
     ],
-    "run": "./triad"
+    "run": "./triad",
+    "results": [
+        "best-triad-results.json"
+    ]
 }

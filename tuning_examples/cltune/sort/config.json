@@ -3,5 +3,10 @@
         "make clean",
         "make"
     ],
-    "run": "./sort"
+    "run": "./sort",
+    "results": [
+        "best-scan-results.json",
+        "best-radixSortBlocks-results.json",
+        "best-vectorAddUniform4-results.json"
+    ]
 }

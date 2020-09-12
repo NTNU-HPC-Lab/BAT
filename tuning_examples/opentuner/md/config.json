@@ -3,5 +3,8 @@
         "make clean",
         "make dependencies"
     ],
-    "run": "python3 md_tuner.py --no-dups --stop-after=30"
+    "run": "python3 md_tuner.py --no-dups --stop-after=30",
+    "results": [
+        "results.json"
+    ]
 }
