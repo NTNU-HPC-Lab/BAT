@@ -89,8 +89,8 @@ int main(int argc, char* argv[]) {
     // Initialize start values for input
     for (size_t i = 0; i < halfNumFloats; i++) {
         double currentRandomNumber = drand48() * 10.0;
-        Af[i] = Bf[i] = Cf[i] = Af[halfNumFloats + i] = Bf[halfNumFloats + i] = Cf[halfNumFloats + i] = (float) currentRandomNumber;
-        Ad[i] = Bd[i] = Cd[i] = Ad[halfNumFloats + i] = Bd[halfNumFloats + i] = Cd[halfNumFloats + i] = currentRandomNumber;
+        Af[i] = Bf[i] = Af[halfNumFloats + i] = Bf[halfNumFloats + i] = (float) currentRandomNumber;
+        Ad[i] = Bd[i] = Ad[halfNumFloats + i] = Bd[halfNumFloats + i] = currentRandomNumber;
     }
 
     // Add arguments for kernel
