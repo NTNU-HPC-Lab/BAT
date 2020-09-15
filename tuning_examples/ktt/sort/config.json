@@ -3,5 +3,8 @@
         "make clean",
         "make"
     ],
-    "run": "./sort"
+    "run": "./sort",
+    "results": [
+        "best-sort-results.json"
+    ]
 }

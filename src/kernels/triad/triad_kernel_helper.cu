@@ -44,3 +44,11 @@ extern "C" __global__ void triad(DATA_TYPE* A, DATA_TYPE* B, DATA_TYPE* C, DATA_
         }
     }
 }
+
+extern "C" __global__ void triad_helper(float* Af, float* Bf, float* Cf, float sf, double* Ad, double* Bd, double* Cd, double sd, int numberOfElements) {
+    #if PRECISION == 32
+        triad(Af, Bf, Cf, sf, numberOfElements);
+    #elif PRECISION == 64
+        triad(Ad, Bd, Cd, sd, numberOfElements);
+    #endif
+}
