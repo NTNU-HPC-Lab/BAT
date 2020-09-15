@@ -133,6 +133,7 @@ bool verifyResults(const floatType *cpuResults, const floatType *gpuResults,
 //            cout << "Mismatch at i: "<< i << " ref: " << cpuResults[i] <<
 //                " dev: " << gpuResults[i] << endl;
             passed = false;
+            cerr << "Error: incorrect computed result." << endl;
         }
     }
     if (pass != -1)

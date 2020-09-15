@@ -6,6 +6,7 @@
 #include <fstream>
 #include "OptionParser.h"
 #include "PMSMemMgmt.h"
+#include "string.h"
 
 
 // Constants

@@ -59,7 +59,7 @@ __global__ void BFS_kernel_warp(
     int *flag)
 {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
-    int CHUNK_SZ = CHUNK_SIZE;
+    int CHUNK_SZ = CHUNK_FACTOR*32;
     int W_OFF = tid % W_SZ;
     int W_ID = tid / W_SZ;
     int v1= W_ID * CHUNK_SZ;

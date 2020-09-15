@@ -22,16 +22,6 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
                         fpType * vec,
                         const int dim, fpType * __restrict__ out);
 
-// Texture Readers
-texture<float, 1> vecTex;    
-
-struct texReader {
-    __device__ __forceinline__ float operator()(const int idx) const
-    {
-        return tex1D(vecTex, idx);
-    }
-};
-
 
 /**
  * Helper function for tuners that can not use templated kernels directly
@@ -80,8 +70,6 @@ spmv_kernel(float * valSP_csr,
             #endif
         #else
         // Ellpackr
-    //    spmv_ellpackr_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, vecSP, dim, outSP);
-
            spmv_ellpackr_kernel<float, texReader>(valSP_ellpackr, cols_ellpackr, rowLengths, vecSP, dim, outSP);
         #endif
     #else 
@@ -146,7 +134,6 @@ spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int dim, fpType * __restrict__ out)
 {
     int myRow = blockIdx.x * blockDim.x + threadIdx.x;
-    //texReader vecTexReader;
 
     if (myRow < dim)
     {
@@ -157,7 +144,7 @@ spmv_csr_scalar_kernel(const fpType * __restrict__ val,
         for (int j = start; j < end; j++)
         {
             int col = cols[j];
-            t += val[j] * vecSP[col];//vecTexReader(col);
+            t += val[j] * vecSP[col];
         }
         out[myRow] = t;
     }
@@ -204,8 +191,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
     int warpsPerBlock = blockDim.x / warpSize;
     // One row per warp
     int myRow = (blockIdx.x * warpsPerBlock) + (t / warpSize);
-    // Texture reader for the dense vector
-    //texReader vecTexReader;
+
     __shared__ volatile fpType partialSums[128];
 
     if (myRow < dim) {
@@ -215,7 +201,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
         {
             int col = cols[j];
-            mySum += val[j] * vec[col]; //vecTexReader(col);
+            mySum += val[j] * vec[col];
         }
         partialSums[t] = mySum;
 
@@ -268,7 +254,6 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
                      const int dim, fpType * __restrict__ out)
 {
     int t = blockIdx.x * blockDim.x + threadIdx.x;
-    //texReader vecTexReader;
 
     if (t < dim)
     {
@@ -278,7 +263,7 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
         for (int i = 0; i < max; i++)
         {
             int ind = i*dim+t;
-            result += val[ind] * vec[cols[ind]];//vecTexReader(cols[ind]);
+            result += val[ind] * vec[cols[ind]];
         }
         out[t] = result;
     }

@@ -28,7 +28,7 @@ class MD5HashTuner(MeasurementInterface):
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_3', [0, 1]))
         manipulator.add_parameter(EnumParameter('INLINE_1', [0, 1]))
         manipulator.add_parameter(EnumParameter('INLINE_2', [0, 1]))
-        manipulator.add_parameter(EnumParameter('WORK_PER_THREAD_FACTOR', [1, 2, 3, 4]))
+        manipulator.add_parameter(EnumParameter('WORK_PER_THREAD_FACTOR', [1, 2, 3, 4, 5]))
 
         return manipulator
 

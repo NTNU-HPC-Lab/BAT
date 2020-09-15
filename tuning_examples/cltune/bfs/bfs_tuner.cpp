@@ -3,6 +3,8 @@
 #include <iterator>
 #include <math.h>
 #include <limits.h>
+#include <cuda_runtime_api.h>
+#include <cuda.h>
 #include "cltune.h" // CLTune API
 #include "cltune_json_saver.hpp" // Custom JSON CLTune results saver
 #include "Graph.h"
@@ -44,10 +46,6 @@ int main(int argc, char* argv[]) {
     // Set the tuning kernel to run on device id 0 and platform 0
     cltune::Tuner auto_tuner(0, 0);
 
-
-    //unsigned int **edge_ptr1 = G->GetEdgeOffsetsPtr();
-    //unsigned int **edge_ptr2 = G->GetEdgeListPtr();
-
     unsigned int numVertsGraph = problemSizes[inputProblemSize-1];
     int avg_degree = 2;
 
@@ -59,7 +57,7 @@ int main(int argc, char* argv[]) {
     unsigned int *edgeArrayAux=G->GetEdgeList();
     unsigned int adj_list_length=G->GetAdjacencyListLength();
     unsigned int numVerts = G->GetNumVertices();
-    unsigned int numEdges = G->GetNumEdges();
+    //unsigned int numEdges = G->GetNumEdges();
     vector<int> edgeArrayVector(edgeArray, edgeArray + numVerts+1);
     vector<int> edgeArrayAuxVector(edgeArrayAux, edgeArrayAux + adj_list_length);
 
@@ -71,9 +69,13 @@ int main(int argc, char* argv[]) {
     vector<int> flag = {0};
     int numVerts2 = numVerts;
 
+    // Get the maximum threads per block 
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, 0);
+    unsigned int maxThreads = deviceProp.maxThreadsPerBlock;
+    // Define a vector of block sizes from 1 to maximum threads per block
     vector<long unsigned int> block_sizes = {};
-    
-    for(int i = 1; i < (1024+1); i++) {
+    for(int i = 1; i < (maxThreads+1); i++) {
         block_sizes.push_back(i);
     }
 
@@ -94,7 +96,6 @@ int main(int argc, char* argv[]) {
     // Set reference kernel for correctness verification and compare to the computed result
     auto_tuner.SetReference({referenceKernelFile}, kernelName, {numVerts}, {1024});
 
-    
     // Add arguments for kernel
     auto_tuner.AddArgumentOutput(costArray);
     auto_tuner.AddArgumentInput(edgeArrayVector);

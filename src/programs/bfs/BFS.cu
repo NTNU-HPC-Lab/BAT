@@ -213,10 +213,8 @@ void RunTest(OptionParser &op, Graph *G)
     cudaGetDeviceProperties(&devProp,device);
 
     // Set the kernel configuration
-    int chunkFactor = CHUNK_SIZE/32;
     int numThreads = BLOCK_SIZE;
-    int numBlocks = 0;
-    numBlocks = (int)ceil((double)numVerts/(double)numThreads/(double)chunkFactor);
+    int numBlocks = (int)ceil((double)numVerts/(double)numThreads/(double)CHUNK_FACTOR);
     
     if (numBlocks > devProp.maxGridSize[0]) {
         std::cout << "Max number of blocks exceeded";
