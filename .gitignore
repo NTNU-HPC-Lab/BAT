@@ -196,6 +196,7 @@ tuning_examples/cltune/sort/sort
 tuning_examples/cltune/triad/triad
 tuning_examples/cltune/bfs/bfs
 tuning_examples/cltune/spmv/spmv
+tuning_examples/cltune/md5hash/md5hash
 results.csv
 *results.json
 *results.csv
