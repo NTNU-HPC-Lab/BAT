@@ -65,6 +65,9 @@ int main(int argc, char* argv[]) {
     auto_tuner.MulLocalSize(kernel_id, {"BLOCK_SIZE"});
 
     auto_tuner.AddParameter(kernel_id, "WORK_PER_THREAD", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    // To set the different grid sizes (global size) divided by the amount of work per thread
+    auto_tuner.DivGlobalSize(kernel_id, {"WORK_PER_THREAD"});
+
     auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_TRIAD", {0, 1});
     auto_tuner.AddParameter(kernel_id, "PRECISION", {32, 64});
 
