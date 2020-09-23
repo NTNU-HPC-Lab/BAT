@@ -140,3 +140,22 @@ extern "C" __global__ void compute_lj_force(forceVecType* __restrict__ force3,
         }
     }
 }
+
+extern "C" __global__ void md_helper(
+    float3* __restrict__ force3f,
+    const float4* __restrict__ positionf,
+    double3* __restrict__ force3d,
+    const double4* __restrict__ positiond,
+    const int neighCount,
+    const int* __restrict__ neighList,
+    const T cutsq,
+    const T lj1,
+    const T lj2,
+    const int inum
+) {
+    #if PRECISION == 32
+        compute_lj_force(force3f, positionf, neighCount, neighList, cutsq, lj1, lj2, inum);
+    #elif PRECISION == 64
+        compute_lj_force(force3d, positiond, neighCount, neighList, cutsq, lj1, lj2, inum);
+    #endif
+}
