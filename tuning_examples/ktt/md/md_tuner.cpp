@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.setKernelArguments(kernelId, vector<ktt::ArgumentId>{forcefId, positionfId, forcedId, positiondId, maxNeighborsId, neighborListId, cutsqId, lj1Id, lj2Id, nAtomId});
     auto_tuner.setKernelArguments(referenceKernelId, vector<ktt::ArgumentId>{forcefId, positionfId, forcedId, positiondId, maxNeighborsId, neighborListId, cutsqId, lj1Id, lj2Id, nAtomId});
 
-    // Get CUDA properties from device 0 
+    // Get CUDA properties from device 0
     cudaDeviceProp properties;
     cudaGetDeviceProperties(&properties, 0);
     
@@ -131,7 +131,6 @@ int main(int argc, char* argv[]) {
 
     // To set the different block sizes (local size) multiplied by the base (1)
     auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_SIZE", ktt::ModifierAction::Multiply);
-    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "BLOCK_SIZE", ktt::ModifierAction::Divide);
     // To set the different grid sizes (global size) divided by the amount of work per thread
     auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_PER_THREAD", ktt::ModifierAction::Divide);
 
