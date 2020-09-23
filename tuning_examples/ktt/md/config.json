@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./md",
+    "results": [
+        "best-md_helper-results.json"
+    ]
+}
