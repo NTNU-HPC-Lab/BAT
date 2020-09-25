@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Copy back the double data
-    vector<float> positiond(nAtom * 4);
+    vector<double> positiond(nAtom * 4);
     for (size_t i = 0; i < positiond4.size(); i += 4) {
         positiond.at(i) = positiond4.at(i).x;
         positiond.at(i + 1) = positiond4.at(i).y;
