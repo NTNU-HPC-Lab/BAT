@@ -5,6 +5,6 @@
     ],
     "run": "./triad",
     "results": [
-        "best-triad-results.json"
+        "best-triad_helper-results.json"
     ]
 }
