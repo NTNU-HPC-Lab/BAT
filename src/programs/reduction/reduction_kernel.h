@@ -42,13 +42,16 @@ class SharedMem <float>
       }
 };
 
+__inline__ __device__ double convertTextureObjectToDouble(cudaTextureObject_t textureObject, const int &position) {
+    uint2 values = tex1Dfetch<uint2>(textureObject, position);
+    return __hiloint2double(values.y, values.x);
+}
+
 // Reduction Kernel
 template <class T, int blockSize>
 __global__ void
-reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata,
-        const unsigned int n)
+reduce(const T* __restrict__ g_idata, cudaTextureObject_t idataTextureObject, T* __restrict__ g_odata, const unsigned int n)
 {
-
     const unsigned int tid = threadIdx.x;
     unsigned int i = (blockIdx.x*(blockDim.x*2)) + tid;
     const unsigned int gridSize = blockDim.x*2*gridDim.x;
@@ -72,44 +75,47 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata,
     // Reduce multiple elements per thread
     while (i < n)
     {
+    #if TEXTURE_MEMORY
+        #if PRECISION == 32
+            sdata[tid] += tex1Dfetch<T>(idataTextureObject, i) + tex1Dfetch<T>(idataTextureObject, i+blockSize);
+        #elif PRECISION == 64
+            sdata[tid] += convertTextureObjectToDouble(idataTextureObject, i) + convertTextureObjectToDouble(idataTextureObject, i+blockSize);
+        #endif
+    #else
         sdata[tid] += g_idata[i] + g_idata[i+blockSize];
+    #endif
         i += gridSize;
     }
     __syncthreads();
 
     // Reduce the contents of shared memory
-    // NB: This is an unrolled loop, and assumes warp-syncrhonous
-    // execution.
-    if (blockSize >= 512)
-    {
-        if (tid < 256)
-        {
-            sdata[tid] += sdata[tid + 256];
+    #if LOOP_UNROLL_REDUCE_1
+    #pragma unroll
+    #else
+    #pragma unroll(1)
+    #endif
+    for (int i = BLOCK_SIZE; i > 64; i /= 2) {
+        if (blockSize >= i) {
+            if (tid < (i / 2)) {
+                sdata[tid] += sdata[tid + (i / 2)];
+            }
+            __syncthreads();
         }
-        __syncthreads();
     }
-    if (blockSize >= 256)
-    {
-        if (tid < 128)
-        {
-            sdata[tid] += sdata[tid + 128];
+
+    #if LOOP_UNROLL_REDUCE_2
+    #pragma unroll
+    #else
+    #pragma unroll(1)
+    #endif
+    for (int i = 64; i > 1; i /= 2) {
+        if (tid < warpSize) {
+            if (blockSize >= i) {
+                sdata[tid] += sdata[tid + (i / 2)];
+                // NB2: This section would also need __sync calls if warp
+                // synchronous execution were not assumed
+            }
         }
-        __syncthreads();
-    }
-    if (blockSize >= 128)
-    {
-        if (tid < 64)  { sdata[tid] += sdata[tid + 64]; }  __syncthreads();
-    }
-    if (tid < warpSize)
-    {
-        // NB2: This section would also need __sync calls if warp
-        // synchronous execution were not assumed
-        if (blockSize >= 64) sdata[tid] += sdata[tid + 32];
-        if (blockSize >= 32) sdata[tid] += sdata[tid + 16];
-        if (blockSize >= 16) sdata[tid] += sdata[tid + 8];
-        if (blockSize >= 8)  sdata[tid] += sdata[tid + 4];
-        if (blockSize >= 4)  sdata[tid] += sdata[tid + 2];
-        if (blockSize >= 2)  sdata[tid] += sdata[tid + 1];
     }
 
     // Write result for this block to global memory

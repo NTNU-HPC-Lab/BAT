@@ -67,8 +67,7 @@ T reduceCPU(const T *data, int size)
 void
 addBenchmarkSpecOptions(OptionParser &op)
 {
-    op.addOption("iterations", OPT_INT, "256",
-                 "specify reduction iterations");
+    op.addOption("iterations", OPT_INT, "256", "specify reduction iterations");
 }
 
 // ****************************************************************************
@@ -93,25 +92,15 @@ addBenchmarkSpecOptions(OptionParser &op)
 void
 RunBenchmark(OptionParser &op)
 {
-    int device;
-    cudaGetDevice(&device);
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, device);
-
-    cout << "Running single precision test" << endl;
-    RunTest<float>("Reduction", op);
-
-    // Test to see if this device supports double precision
-    if ((deviceProp.major == 1 && deviceProp.minor >= 3) ||
-               (deviceProp.major >= 2))
-    {
+    #if PRECISION == 32
+        cout << "Running single precision test" << endl;
+        RunTest<float>("Reduction", op);
+    #elif PRECISION == 64
         cout << "Running double precision test" << endl;
         RunTest<double>("Reduction-DP", op);
-    } else {
-        cout << "Skipping double precision test" << endl;
-    }
-
+    #endif
 }
+
 // ****************************************************************************
 // Function: RunTest
 //
@@ -137,7 +126,7 @@ void RunTest(string testName, OptionParser &op)
 {
     int prob_sizes[4] = { 1, 8, 32, 64 };
 
-    int size = prob_sizes[op.getOptionInt("size")-1];
+    int size = prob_sizes[op.getOptionInt("size") - 1];
     size = (size * 1024 * 1024) / sizeof(T);
 
     T* h_idata;
@@ -154,9 +143,8 @@ void RunTest(string testName, OptionParser &op)
     T* d_idata;
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_idata, size * sizeof(T)));
 
-    int num_threads = BLOCK_SIZE; // NB: Update template to kernel launch
-                           // if this is changed
-    int num_blocks = 64;
+    int num_threads = BLOCK_SIZE; // NB: Update template to kernel launch if this is changed
+    int num_blocks = GRID_SIZE;
     int smem_size = sizeof(T) * num_threads;
     // allocate mem for the result on host side
     T* h_odata;
@@ -169,21 +157,50 @@ void RunTest(string testName, OptionParser &op)
     int iters  = op.getOptionInt("iterations");
 
     cout << "Running benchmark." << endl;
-    for (int k=0; k<passes; k++)
+    for (int k = 0; k < passes; k++)
     {
         // Copy data to GPU
-        CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_idata, size*sizeof(T),
-                cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_idata, size * sizeof(T), cudaMemcpyHostToDevice));
+
+        cudaTextureObject_t idataTextureObject = 0;
+        
+    #if TEXTURE_MEMORY
+        // Setup the texture memory
+        // Create the texture resource descriptor
+        cudaResourceDesc resourceDescriptor;
+        memset(&resourceDescriptor, 0, sizeof(resourceDescriptor));
+        resourceDescriptor.resType = cudaResourceTypeLinear;
+        resourceDescriptor.res.linear.devPtr = d_idata;
+        #if PRECISION == 32
+            resourceDescriptor.res.linear.desc.f = cudaChannelFormatKindFloat;
+        #elif PRECISION == 64
+            resourceDescriptor.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+        #endif
+        resourceDescriptor.res.linear.desc.x = 32;
+        #if PRECISION == 64
+            resourceDescriptor.res.linear.desc.y = 32;
+        #endif
+        resourceDescriptor.res.linear.sizeInBytes = size * sizeof(T);
+
+        // Create the texture resource descriptor
+        cudaTextureDesc textureDescriptor;
+        memset(&textureDescriptor, 0, sizeof(textureDescriptor));
+        textureDescriptor.readMode = cudaReadModeElementType;
+        textureDescriptor.addressMode[0] = cudaAddressModeWrap;
+
+        // Create the texture object
+        cudaCreateTextureObject(&idataTextureObject, &resourceDescriptor, &textureDescriptor, NULL);
+    #endif
 
         // Execute kernel
         for (int m = 0; m < iters; m++)
         {
             reduce<T, BLOCK_SIZE><<<num_blocks,num_threads, smem_size>>>
-                (d_idata, d_odata, size);
+                (d_idata, idataTextureObject, d_odata, size);
         }
 
         // Copy back to host
-        CUDA_SAFE_CALL(cudaMemcpy(h_odata, d_odata, num_blocks*sizeof(T), cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(h_odata, d_odata, num_blocks * sizeof(T), cudaMemcpyDeviceToHost));
 
         T dev_result = 0;
         for (int i=0; i<num_blocks; i++)
@@ -197,16 +214,14 @@ void RunTest(string testName, OptionParser &op)
         T diff = fabs(dev_result - cpu_result);
 
         cout << "Test ";
-        if (diff < threshold)
-            cout << "Passed";
-        else
-        {
-            cout << "FAILED\n";
-            cout << "Diff: " << diff;
+        if (diff < threshold) {
+            cout << "Passed" << endl;
+        } else {
+            cout << "FAILED" << endl;
+            cout << "Diff: " << diff << endl;
             cerr << "Error: incorrect computed result." << endl;
             return; // (don't report erroneous results)
         }
-        cout << endl;
     }
     CUDA_SAFE_CALL(cudaFreeHost(h_idata));
     CUDA_SAFE_CALL(cudaFreeHost(h_odata));
