@@ -1,6 +1,6 @@
 {
     "run": "python3 md_tuner.py",
     "results": [
-        "md-results.json"
+        "best-md-results.json"
     ]
 }

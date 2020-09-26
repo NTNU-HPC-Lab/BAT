@@ -29,3 +29,18 @@ tuning_results = tune_kernel("triad_host", kernel_files, size, [], tune_params, 
 # Save the results as a JSON file
 with open("triad-results.json", 'w') as f:
     json.dump(tuning_results, f)
+
+# Get the best configuration
+best_parameter_config = min(tuning_results[0], key=lambda x: x['time'])
+best_parameters = dict()
+
+# Filter out parameters from results
+for k, v in best_parameter_config.items():
+    if k not in tune_params:
+        continue
+
+    best_parameters[k] = v
+
+# Save the best results as a JSON file
+with open("best-triad-results.json", 'w') as f:
+    json.dump(best_parameters, f)

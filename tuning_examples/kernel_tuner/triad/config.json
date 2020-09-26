@@ -1,6 +1,6 @@
 {
     "run": "python3 triad_tuner.py",
     "results": [
-        "triad-results.json"
+        "best-triad-results.json"
     ]
 }
