@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
     // Problem sizes from SHOC
     uint problemSizes[9] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384 };
-    TODO: uint inputProblemSize = 9; // Default to the last problem size if no input
+    uint inputProblemSize = 9; // Default to the last problem size if no input
 
     // If only one extra argument and the flag is set for size
     if (argc == 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
