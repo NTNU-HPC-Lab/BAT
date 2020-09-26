@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./triad",
+    "results": [
+        "best-triad-results.json"
+    ]
+}
