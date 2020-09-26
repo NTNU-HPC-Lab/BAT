@@ -1,0 +1,6 @@
+{
+    "run": "python3 reduction_tuner.py",
+    "results": [
+        "best-reduction-results.json"
+    ]
+}
