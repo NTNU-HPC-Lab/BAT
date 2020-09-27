@@ -37,10 +37,6 @@ RUN cd /usr/local \
 # Copy content 
 COPY . .
 
-# Build all KTT benchmarks
-RUN cd tuning_examples/ktt/ \
-    && cd sort && make
-
 # Remove the symbolic link for the CUDA libraries as it is not needed anymore
 RUN rm /usr/local/cuda/lib64/stubs/libcuda.so.1
 
