@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./reduction",
+    "results": [
+        "best-reduce_helper-results.json"
+    ]
+}
