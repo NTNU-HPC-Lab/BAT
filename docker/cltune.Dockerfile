@@ -5,7 +5,8 @@ WORKDIR /usr/src/bat
 
 RUN apt-get update && apt-get install -y \
     git \
-    cmake
+    cmake \
+    python3
 
 # Download and build CLTune
 RUN cd /usr/local \

@@ -5,7 +5,8 @@ WORKDIR /usr/src/bat
 
 RUN apt-get update && apt-get install -y \
     git \
-    wget
+    wget \
+    python3
 
 # Download premake5 (dependency of KTT)
 RUN wget https://github.com/premake/premake-core/releases/download/v5.0.0-alpha15/premake-5.0.0-alpha15-linux.tar.gz \
