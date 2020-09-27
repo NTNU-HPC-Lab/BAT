@@ -6,16 +6,13 @@ WORKDIR /usr/src/bat
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
-    python3-pip \
-    openmpi-bin \
-    openssh-client \
-    libopenmpi-dev
+    python3-pip
 
 # Copy content 
 COPY . .
 
-# Install dependencies for OpenTuner
-RUN cd tuning_examples/opentuner && \
+# Install dependencies for Kernel Tuner
+RUN cd tuning_examples/kernel_tuner && \
     pip3 install -r requirements.txt
 
 # Set the correct encoding for Python
