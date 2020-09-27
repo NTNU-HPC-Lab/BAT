@@ -24,8 +24,6 @@ class ScanTuner(MeasurementInterface):
 
         block_sizes = [2**i for i in range(4, 10)]
         grid_sizes = [2**i for i in range(0, 10)]
-        print(block_sizes)
-        print(grid_sizes)
         manipulator = ConfigurationManipulator()
 
         manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
@@ -98,7 +96,6 @@ class ScanTuner(MeasurementInterface):
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o scan main.o scan.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
 
-        print(cfg)
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 

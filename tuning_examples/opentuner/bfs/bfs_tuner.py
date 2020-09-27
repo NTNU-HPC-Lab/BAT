@@ -29,7 +29,7 @@ class BFSTuner(MeasurementInterface):
 
         manipulator = ConfigurationManipulator()
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
-        manipulator.add_parameter(EnumParameter('CHUNK_SIZE', [32, 64, 128, 256]))
+        manipulator.add_parameter(EnumParameter('CHUNK_FACTOR', [1, 2, 4, 8]))
         manipulator.add_parameter(EnumParameter('UNROLL_OUTER_LOOP', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_INNER_LOOP', [0, 1]))
         manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY_EA1', [0, 1, 2]))

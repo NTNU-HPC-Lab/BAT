@@ -201,12 +201,9 @@ int main(int argc, char* argv[]) {
     md5_2words((unsigned int*)randomKey, byteLength, randomDigest);
 
     int digest[4] = {(int) randomDigest[0], (int) randomDigest[1], (int) randomDigest[2], (int) randomDigest[3]};
-    //unsigned int foundDigest[4] = {0,0,0,0};
     vector<int> foundIndex = {-1};
     vector<char> foundKey = {0,0,0,0,0,0,0,0};
     vector<int> foundDigest = {0,0,0,0};
-    //int foundIndex = -1;
-    //unsigned char foundKey[8] = {0,0,0,0, 0,0,0,0};
     
     // Get the maximum threads per block 
     cudaDeviceProp deviceProp;
@@ -223,7 +220,7 @@ int main(int argc, char* argv[]) {
 
     // Add parameters to tune
     auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", block_sizes);
-    auto_tuner.AddParameter(kernel_id, "WORK_PER_THREAD_FACTOR", {1});
+    auto_tuner.AddParameter(kernel_id, "WORK_PER_THREAD_FACTOR", {1, 2, 3, 4, 5});
     auto_tuner.AddParameter(kernel_id, "ROUND_STYLE", {0, 1});
     auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_1", {0, 1});
     auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_2", {0, 1});
@@ -263,5 +260,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
-

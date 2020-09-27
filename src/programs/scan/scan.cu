@@ -105,7 +105,7 @@ void RunTest(string testName, OptionParser &op)
 
     // Thread configuration
     // Note: changing this may require updating the kernel calls below
-    int num_blocks  = GRID_SIZE;//BLOCK_SIZE/GRID_SIZE_PART;
+    int num_blocks  = GRID_SIZE;
     int num_threads = BLOCK_SIZE;
 
     int smem_size = sizeof(T) * num_threads;
