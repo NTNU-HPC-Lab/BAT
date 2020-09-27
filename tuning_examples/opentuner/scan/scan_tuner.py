@@ -9,10 +9,12 @@ from opentuner import MeasurementInterface
 from opentuner import Result
 from numba import cuda
 import math
+import json
 
 start_path = '../../../src/programs'
 
 class ScanTuner(MeasurementInterface):
+    all_results = []
 
     def manipulator(self):
         """
@@ -20,11 +22,14 @@ class ScanTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        gpu = cuda.get_current_device()
-
+        block_sizes = [2**i for i in range(4, 10)]
+        grid_sizes = [2**i for i in range(0, 10)]
+        print(block_sizes)
+        print(grid_sizes)
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('BLOCK_SIZE', [128, 256, 512]))
-        manipulator.add_parameter(EnumParameter('GRID_SIZE_PART', [1, 2, 4]))
+
+        manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
+        manipulator.add_parameter(EnumParameter('GRID_SIZE', grid_sizes)) 
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
@@ -44,6 +49,11 @@ class ScanTuner(MeasurementInterface):
         args = argparser.parse_args()
 
         cfg = desired_result.configuration.data
+
+        # Check constraints for the parameters
+        if cfg['GRID_SIZE'] > cfg['BLOCK_SIZE']:
+            return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
+
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
         use_fast_math = ''
@@ -58,7 +68,7 @@ class ScanTuner(MeasurementInterface):
         make_program += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])
         make_program += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
         make_program += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
-        make_program += ' -D{0}={1}'.format('GRID_SIZE_PART',cfg['GRID_SIZE_PART'])
+        make_program += ' -D{0}={1}'.format('GRID_SIZE',cfg['GRID_SIZE'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
 
         if args.parallel == 1:
@@ -73,13 +83,13 @@ class ScanTuner(MeasurementInterface):
             compile_cmd += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
-            compile_cmd += ' -D{0}={1}'.format('GRID_SIZE_PART',cfg['GRID_SIZE_PART'])
+            compile_cmd += ' -D{0}={1}'.format('GRID_SIZE',cfg['GRID_SIZE'])
             compile_cmd += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
             compile_cmd += f'nvcc {cfg["OPTIMIZATION_LEVEL_HOST"]} {use_fast_math}{max_registers}-Xptxas {cfg["OPTIMIZATION_LEVEL_DEVICE"]},-v -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -c {start_path}/scan/tpScanLaunchKernel.cu'
             compile_cmd += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
-            compile_cmd += ' -D{0}={1}'.format('GRID_SIZE_PART',cfg['GRID_SIZE_PART'])
+            compile_cmd += ' -D{0}={1}'.format('GRID_SIZE',cfg['GRID_SIZE'])
             compile_cmd += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
             compile_cmd += f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o scan main.o tpScan.o tpScanLaunchKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
         else:
@@ -88,6 +98,7 @@ class ScanTuner(MeasurementInterface):
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o scan main.o scan.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
 
+        print(cfg)
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
@@ -106,11 +117,15 @@ class ScanTuner(MeasurementInterface):
         assert run_result['stderr'] == b''
         assert run_result['returncode'] == 0
 
+        result = {'parameters': cfg, 'time': run_result['time']}
+        self.all_results.append(result)
         return Result(time=run_result['time'])
 
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+        with open('all-results.json', 'w') as f:
+            json.dump(self.all_results, f)
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 

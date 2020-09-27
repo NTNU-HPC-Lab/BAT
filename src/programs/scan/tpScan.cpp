@@ -105,8 +105,8 @@ void RunTest(string testName, OptionParser &op)
     unsigned int bytes = size * sizeof(T);
 
     // Thread configuration
+    int num_blocks  = GRID_SIZE;
     int num_threads = BLOCK_SIZE;
-    int num_blocks = BLOCK_SIZE/GRID_SIZE_PART;
     int smem_size = num_threads * sizeof(T);
 
     // Allocate Host Memory
