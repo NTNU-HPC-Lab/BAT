@@ -1,8 +1,7 @@
 # CUDA version 10.2
 FROM nvidia/cuda:10.2-devel-ubuntu18.04
 
-# TODO: fix this:
-WORKDIR /usr/src/BFS
+WORKDIR /usr/src/bat
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,17 +11,11 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     libopenmpi-dev
 
-RUN pip3 install \
-    https://github.com/ingunnsund/opentuner/archive/master.zip \
-    numba
-
 # Copy content 
 COPY . .
 
-# RUN make clean
-# RUN make dependencies
+RUN cd tuning_examples/opentuner && \
+    pip3 install -r requirements.txt
 
-#nvidia-docker build -t bfs .
-#nvidia-docker run --rm -ti bfs
-
-#CMD python3 BFS_tuner.py --no-dups --stop-after=30 
+# Set the correct encoding for Python
+ENV PYTHONIOENCODING=utf-8

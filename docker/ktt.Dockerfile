@@ -1,8 +1,7 @@
 # CUDA version 10.2
 FROM nvidia/cuda:10.2-devel-ubuntu18.04
 
-# TODO: fix this:
-WORKDIR /usr/src/supercoolbenchmarksuite
+WORKDIR /usr/src/bat
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -49,3 +48,6 @@ ENV LD_LIBRARY_PATH=${TEMP_LD_LIBRARY_PATH}
 
 # Set the environment variable so other sources can use KTT
 ENV KTT_PATH=/usr/local/KTT
+
+# Set the correct encoding for Python
+ENV PYTHONIOENCODING=utf-8

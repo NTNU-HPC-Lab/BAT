@@ -1,2 +1,2 @@
 https://github.com/ingunnsund/opentuner/archive/master.zip
-numba
+numba==0.50.0
