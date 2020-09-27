@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 # Download and build CLTune
 RUN cd /usr/local \
-    && git clone https://github.com/CNugteren/CLTune \
+    && git clone https://github.com/ingunnsund/CLTune \
     && cd CLTune \
     && mkdir build \
     && cd build \
