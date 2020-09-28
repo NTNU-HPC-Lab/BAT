@@ -22,7 +22,7 @@ class BFSTuner(MeasurementInterface):
 
         gpu = cuda.get_current_device()
         sizes = [1000, 10000, 100000, 1000000, 10000000]
-        numVerts = sizes[argparser.parse_args().problem_size - 1]
+        numVerts = sizes[argparser.parse_args().size - 1]
 
         min_size = 1
         max_size = min(numVerts, gpu.MAX_THREADS_PER_BLOCK)
@@ -70,7 +70,7 @@ class BFSTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './BFS -s ' + str(args.problem_size)
+        program_command = './BFS -s ' + str(args.size)
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
@@ -91,12 +91,16 @@ class BFSTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+
+        # Update configuration with problem size
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 
 if __name__ == '__main__':
   argparser = opentuner.default_argparser()
-  argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+  argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
   argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
   argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
   BFSTuner.main(argparser.parse_args())
