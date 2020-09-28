@@ -19,15 +19,12 @@ class ReductionTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        args = argparser.parse_args()
-
         gpu = cuda.get_current_device()
         max_block_size = gpu.MAX_THREADS_PER_BLOCK
         # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK` except 32
         block_sizes = list(filter(lambda x: x <= max_block_size, [1, 2, 4, 8, 16, 64, 128, 256, 512, 1024]))
 
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
         manipulator.add_parameter(EnumParameter('GRID_SIZE', [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
@@ -107,6 +104,10 @@ class ReductionTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+    
+        # Update configuration with problem size
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 

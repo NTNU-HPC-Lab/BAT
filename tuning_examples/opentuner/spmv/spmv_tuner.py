@@ -20,14 +20,11 @@ class SPMVTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        args = argparser.parse_args()
-
         gpu = cuda.get_current_device()
         min_size = 1
         max_size = gpu.MAX_THREADS_PER_BLOCK
 
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
         # 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
@@ -90,6 +87,10 @@ class SPMVTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+        
+        # Update configuration with problem size
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 

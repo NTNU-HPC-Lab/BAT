@@ -19,12 +19,9 @@ class MDTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        args = argparser.parse_args()
-
         gpu = cuda.get_current_device()
         max_block_size = gpu.MAX_THREADS_PER_BLOCK
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         # Using block size less than `gpu.MAX_THREADS_PER_BLOCK`
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, max_block_size))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
@@ -83,6 +80,10 @@ class MDTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+        
+        # Update configuration with problem size
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 

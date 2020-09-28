@@ -20,10 +20,7 @@ class Stencil2DTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        args = argparser.parse_args()
-
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(IntegerParameter('GPUS', 1, len(cuda.gpus)))
 
         return manipulator
@@ -58,6 +55,7 @@ class Stencil2DTuner(MeasurementInterface):
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
 
+        # TODO: remove this
         print(compile_cmd)
 
         compile_result = self.call_program(compile_cmd)
@@ -75,6 +73,7 @@ class Stencil2DTuner(MeasurementInterface):
         else:
             run_cmd = program_command
 
+        # TODO: remove this
         print(run_cmd)
         run_result = self.call_program(run_cmd)
 
@@ -87,6 +86,10 @@ class Stencil2DTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+        
+        # Update configuration with problem size
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 

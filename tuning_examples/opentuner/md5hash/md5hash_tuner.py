@@ -20,11 +20,8 @@ class MD5HashTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        args = argparser.parse_args()
-
         gpu = cuda.get_current_device()
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, gpu.MAX_THREADS_PER_BLOCK))
         manipulator.add_parameter(EnumParameter('ROUND_STYLE', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
@@ -90,6 +87,10 @@ class MD5HashTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+        
+        # Update configuration with problem size
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 
