@@ -20,7 +20,10 @@ class Stencil2DTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
+        args = argparser.parse_args()
+
         manipulator = ConfigurationManipulator()
+        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(IntegerParameter('GPUS', 1, len(cuda.gpus)))
 
         return manipulator
@@ -60,7 +63,7 @@ class Stencil2DTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './Stencil2D -s ' + str(args.problem_size)
+        program_command = './Stencil2D -s ' + str(args.size)
 
         chosen_gpu_number = cfg['GPUS']
         
@@ -89,7 +92,7 @@ class Stencil2DTuner(MeasurementInterface):
 
 if __name__ == '__main__':
   argparser = opentuner.default_argparser()
-  argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+  argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
   argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
   argparser.add_argument('--parallel', type=bool, default=False, help='run on multiple GPUs')
   Stencil2DTuner.main(argparser.parse_args())

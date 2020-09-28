@@ -19,9 +19,12 @@ class MDTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
+        args = argparser.parse_args()
+
         gpu = cuda.get_current_device()
         max_block_size = gpu.MAX_THREADS_PER_BLOCK
         manipulator = ConfigurationManipulator()
+        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         # Using block size less than `gpu.MAX_THREADS_PER_BLOCK`
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, max_block_size))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
@@ -59,7 +62,7 @@ class MDTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './md -s ' + str(args.problem_size)
+        program_command = './md -s ' + str(args.size)
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
@@ -85,7 +88,7 @@ class MDTuner(MeasurementInterface):
 
 if __name__ == '__main__':
     argparser = opentuner.default_argparser()
-    argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+    argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
     argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
     MDTuner.main(argparser.parse_args())

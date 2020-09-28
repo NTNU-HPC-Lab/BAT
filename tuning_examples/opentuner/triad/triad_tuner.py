@@ -63,8 +63,7 @@ class TriadTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        # TODO: change this as size is not present in triad benchmark code
-        program_command = './triad -s ' + str(args.problem_size)
+        program_command = './triad'
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
@@ -90,7 +89,7 @@ class TriadTuner(MeasurementInterface):
 
 if __name__ == '__main__':
     argparser = opentuner.default_argparser()
-    argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+    argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
     argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
     TriadTuner.main(argparser.parse_args())

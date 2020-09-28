@@ -20,11 +20,14 @@ class SPMVTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
+        args = argparser.parse_args()
+
         gpu = cuda.get_current_device()
         min_size = 1
         max_size = gpu.MAX_THREADS_PER_BLOCK
 
         manipulator = ConfigurationManipulator()
+        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
         # 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
@@ -66,7 +69,7 @@ class SPMVTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './spmv -s ' + str(args.problem_size)
+        program_command = './spmv -s ' + str(args.size)
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
@@ -92,7 +95,7 @@ class SPMVTuner(MeasurementInterface):
 
 if __name__ == '__main__':
     argparser = opentuner.default_argparser()
-    argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+    argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
     argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
     SPMVTuner.main(argparser.parse_args())

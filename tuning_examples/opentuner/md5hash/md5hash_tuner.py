@@ -19,8 +19,12 @@ class MD5HashTuner(MeasurementInterface):
         Define the search space by creating a
         ConfigurationManipulator
         """
+
+        args = argparser.parse_args()
+
         gpu = cuda.get_current_device()
         manipulator = ConfigurationManipulator()
+        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, gpu.MAX_THREADS_PER_BLOCK))
         manipulator.add_parameter(EnumParameter('ROUND_STYLE', [0, 1]))
         manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
@@ -65,7 +69,7 @@ class MD5HashTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './md5hash -s ' + str(args.problem_size)
+        program_command = './md5hash -s ' + str(args.size)
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
@@ -91,7 +95,7 @@ class MD5HashTuner(MeasurementInterface):
 
 if __name__ == '__main__':
   argparser = opentuner.default_argparser()
-  argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+  argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
   argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
   argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
   MD5HashTuner.main(argparser.parse_args())

@@ -19,12 +19,15 @@ class ReductionTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
+        args = argparser.parse_args()
+
         gpu = cuda.get_current_device()
         max_block_size = gpu.MAX_THREADS_PER_BLOCK
         # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK` except 32
         block_sizes = list(filter(lambda x: x <= max_block_size, [1, 2, 4, 8, 16, 64, 128, 256, 512, 1024]))
 
         manipulator = ConfigurationManipulator()
+        manipulator.add_parameter(EnumParameter('PROBLEM_SIZE', [args.size]))
         manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
         manipulator.add_parameter(EnumParameter('GRID_SIZE', [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
@@ -83,7 +86,7 @@ class ReductionTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './reduction -s ' + str(args.problem_size)
+        program_command = './reduction -s ' + str(args.size)
         if args.parallel == 0:
             run_cmd = program_command
         else:
@@ -109,7 +112,7 @@ class ReductionTuner(MeasurementInterface):
 
 if __name__ == '__main__':
     argparser = opentuner.default_argparser()
-    argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+    argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, help='number of GPUs')
     argparser.add_argument('--parallel', type=int, default=0, help='run on multiple GPUs (0=serial, 1=parallel, 2=true parallel)')
     ReductionTuner.main(argparser.parse_args())

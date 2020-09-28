@@ -3,5 +3,8 @@
         "make clean",
         "make dependencies"
     ],
-    "run": "python3 scan_tuner.py --stop-after=30 --problem-size=1"
+    "run": "python3 scan_tuner.py --stop-after=30",
+    "results": [
+        "results.json"
+    ]
 }
