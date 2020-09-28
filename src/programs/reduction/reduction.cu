@@ -186,7 +186,6 @@ void RunTest(string testName, OptionParser &op)
         cudaTextureDesc textureDescriptor;
         memset(&textureDescriptor, 0, sizeof(textureDescriptor));
         textureDescriptor.readMode = cudaReadModeElementType;
-        textureDescriptor.addressMode[0] = cudaAddressModeWrap;
 
         // Create the texture object
         cudaCreateTextureObject(&idataTextureObject, &resourceDescriptor, &textureDescriptor, NULL);
