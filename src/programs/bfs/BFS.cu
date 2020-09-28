@@ -171,18 +171,17 @@ void RunTest(OptionParser &op, Graph *G)
     
     cudaTextureObject_t textureObjEA=0;
     #if TEXTURE_MEMORY_EA1 == 2
-        cudaResourceDesc resDesc;
-        memset(&resDesc, 0, sizeof(resDesc));
-        resDesc.resType = cudaResourceTypeLinear;
-        resDesc.res.linear.devPtr = d_edgeArray;
-        resDesc.res.linear.desc.f = cudaChannelFormatKindUnsigned;
-        resDesc.res.linear.desc.x = 32;
-        resDesc.res.linear.sizeInBytes = sizeof(unsigned int)*(numVerts+1);
-        cudaTextureDesc texDesc;
-        memset(&texDesc, 0, sizeof(texDesc));
-        texDesc.readMode = cudaReadModeElementType;
-        texDesc.addressMode = cudaAddressModeWrap;
-        CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEA, &resDesc, &texDesc, NULL));
+        cudaResourceDesc resDescEA1;
+        memset(&resDescEA1, 0, sizeof(resDescEA1));
+        resDescEA1.resType = cudaResourceTypeLinear;
+        resDescEA1.res.linear.devPtr = d_edgeArray;
+        resDescEA1.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+        resDescEA1.res.linear.desc.x = 32;
+        resDescEA1.res.linear.sizeInBytes = sizeof(unsigned int)*(numVerts+1);
+        cudaTextureDesc texDescEA1;
+        memset(&texDescEA1, 0, sizeof(texDescEA1));
+        texDescEA1.readMode = cudaReadModeElementType;
+        CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEA, &resDescEA1, &texDescEA1, NULL));
     #elif TEXTURE_MEMORY_EA1 == 1
         //Bind a 1D texture to the edgeArray array
         CUDA_SAFE_CALL(cudaBindTexture(0, textureRefEA, d_edgeArray, sizeof(unsigned int)*(numVerts+1)));
@@ -190,17 +189,17 @@ void RunTest(OptionParser &op, Graph *G)
     
     cudaTextureObject_t textureObjEAA=0;
     #if TEXTURE_MEMORY_EAA == 2
-        cudaResourceDesc resDesc;
-        memset(&resDesc, 0, sizeof(resDesc));
-        resDesc.resType = cudaResourceTypeLinear;
-        resDesc.res.linear.devPtr = d_edgeArrayAux;
-        resDesc.res.linear.desc.f = cudaChannelFormatKindUnsigned;
-        resDesc.res.linear.desc.x = 32;
-        resDesc.res.linear.sizeInBytes = adj_list_length*sizeof(unsigned int);
-        cudaTextureDesc texDesc;
-        memset(&texDesc, 0, sizeof(texDesc));
-        texDesc.readMode = cudaReadModeElementType;        
-        CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEAA, &resDesc, &texDesc, NULL));
+        cudaResourceDesc resDescEAA;
+        memset(&resDescEAA, 0, sizeof(resDescEAA));
+        resDescEAA.resType = cudaResourceTypeLinear;
+        resDescEAA.res.linear.devPtr = d_edgeArrayAux;
+        resDescEAA.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+        resDescEAA.res.linear.desc.x = 32;
+        resDescEAA.res.linear.sizeInBytes = adj_list_length*sizeof(unsigned int);
+        cudaTextureDesc texDescEAA;
+        memset(&texDescEAA, 0, sizeof(texDescEAA));
+        texDescEAA.readMode = cudaReadModeElementType;        
+        CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEAA, &resDescEAA, &texDescEAA, NULL));
     #elif TEXTURE_MEMORY_EAA == 1
         // Bind a 1D texture to the position array
         CUDA_SAFE_CALL(cudaBindTexture(0, textureRefEAA, d_edgeArrayAux, adj_list_length*sizeof(unsigned int)));

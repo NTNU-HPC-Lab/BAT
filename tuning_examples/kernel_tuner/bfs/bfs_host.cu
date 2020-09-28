@@ -197,7 +197,6 @@ float RunTest(Graph *G)
         cudaTextureDesc texDesc;
         memset(&texDesc, 0, sizeof(texDesc));
         texDesc.readMode = cudaReadModeElementType;
-        texDesc.addressMode = cudaAddressModeWrap;
         CUDA_SAFE_CALL(cudaCreateTextureObject(&textureObjEA, &resDesc, &texDesc, NULL));
     #elif TEXTURE_MEMORY_EA1 == 1
         //Bind a 1D texture to the edgeArray array
