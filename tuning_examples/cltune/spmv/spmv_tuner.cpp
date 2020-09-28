@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
     size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {totalSize}, {1});
 
     // Add parameters to tune
-    auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", {block_sizes});
+    auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", block_sizes);
     auto_tuner.AddParameter(kernel_id, "PRECISION", {32, 64});
     // Formats: 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
     auto_tuner.AddParameter(kernel_id, "FORMAT", {0, 1, 2, 3, 4});
