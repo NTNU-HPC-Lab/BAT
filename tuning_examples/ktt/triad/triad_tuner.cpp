@@ -103,6 +103,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Add parameters to tune
+    auto_tuner.addParameter(kernelId, "PROBLEM_SIZE", {inputProblemSize});
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", block_sizes);
     auto_tuner.addParameter(kernelId, "WORK_PER_THREAD", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
     auto_tuner.addParameter(kernelId, "LOOP_UNROLL_TRIAD", {0, 1});

@@ -124,6 +124,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Add parameters to tune
+    auto_tuner.addParameter(kernelId, "PROBLEM_SIZE", {inputProblemSize});
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", block_sizes);
     auto_tuner.addParameter(kernelId, "PRECISION", {32, 64});
     auto_tuner.addParameter(kernelId, "TEXTURE_MEMORY", {0}); // KTT does not support texture memory, so this is always disabled
