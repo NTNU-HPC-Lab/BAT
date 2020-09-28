@@ -128,7 +128,6 @@ int main(int argc, char* argv[]) {
     size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {totalSize}, {1});
 
     // Add parameters to tune
-    auto_tuner.AddParameter(kernel_id, "PROBLEM_SIZE", {inputProblemSize});
     auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", {block_sizes});
     auto_tuner.AddParameter(kernel_id, "PRECISION", {32, 64});
     // Formats: 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
@@ -194,7 +193,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.Tune();
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json");
+    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json", inputProblemSize);
 
     // Print the results to cout and save it as a JSON file
     auto_tuner.PrintToScreen();
