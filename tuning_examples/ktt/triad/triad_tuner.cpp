@@ -103,7 +103,6 @@ int main(int argc, char* argv[]) {
     }
 
     // Add parameters to tune
-    auto_tuner.addParameter(kernelId, "PROBLEM_SIZE", {inputProblemSize});
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", block_sizes);
     auto_tuner.addParameter(kernelId, "WORK_PER_THREAD", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
     auto_tuner.addParameter(kernelId, "LOOP_UNROLL_TRIAD", {0, 1});
@@ -126,7 +125,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.tuneKernel(kernelId);
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json");
+    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json", inputProblemSize);
 
     // Print the results to cout and save it as a CSV file
     auto_tuner.printResult(kernelId, cout, ktt::PrintFormat::Verbose);

@@ -80,7 +80,6 @@ int main(int argc, char* argv[]) {
     auto_tuner.setKernelArguments(referenceKernelId, vector<ktt::ArgumentId>{idatafId, idataTextureObjectfId, odatafId, idatadId, idataTextureObjectdId, odatadId, sizeId});
 
     // Add parameters to tune
-    auto_tuner.addParameter(kernelId, "PROBLEM_SIZE", {inputProblemSize});
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", {1, 2, 4, 8, 16, 64, 128, 256, 512, 1024});
     auto_tuner.addParameter(kernelId, "GRID_SIZE", {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024});
     auto_tuner.addParameter(kernelId, "PRECISION", {32, 64});
@@ -113,7 +112,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.tuneKernel(kernelId);
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json");
+    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json", inputProblemSize);
 
     // Print the results to cout and save it as a CSV file
     auto_tuner.printResult(kernelId, cout, ktt::PrintFormat::Verbose);

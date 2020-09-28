@@ -1,10 +1,15 @@
 #include <fstream>
 #include "ktt_json_saver.hpp"
 
-void saveJSONFileFromKTTResults(const ktt::ComputationResult &computationResult, const string &fileName) {
-    string jsonOutput = "{";
+void saveJSONFileFromKTTResults(const ktt::ComputationResult &computationResult, const string &fileName, const int &problemSize) {
+    string jsonOutput = "{\n\t\"PROBLEM_SIZE\": " + to_string(problemSize);
 
     auto bestParameters = computationResult.getConfiguration();
+
+    // Add comma if parameters
+    if (computationResult.getConfiguration().size() > 0) {
+        jsonOutput += ",";
+    }
 
     // Loop all parameters and add one by one
     for (auto const& parameter: bestParameters) {
