@@ -78,7 +78,7 @@ def copy_benchmark_result_files(auto_tuner_name, benchmark_dir):
     print(f"{print_helpers['success']} Copied benchmark results to: {current_results_dir}")
 
 # By default benchmark=None and auto_tuner=None. Either of them is required to be specified in order to run the benchmark
-def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_directory=benchmark_dir):
+def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_directory=benchmark_dir, problem_size=1):
     if not benchmark_name and not auto_tuner:
         print(f"{print_helpers['error']} You have to specify at least one of `benchmark_name` and `auto_tuner`")
         return
@@ -143,7 +143,8 @@ def run_benchmark(benchmark_name=None, auto_tuner=None, verbose=False, start_dir
             if build_successful:
                 # Run the benchmark command in the benchmark directory
                 print(f"{print_helpers['info']} Starting benchmark `{current_benchmark}` for `{os.path.basename(directory)}`")
-                run_result = subprocess.run(benchmark_config["run"].split(), cwd=current_benchmark_dir)
+                run_command = f"{benchmark_config['run']} --size {problem_size}"
+                run_result = subprocess.run(run_command.split(), cwd=current_benchmark_dir)
 
                 # Check for errors during benchmarking
                 if run_result.stderr != None or run_result.returncode != 0:
@@ -186,7 +187,8 @@ if __name__ == "__main__":
     parser.add_argument("--benchmark", "-b", type=str, default=None, help="name of the benchmark (e.g.: sort)")
     parser.add_argument("--auto-tuner", "-a", type=str, default=None, help="auto-tuner to benchmark (e.g.: opentuner)")
     parser.add_argument("--verbose", "-v", action="store_true", help="print stdout and stderr from building of benchmarks")
+    parser.add_argument("--size", "-s", type=int, default=1, help="problem size to the benchmark(s) (e.g.: 2)")
     arguments = parser.parse_args()
     
     # Run benchmark given inputs
-    run_benchmark(benchmark_name=arguments.benchmark, auto_tuner=arguments.auto_tuner, verbose=arguments.verbose)
+    run_benchmark(benchmark_name=arguments.benchmark, auto_tuner=arguments.auto_tuner, verbose=arguments.verbose, problem_size=arguments.size)
