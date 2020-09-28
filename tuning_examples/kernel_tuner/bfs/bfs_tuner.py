@@ -2,8 +2,14 @@ import numpy
 from kernel_tuner import tune_kernel, run_kernel
 from numba import cuda
 import json
+import argparse
 
-size = 1
+# Setup CLI parser
+parser = argparse.ArgumentParser(description="Reduction tuner")
+parser.add_argument("--size", "-s", type=int, default=1, help="problem size to the benchmark (e.g.: 2)")
+arguments = parser.parse_args()
+
+size = arguments.size
 gpu = cuda.get_current_device()
 sizes = [1000, 10000, 100000, 1000000]
 vertices = sizes[size - 1]
@@ -21,10 +27,9 @@ tune_params["TEXTURE_MEMORY_EA1"] = [0, 1] # 1 after name so Kernel Tuner wont r
 tune_params["TEXTURE_MEMORY_EAA"] = [0, 1]
 tune_params["UNROLL_OUTER_LOOP"] = [0, 1]
 tune_params["UNROLL_INNER_LOOP"] = [0, 1]
-tune_params["PROBLEM_SIZE"] = [size] # For setting problem size in host code
 
 tuning_results = tune_kernel("RunBenchmark", kernel_files, vertices, [], tune_params, lang="C", block_size_names=["BLOCK_SIZE"], 
-    compiler_options=["-I ../../../src/programs/bfs/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/"])
+    compiler_options=["-I ../../../src/programs/bfs/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"])
 
 
 # Save the results as a JSON file
@@ -41,6 +46,9 @@ for k, v in best_parameter_config.items():
         continue
 
     best_parameters[k] = v
+
+# Add problem size to results
+best_parameters["PROBLEM_SIZE"] = size
 
 # Save the best results as a JSON file
 with open("best-bfs-results.json", 'w') as f:

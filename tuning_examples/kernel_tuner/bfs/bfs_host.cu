@@ -381,7 +381,7 @@ float RunBenchmark()
 
     //Load simple k-way tree
     unsigned int prob_sizes[5] = {1000,10000,100000,1000000,10000000};
-    numVerts = prob_sizes[PROBLEM_SIZE];
+    numVerts = prob_sizes[PROBLEM_SIZE - 1];
     int avg_degree = 2;
     if(avg_degree<1)
         avg_degree=1;
