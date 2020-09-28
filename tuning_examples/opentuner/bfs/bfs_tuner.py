@@ -53,7 +53,7 @@ class BFSTuner(MeasurementInterface):
         make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY_EAA',cfg['TEXTURE_MEMORY_EAA'])
         make_program += ' -D{0}={1}'.format('UNROLL_OUTER_LOOP',cfg['UNROLL_OUTER_LOOP'])
         make_program += ' -D{0}={1}'.format('UNROLL_INNER_LOOP',cfg['UNROLL_INNER_LOOP'])
-        make_program += ' -D{0}={1}'.format('CHUNK_SIZE',cfg['CHUNK_SIZE'])
+        make_program += ' -D{0}={1}'.format('CHUNK_FACTOR',cfg['CHUNK_FACTOR'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
 
         if args.parallel:

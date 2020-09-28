@@ -4,7 +4,7 @@
 #include <limits.h>
 #include <string.h>
 
-#include "bfs_kernel.h"
+#include "bfs_kernel.cu"
 #include "cudacommon.h"
 #include "Graph.h"
 #include "OptionParser.h"
