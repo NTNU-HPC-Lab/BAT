@@ -3,5 +3,8 @@
         "make clean",
         "make"
     ],
-    "run": "./bfs"
+    "run": "./bfs",
+    "results": [
+        "best-BFS_kernel_warp-results.json"
+    ]
 }

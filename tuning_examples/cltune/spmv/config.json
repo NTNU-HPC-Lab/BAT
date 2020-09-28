@@ -3,5 +3,8 @@
         "make clean",
         "make"
     ],
-    "run": "./spmv"
+    "run": "./spmv",
+    "results": [
+        "best-spmv_kernel-results.json"
+    ]
 }

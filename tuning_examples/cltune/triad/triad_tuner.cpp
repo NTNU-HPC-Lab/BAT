@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Add parameters to tune
+    auto_tuner.AddParameter(kernel_id, "PROBLEM_SIZE", {inputProblemSize});
     auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", block_sizes);
     // To set the different block sizes (local size) multiplied by the base (1)
     auto_tuner.MulLocalSize(kernel_id, {"BLOCK_SIZE"});
