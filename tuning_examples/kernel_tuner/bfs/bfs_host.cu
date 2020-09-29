@@ -234,7 +234,7 @@ float RunTest(Graph *G)
     if (numBlocks > devProp.maxGridSize[0]) {
         std::cout << "Max number of blocks exceeded";
         throw "Max number of blocks exceeded";
-        return 0.0;
+        return 10000.0;
     }
 
     unsigned int *cpu_cost = new unsigned int[numVerts];
@@ -301,7 +301,7 @@ float RunTest(Graph *G)
             std::cout << "Failed\n";
             cerr << "Error: incorrect computed result." << endl;
             throw "Error: incorrect computed result.";
-            return 0.0;
+            return 100000.0;
         }
 
         if (j==passes-1) //if passes completed break;

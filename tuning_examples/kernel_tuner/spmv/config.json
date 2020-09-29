@@ -1,0 +1,6 @@
+{
+    "run": "python3 spmv_tuner.py",
+    "results": [
+        "best-spmv-results.json"
+    ]
+}
