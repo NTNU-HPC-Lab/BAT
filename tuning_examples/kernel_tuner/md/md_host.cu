@@ -155,7 +155,7 @@ float runTest(const string& testName)
 {
     // Problem Parameters
     const int probSizes[4] = { 12288, 24576, 36864, 73728 };
-    int sizeClass = 1; // TODO: change this?
+    int sizeClass = PROBLEM_SIZE;
     assert(sizeClass >= 0 && sizeClass < 5);
     int nAtom = probSizes[sizeClass - 1];
 

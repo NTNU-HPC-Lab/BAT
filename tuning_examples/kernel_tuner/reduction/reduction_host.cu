@@ -109,7 +109,8 @@ float RunTest(string testName)
 {
     int prob_sizes[4] = { 1, 8, 32, 64 };
 
-    int size = prob_sizes[0];
+    int input_problem_size = PROBLEM_SIZE;
+    int size = prob_sizes[input_problem_size - 1];
     size = (size * 1024 * 1024) / sizeof(T);
 
     T* h_idata;

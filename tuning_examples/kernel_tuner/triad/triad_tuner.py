@@ -10,7 +10,7 @@ problem_sizes = [16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 
 gpu = cuda.get_current_device()
 max_block_size = gpu.MAX_THREADS_PER_BLOCK
 
-# TODO use different problem sizes from input
+# Triad does not set problem size, so just set to last size
 size = problem_sizes[8]
 
 # Use host code in combination with CUDA kernel
