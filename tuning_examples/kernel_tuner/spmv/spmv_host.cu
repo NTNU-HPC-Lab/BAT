@@ -13,8 +13,6 @@
 #include <fstream>
 #include "PMSMemMgmt.h"
 #include "string.h"
-//#include "Spmv/util.h"
-
 
 extern "C" {
 
