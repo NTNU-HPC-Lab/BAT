@@ -23,6 +23,7 @@ class ScanTuner(MeasurementInterface):
         """
 
         block_sizes = [2**i for i in range(4, 10)]
+        block_sizes.remove(32)
         grid_sizes = [2**i for i in range(0, 10)]
         manipulator = ConfigurationManipulator()
 

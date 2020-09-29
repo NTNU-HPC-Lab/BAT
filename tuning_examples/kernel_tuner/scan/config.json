@@ -1,0 +1,6 @@
+{
+    "run": "python3 scan_tuner.py",
+    "results": [
+        "best-scan-results.json"
+    ]
+}
