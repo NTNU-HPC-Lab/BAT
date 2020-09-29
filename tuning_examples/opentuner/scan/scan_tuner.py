@@ -99,7 +99,7 @@ class ScanTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './scan -s ' + str(args.problem_size)
+        program_command = './scan -s ' + str(args.size)
         if args.parallel == 1 or args.parallel == 2:
             chosen_gpu_number = cfg['GPUS']
 
@@ -128,7 +128,7 @@ class ScanTuner(MeasurementInterface):
 
 if __name__ == '__main__':
     argparser = opentuner.default_argparser()
-    argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+    argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
     argparser.add_argument('--parallel', type=int, default=0, help='run on multiple GPUs (0=serial, 1=parallel, 2=true parallel)')
     ScanTuner.main(argparser.parse_args())
