@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./md5hash",
+    "results": [
+        "best-FindKeyWithDigest_Kernel-results.json"
+    ]
+}

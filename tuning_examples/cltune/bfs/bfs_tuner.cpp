@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     // Get the maximum threads per block 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
-    unsigned int maxThreads = deviceProp.maxThreadsPerBlock;
+    unsigned int maxThreads = min(deviceProp.maxThreadsPerBlock, numVertsGraph);
     // Define a vector of block sizes from 1 to maximum threads per block
     vector<long unsigned int> block_sizes = {};
     for(int i = 1; i < (maxThreads+1); i++) {

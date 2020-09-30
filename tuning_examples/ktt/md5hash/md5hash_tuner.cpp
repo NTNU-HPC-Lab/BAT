@@ -1,12 +1,7 @@
 #include <iostream>
-#include <fstream>
-#include <iterator>
-#include <math.h>
-#include <limits.h>
 #include <cuda_runtime_api.h>
-#include <cuda.h>
-#include "cltune.h" // CLTune API
-#include "cltune_json_saver.hpp" // Custom JSON CLTune results saver
+#include "tuner_api.h" // KTT API
+#include "ktt_json_saver.hpp" // Custom JSON KTT results saver
 
 using namespace std;
 
@@ -14,11 +9,21 @@ void md5_2words(unsigned int *words, unsigned int len, unsigned int *digest);
 void IndexToKey(unsigned int index, int byteLength, int valsPerByte, unsigned char vals[8]);
 
 int main(int argc, char* argv[]) {
+    // Tune md5hash kernel
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
+    string kernelFile = "../../../src/kernels/md5hash/md5hash_kernel.cu";
+    string referenceKernelFile = "./reference_kernel.cu";
+    string kernelName("FindKeyWithDigest_Kernel");
+    ktt::Tuner auto_tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+
+    // NOTE: Maybe a bug in KTT where this has to be OpenCL to work, even for CUDA
+    auto_tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+
     // Problem sizes used in the SHOC benchmark
     const int sizes_byteLength[4]  = { 7,  5,  6,  5};
     const int sizes_valsPerByte[4] = {10, 35, 25, 70};
-
-    uint inputProblemSize = 1; // Default to the first problem size
+    uint inputProblemSize = 1; // Default to the first problem size if no input
 
     // If only one extra argument and the flag is set for size
     if (argc == 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
@@ -42,14 +47,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    string kernelFile = "../../../src/kernels/md5hash/md5hash_kernel.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
-
-    // Tune "FindKeyWithDigest_Kernel" kernel
-    string kernelName("FindKeyWithDigest_Kernel");
-    // Set the tuning kernel to run on device id 0 and platform 0
-    cltune::Tuner auto_tuner(0, 0);
-
+    // Calculate input arguments
     const int byteLength = sizes_byteLength[inputProblemSize-1];   
     const int valsPerByte = sizes_valsPerByte[inputProblemSize-1];
 
@@ -73,7 +71,55 @@ int main(int argc, char* argv[]) {
     vector<int> foundIndex = {-1};
     vector<char> foundKey = {0,0,0,0,0,0,0,0};
     vector<int> foundDigest = {0,0,0,0};
-    
+
+    size_t totalSize = ceil((double)keyspace / (double)valsPerByte);
+
+    const ktt::DimensionVector totalThreads(totalSize);
+    const ktt::DimensionVector blockSize;
+    const ktt::DimensionVector blockSizeReference(384);
+
+    // Add kernel and reference kernel
+    ktt::KernelId kernelId = auto_tuner.addKernelFromFile(kernelFile, kernelName, totalThreads, blockSize);
+    ktt::KernelId referenceKernelId = auto_tuner.addKernelFromFile(referenceKernelFile, kernelName, totalThreads, blockSizeReference);
+
+    // Add arguments for kernel
+    ktt::ArgumentId searchDigest0Id = auto_tuner.addArgumentScalar(digest[0]);
+    ktt::ArgumentId searchDigest1Id = auto_tuner.addArgumentScalar(digest[1]);
+    ktt::ArgumentId searchDigest2Id = auto_tuner.addArgumentScalar(digest[2]);
+    ktt::ArgumentId searchDigest3Id = auto_tuner.addArgumentScalar(digest[3]);
+    ktt::ArgumentId keyspaceId = auto_tuner.addArgumentScalar(keyspace);
+    ktt::ArgumentId byteLengthId = auto_tuner.addArgumentScalar(byteLength);
+    ktt::ArgumentId valsPerByteId = auto_tuner.addArgumentScalar(valsPerByte);
+    ktt::ArgumentId foundIndexId = auto_tuner.addArgumentVector(foundIndex, ktt::ArgumentAccessType::ReadWrite);
+    ktt::ArgumentId foundKeyId = auto_tuner.addArgumentVector(foundKey, ktt::ArgumentAccessType::ReadWrite);
+    ktt::ArgumentId foundDigestId = auto_tuner.addArgumentVector(foundDigest, ktt::ArgumentAccessType::ReadWrite);
+
+    // Add arguments to kernel and reference kernel
+    auto_tuner.setKernelArguments(kernelId, vector<ktt::ArgumentId>{
+        searchDigest0Id,
+        searchDigest1Id,
+        searchDigest2Id,
+        searchDigest3Id,
+        keyspaceId,
+        byteLengthId,
+        valsPerByteId,
+        foundIndexId,
+        foundKeyId,
+        foundDigestId
+    });
+    auto_tuner.setKernelArguments(referenceKernelId, vector<ktt::ArgumentId>{
+        searchDigest0Id,
+        searchDigest1Id,
+        searchDigest2Id,
+        searchDigest3Id,
+        keyspaceId,
+        byteLengthId,
+        valsPerByteId,
+        foundIndexId,
+        foundKeyId,
+        foundDigestId
+    });
+
     // Get the maximum threads per block 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
@@ -83,49 +129,42 @@ int main(int argc, char* argv[]) {
     for(int i = 1; i < (maxThreads+1); i++) {
         block_sizes.push_back(i);
     }
-    unsigned long int totalSize = ceil((double)keyspace / (double)valsPerByte);
-    // Add kernel
-    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {totalSize}, {1});
 
     // Add parameters to tune
-    auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", block_sizes);
-    auto_tuner.AddParameter(kernel_id, "WORK_PER_THREAD_FACTOR", {1, 2, 3, 4, 5});
-    auto_tuner.AddParameter(kernel_id, "ROUND_STYLE", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_1", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_2", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_3", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "INLINE_1", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "INLINE_2", {0, 1});
+    auto_tuner.addParameter(kernelId, "BLOCK_SIZE", block_sizes);
+    auto_tuner.addParameter(kernelId, "WORK_PER_THREAD_FACTOR", {1, 2, 3, 4, 5});
+    auto_tuner.addParameter(kernelId, "ROUND_STYLE", {0, 1});
+    auto_tuner.addParameter(kernelId, "UNROLL_LOOP_1", {0, 1});
+    auto_tuner.addParameter(kernelId, "UNROLL_LOOP_2", {0, 1});
+    auto_tuner.addParameter(kernelId, "UNROLL_LOOP_3", {0, 1});
+    auto_tuner.addParameter(kernelId, "INLINE_1", {0, 1});
+    auto_tuner.addParameter(kernelId, "INLINE_2", {0, 1});
 
-  
-    // Set the different block sizes (local size) multiplied by the base (1)
-    auto_tuner.MulLocalSize(kernel_id, {"BLOCK_SIZE"});
-    // Divide the total number of threads by the work per thread factor
-    auto_tuner.DivGlobalSize(kernel_id, {"WORK_PER_THREAD_FACTOR"});
+    // The block size (local size) base (1) is multiplied by the BLOCK_SIZE parameter
+    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_SIZE", ktt::ModifierAction::Multiply);
+    // The grid size (global size) base (totalThreads) is divided by BLOCK_SIZE and WORK_PER_THREAD_FACTOR
+    // The grid size value is then multiplied by the BLOCK_SIZE parameter because it will be divided by BLOCK_SIZE at launch in KTT (without using ceil(), which is necessary)
+    auto globalModifier = [](const size_t size, const std::vector<size_t>& vector) {
+        return int(ceil(double(size) / double(vector.at(0)) / double(vector.at(1)))) * vector.at(0);
+    };
+    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, 
+        std::vector<std::string>{"BLOCK_SIZE", "WORK_PER_THREAD_FACTOR"}, globalModifier);
 
     // Set reference kernel for correctness verification and compare to the computed result
-    auto_tuner.SetReference({referenceKernelFile}, kernelName, {totalSize}, {384});
+    auto_tuner.setReferenceKernel(kernelId, referenceKernelId, vector<ktt::ParameterPair>{}, vector<ktt::ArgumentId>{foundIndexId, foundKeyId, foundDigestId});
 
-    // Add arguments for kernel
-    auto_tuner.AddArgumentScalar(digest[0]);
-    auto_tuner.AddArgumentScalar(digest[1]);
-    auto_tuner.AddArgumentScalar(digest[2]);
-    auto_tuner.AddArgumentScalar(digest[3]);
-    auto_tuner.AddArgumentScalar(keyspace);
-    auto_tuner.AddArgumentScalar(byteLength);
-    auto_tuner.AddArgumentScalar(valsPerByte);
-    auto_tuner.AddArgumentOutput(foundIndex);
-    auto_tuner.AddArgumentOutput(foundKey);
-    auto_tuner.AddArgumentOutput(foundDigest);
+    // Set the tuner to print in nanoseconds
+    auto_tuner.setPrintingTimeUnit(ktt::TimeUnit::Nanoseconds);
 
-    auto_tuner.Tune();
+    // Tune the kernel
+    auto_tuner.tuneKernel(kernelId);
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json", inputProblemSize);
+    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json", inputProblemSize);
 
-    // Print the results to cout and save it as a JSON file
-    auto_tuner.PrintToScreen();
-    auto_tuner.PrintJSON(kernelName + "-results.json", {{"sample", kernelName}});
+    // Print the results to cout and save it as a CSV file
+    auto_tuner.printResult(kernelId, cout, ktt::PrintFormat::Verbose);
+    auto_tuner.printResult(kernelId, kernelName + "-results.csv", ktt::PrintFormat::CSV);
 
     return 0;
 }
