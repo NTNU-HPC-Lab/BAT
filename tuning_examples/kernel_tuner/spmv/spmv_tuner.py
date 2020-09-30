@@ -4,10 +4,12 @@ from numba import cuda
 import math
 import json
 import argparse
+from numpyencoder import NumpyEncoder
 
 # Setup CLI parser
-parser = argparse.ArgumentParser(description="Reduction tuner")
+parser = argparse.ArgumentParser(description="SPMV tuner")
 parser.add_argument("--size", "-s", type=int, default=1, help="problem size to the benchmark (e.g.: 2)")
+parser.add_argument("--technique", "-t", type=str, default="brute_force", help="tuning technique to use for the benchmark (e.g.: annealing)")
 arguments = parser.parse_args()
 
 gpu = cuda.get_current_device()
@@ -31,13 +33,13 @@ tune_params["UNROLL_LOOP_2"] = [0, 1]
 
 restrict = ["FORMAT < 3 or (BLOCK_SIZE == 32) or (BLOCK_SIZE == 64) or (BLOCK_SIZE == 128) or (BLOCK_SIZE == 256) or (BLOCK_SIZE == 512) or (BLOCK_SIZE == 1024)", "FORMAT > 2 or (UNROLL_LOOP_2 < 1)"]
 
-tuning_results = tune_kernel("RunBenchmark", kernel_files, size, [], tune_params, restrictions=restrict, lang="C", block_size_names=["BLOCK_SIZE"], 
+tuning_results = tune_kernel("RunBenchmark", kernel_files, size, [], tune_params, strategy=arguments.technique, restrictions=restrict, lang="C", block_size_names=["BLOCK_SIZE"], 
     compiler_options=["-I ../../../src/kernels/spmv/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={sizeIndex}"])
 
 
 # Save the results as a JSON file
 with open("spmv-results.json", 'w') as f:
-    json.dump(tuning_results, f)
+    json.dump(tuning_results, f, indent=4, cls=NumpyEncoder)
 
 # Get the best configuration
 best_parameter_config = min(tuning_results[0], key=lambda x: x['time'])
@@ -50,9 +52,10 @@ for k, v in best_parameter_config.items():
 
     best_parameters[k] = v
 
-# Add problem size to results
+# Add problem size and tuning technique to results
 best_parameters["PROBLEM_SIZE"] = sizeIndex
+best_parameters["TUNING_TECHNIQUE"] = arguments.technique
 
 # Save the best results as a JSON file
 with open("best-spmv-results.json", 'w') as f:
-    json.dump(best_parameters, f)
+    json.dump(best_parameters, f, indent=4, cls=NumpyEncoder)

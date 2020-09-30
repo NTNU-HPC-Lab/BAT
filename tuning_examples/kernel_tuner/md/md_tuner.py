@@ -3,10 +3,12 @@ from kernel_tuner import tune_kernel, run_kernel
 from numba import cuda
 import json
 import argparse
+from numpyencoder import NumpyEncoder
 
 # Setup CLI parser
-parser = argparse.ArgumentParser(description="Reduction tuner")
+parser = argparse.ArgumentParser(description="MD tuner")
 parser.add_argument("--size", "-s", type=int, default=1, help="problem size to the benchmark (e.g.: 2)")
+parser.add_argument("--technique", "-t", type=str, default="brute_force", help="tuning technique to use for the benchmark (e.g.: annealing)")
 arguments = parser.parse_args()
 
 # Problem sizes used in the SHOC benchmark
@@ -28,11 +30,12 @@ tune_params["TEXTURE_MEMORY"] = [0, 1]
 tune_params["WORK_PER_THREAD"] = [i for i in range(1, 6)] # Range: [1, ..., 5]
 
 # Tune all kernels and correctness verify by throwing error if verification failed
-tuning_results = tune_kernel("md_host", kernel_files, size, [], tune_params, lang="C", block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/md/", f"-DPROBLEM_SIZE={input_problem_size}"])
+tuning_results = tune_kernel("md_host", kernel_files, size, [], tune_params, strategy=arguments.technique, lang="C",
+                            block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/md/", f"-DPROBLEM_SIZE={input_problem_size}"])
 
 # Save the results as a JSON file
 with open("md-results.json", 'w') as f:
-    json.dump(tuning_results, f)
+    json.dump(tuning_results, f, indent=4, cls=NumpyEncoder)
 
 # Get the best configuration
 best_parameter_config = min(tuning_results[0], key=lambda x: x['time'])
@@ -45,9 +48,10 @@ for k, v in best_parameter_config.items():
 
     best_parameters[k] = v
 
-# Add problem size to results
+# Add problem size and tuning technique to results
 best_parameters["PROBLEM_SIZE"] = input_problem_size
+best_parameters["TUNING_TECHNIQUE"] = arguments.technique
 
 # Save the best results as a JSON file
 with open("best-md-results.json", 'w') as f:
-    json.dump(best_parameters, f)
+    json.dump(best_parameters, f, indent=4, cls=NumpyEncoder)

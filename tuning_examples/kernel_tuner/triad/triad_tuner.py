@@ -2,7 +2,14 @@ import numpy
 from kernel_tuner import tune_kernel, run_kernel
 from numba import cuda
 import json
+import argparse
+from numpyencoder import NumpyEncoder
 
+# Setup CLI parser
+parser = argparse.ArgumentParser(description="Triad tuner")
+parser.add_argument("--size", "-s", type=int, default=1, help="this is not used for this benchmark")
+parser.add_argument("--technique", "-t", type=str, default="brute_force", help="tuning technique to use for the benchmark (e.g.: annealing)")
+arguments = parser.parse_args()
 
 # Problem sizes used in the SHOC benchmark
 problem_sizes = [16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304]
@@ -24,11 +31,12 @@ tune_params["LOOP_UNROLL_TRIAD"] = [0, 1]
 tune_params["PRECISION"] = [32, 64]
 
 # Tune kernel and correctness verify by throwing error if verification failed
-tuning_results = tune_kernel("triad_host", kernel_files, size, [], tune_params, lang="C", block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/triad/"])
+tuning_results = tune_kernel("triad_host", kernel_files, size, [], tune_params, strategy=arguments.technique, lang="C",
+                            block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/triad/"])
 
 # Save the results as a JSON file
 with open("triad-results.json", 'w') as f:
-    json.dump(tuning_results, f)
+    json.dump(tuning_results, f, indent=4, cls=NumpyEncoder)
 
 # Get the best configuration
 best_parameter_config = min(tuning_results[0], key=lambda x: x['time'])
@@ -41,6 +49,9 @@ for k, v in best_parameter_config.items():
 
     best_parameters[k] = v
 
+# Add tuning technique to results
+best_parameters["TUNING_TECHNIQUE"] = arguments.technique
+
 # Save the best results as a JSON file
 with open("best-triad-results.json", 'w') as f:
-    json.dump(best_parameters, f)
+    json.dump(best_parameters, f, indent=4, cls=NumpyEncoder)

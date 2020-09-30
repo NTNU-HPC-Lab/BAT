@@ -1,3 +1,4 @@
 kernel_tuner[cuda]
 numpy
 numba==0.50.0
+numpyencoder
