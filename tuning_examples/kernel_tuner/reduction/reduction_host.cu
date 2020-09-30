@@ -143,7 +143,7 @@ float RunTest(string testName)
     cudaMalloc((void**)&d_odata, num_blocks * sizeof(T));
 
     int passes = 10;
-    int iters  = 256;
+    int iters  = 100;
 
     // For measuring the time
     cudaEvent_t start, stop;
