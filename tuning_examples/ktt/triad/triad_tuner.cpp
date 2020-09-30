@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    size_t globalWorkSize = problemSizes[inputProblemSize - 1] * 1024 / sizeof(float);
+    size_t globalWorkSize = problemSizes[inputProblemSize - 1] * 1024;
 
     const ktt::DimensionVector gridSize(globalWorkSize);
     const ktt::DimensionVector blockSize;
@@ -111,7 +111,11 @@ int main(int argc, char* argv[]) {
     // To set the different block sizes (local size) multiplied by the base (1)
     auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_SIZE", ktt::ModifierAction::Multiply);
     // To set the different grid sizes (global size) divided by the amount of work per thread
-    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_PER_THREAD", ktt::ModifierAction::Divide);
+    auto globalModifier = [](const size_t size, const std::vector<size_t>& vector) {
+        return int(ceil(double(size) / double(vector.at(0)) / double(vector.at(1)))) * vector.at(0) * (vector.at(2)/32*4);
+    };
+    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, 
+        std::vector<std::string>{"BLOCK_SIZE", "WORK_PER_THREAD", "PRECISION"}, globalModifier);
 
     // Set reference kernel for correctness verification and compare to the computed result
     // NOTE: Due to not being able to specify the precision to match the tuned kernel, this has only been used when developing and testing this benchmark
