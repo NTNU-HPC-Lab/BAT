@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
     cltune::Tuner auto_tuner(0, 0);
 
     unsigned int numVertsGraph = problemSizes[inputProblemSize-1];
+    int size = problemSizes[inputProblemSize-1];
     int avg_degree = 2;
 
     Graph *G=new Graph();
@@ -57,7 +58,6 @@ int main(int argc, char* argv[]) {
     unsigned int *edgeArrayAux=G->GetEdgeList();
     unsigned int adj_list_length=G->GetAdjacencyListLength();
     unsigned int numVerts = G->GetNumVertices();
-    //unsigned int numEdges = G->GetNumEdges();
     vector<int> edgeArrayVector(edgeArray, edgeArray + numVerts+1);
     vector<int> edgeArrayAuxVector(edgeArrayAux, edgeArrayAux + adj_list_length);
 
@@ -67,12 +67,12 @@ int main(int argc, char* argv[]) {
     }
     costArray[0]=0;
     vector<int> flag = {0};
-    int numVerts2 = numVerts;
+    int numVertsInt = numVerts;
 
     // Get the maximum threads per block 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
-    unsigned int maxThreads = min(deviceProp.maxThreadsPerBlock, numVertsGraph);
+    unsigned int maxThreads = min(deviceProp.maxThreadsPerBlock, size);
     // Define a vector of block sizes from 1 to maximum threads per block
     vector<long unsigned int> block_sizes = {};
     for(int i = 1; i < (maxThreads+1); i++) {
@@ -94,14 +94,14 @@ int main(int argc, char* argv[]) {
     auto_tuner.DivGlobalSize(kernel_id, {"CHUNK_FACTOR"});
 
     // Set reference kernel for correctness verification and compare to the computed result
-    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numVerts}, {1024});
+    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numVerts}, {512});
 
     // Add arguments for kernel
     auto_tuner.AddArgumentOutput(costArray);
     auto_tuner.AddArgumentInput(edgeArrayVector);
     auto_tuner.AddArgumentInput(edgeArrayAuxVector);
     auto_tuner.AddArgumentScalar(32);
-    auto_tuner.AddArgumentScalar(numVerts2);
+    auto_tuner.AddArgumentScalar(numVertsInt);
     auto_tuner.AddArgumentScalar(0);
     auto_tuner.AddArgumentOutput(flag);
 

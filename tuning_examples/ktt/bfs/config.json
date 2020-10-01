@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./bfs",
+    "results": [
+        "best-BFS_kernel_warp-results.json"
+    ]
+}
