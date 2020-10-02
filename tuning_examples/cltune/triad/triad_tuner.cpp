@@ -73,8 +73,9 @@ int main(int argc, char* argv[]) {
 
     // Set reference kernel for correctness verification and compare to the computed result
     // NOTE: Due to not being able to specify the precision to match the tuned kernel, this has only been used when developing and testing this benchmark
-    // Remember to set the correct precision in the reference kernel when using the reference kernel
-    // auto_tuner.SetReference({referenceKernelFile}, kernelName, {globalWorkSize}, {1});
+    // Remember to set the correct precision for the reference kernel below
+    // auto_tuner.SetReference({referenceKernelFile}, kernelName, {globalWorkSize}, {128});
+    // auto_tuner.AddParameterReference("PRECISION", 64);
 
     // Use the same seed for random number as in the SHOC benchmark
     srand48(8650341L);
