@@ -49,7 +49,7 @@ using namespace std;
 float triad_host() {
     // TODO implement verbose?
     const bool verbose = false;
-    const int n_passes = 10;
+    const int n_passes = 5;
 
     // 256k through 8M bytes
     const int nSizes = 9;
