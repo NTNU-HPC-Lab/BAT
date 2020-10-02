@@ -1,3 +1,6 @@
+#define PRECISION 64
+#define FORMAT 0
+
 template <typename fpType>
 __device__ void
 spmv_csr_scalar_kernel(const fpType * __restrict__ val,
@@ -22,7 +25,6 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
                         fpType * vec,
                         const int dim, fpType * __restrict__ out);
 
-                        
 /**
  * Helper function for tuners that can not use templated kernels directly
  * This function also chooses format based on a parameter

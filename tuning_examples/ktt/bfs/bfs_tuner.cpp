@@ -80,8 +80,6 @@ int main(int argc, char* argv[]) {
     ktt::KernelId referenceKernelId = auto_tuner.addKernelFromFile(referenceKernelFile, kernelName, gridSize, blockSizeReference);
 
     // Add arguments for kernel
-    // Arrays (A, B, C) have random numbers similar to the program. The numbers are in the range [0, 10)
-    // <x>f are floats and <x>d are double values
     ktt::ArgumentId costArrayId = auto_tuner.addArgumentVector(costArray, ktt::ArgumentAccessType::ReadWrite);
     ktt::ArgumentId edgeArrayVectorId = auto_tuner.addArgumentVector(edgeArrayVector, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId edgeArrayAuxVectorId = auto_tuner.addArgumentVector(edgeArrayAuxVector, ktt::ArgumentAccessType::ReadOnly);

@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./spmv",
+    "results": [
+        "best-spmv_kernel-results.json"
+    ]
+}

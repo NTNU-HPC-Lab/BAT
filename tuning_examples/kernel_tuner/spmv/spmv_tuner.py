@@ -15,7 +15,6 @@ arguments = parser.parse_args()
 gpu = cuda.get_current_device()
 sizeIndex = arguments.size
 problem_sizes = [1024, 8192, 12288, 16384]
-ellpackr_padded_sizes = [1024, 8192, 12288, 16384]
 size = problem_sizes[sizeIndex - 1]
 
 # Use host code in combination with CUDA kernel
@@ -31,7 +30,7 @@ tune_params["FORMAT"] = [0, 1, 2, 3, 4] # 0: ellpackr, 1: csr-normal-scalar, 2: 
 tune_params["UNROLL_LOOP_1"] = [0, 1]
 tune_params["UNROLL_LOOP_2"] = [0, 1]
 
-restrict = ["FORMAT < 3 or (BLOCK_SIZE == 32) or (BLOCK_SIZE == 64) or (BLOCK_SIZE == 128) or (BLOCK_SIZE == 256) or (BLOCK_SIZE == 512) or (BLOCK_SIZE == 1024)", "FORMAT > 2 or (UNROLL_LOOP_2 < 1)"]
+restrict = ["FORMAT < 3 or BLOCK_SIZE % 32 == 0", "FORMAT > 2 or (UNROLL_LOOP_2 < 1)"]
 
 tuning_results = tune_kernel("RunBenchmark", kernel_files, size, [], tune_params, strategy=arguments.technique, restrictions=restrict, lang="C", block_size_names=["BLOCK_SIZE"], 
     compiler_options=["-I ../../../src/kernels/spmv/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={sizeIndex}"])

@@ -42,6 +42,14 @@ class SPMVTuner(MeasurementInterface):
         args = argparser.parse_args()
 
         cfg = desired_result.configuration.data
+
+        # Check constraints for the parameters
+        if not (cfg['FORMAT'] < 3 or cfg['BLOCK_SIZE'] % 32 == 0):
+            return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
+
+        if not (cfg['FORMAT'] > 2 or cfg['UNROLL_LOOP_2'] < 1):
+            return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
+
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 

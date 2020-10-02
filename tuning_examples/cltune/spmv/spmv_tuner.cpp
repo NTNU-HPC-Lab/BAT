@@ -138,21 +138,27 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddParameter(kernel_id, "NOT_TEXTURE_MEMORY", {1});
 
     // Add constraint for only using block sizes that are a multiple of 32 for CSR vector format (format 3 or 4)
-    auto BlockSizeLimit = [] (std::vector<size_t> v) {
+    auto blockSizeLimit = [] (std::vector<size_t> v) {
         return (v[1] < 3 || v[0] % 32 == 0);
     };
-    auto_tuner.AddConstraint(kernel_id, BlockSizeLimit, {"BLOCK_SIZE", "FORMAT"});
-    
+    auto_tuner.AddConstraint(kernel_id, blockSizeLimit, {"BLOCK_SIZE", "FORMAT"});
+
+    // Add constraint for only unrolling loop 2 when the format is CSR Vector
+    auto unrollLoop2 = [] (std::vector<size_t> v) {
+        return (v[0] > 2 || v[1] < 1);
+    };
+    auto_tuner.AddConstraint(kernel_id, unrollLoop2, {"FORMAT", "UNROLL_LOOP_2"});
+
     // Add a constraint for what to multiply the total thread size by. If the format is the CSR vector format (3 or 4)
     // the total number of threads should be multiplied by 32.
-    auto k = [] (std::vector<size_t> v) {
+    auto threadMultiply = [] (std::vector<size_t> v) {
         if (v[1] > 2) {
             return v[0] == 32;
         } else {
             return v[0] == 1;
         }
     };
-    auto_tuner.AddConstraint(kernel_id, k, {"THREADS_PER_ROW", "FORMAT"});
+    auto_tuner.AddConstraint(kernel_id, threadMultiply, {"THREADS_PER_ROW", "FORMAT"});
 
     // Multiply the base number (1) of threads per block with the parameter value
     auto_tuner.MulLocalSize(kernel_id, {"BLOCK_SIZE"});
