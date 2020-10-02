@@ -81,8 +81,9 @@ class MDTuner(MeasurementInterface):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
         
-        # Update configuration with problem size
+        # Update configuration with problem size and tuning technique
         configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        configuration.data["TUNING_TECHNIQUE"] = argparser.parse_args().technique
         
         self.manipulator().save_to_file(configuration.data, 'results.json')
 

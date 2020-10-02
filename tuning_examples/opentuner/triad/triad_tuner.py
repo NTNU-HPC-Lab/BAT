@@ -84,6 +84,10 @@ class TriadTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+
+        # Update configuration with tuning technique
+        configuration.data["TUNING_TECHNIQUE"] = argparser.parse_args().technique
+
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 
