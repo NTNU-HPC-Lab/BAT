@@ -1,16 +1,18 @@
-// Uncomment which precision to use for testing, as KTT does not provide the compiler directives
+// Select precision to use for testing, as KTT does not provide an option that works for this
 // Select which precision that are used in the calculations
-// #if PRECISION == 32
+#define PRECISION 32
+
+#if PRECISION == 32
     #define T float
     #define forceVecType float3
     #define posVecType float4
     #define texReader texReader_sp
-// #elif PRECISION == 64
+#elif PRECISION == 64
     #define T double
     #define forceVecType double3
     #define posVecType double4
     #define texReader texReader_dp
-// #endif
+#endif
 
 // KTT does not support texture memory, so this is always disabled
 #define useTexture false
@@ -150,9 +152,9 @@ extern "C" __global__ void md_helper(
     const T lj2,
     const int inum
 ) {
-    // #if PRECISION == 32
+    #if PRECISION == 32
         compute_lj_force(force3f, positionf, neighCount, neighList, cutsq, lj1, lj2, inum);
-    // #elif PRECISION == 64
+    #elif PRECISION == 64
         compute_lj_force(force3d, positiond, neighCount, neighList, cutsq, lj1, lj2, inum);
-    // #endif
+    #endif
 }

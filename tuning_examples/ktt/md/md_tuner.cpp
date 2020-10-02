@@ -50,10 +50,11 @@ int main(int argc, char* argv[]) {
 
     const ktt::DimensionVector gridSize(nAtom);
     const ktt::DimensionVector blockSize;
+    const ktt::DimensionVector blockSizeReference(256);
 
     // Add kernel and reference kernel
     ktt::KernelId kernelId = auto_tuner.addKernelFromFile(kernelFile, kernelName, gridSize, blockSize);
-    ktt::KernelId referenceKernelId = auto_tuner.addKernelFromFile(referenceKernelFile, kernelName, gridSize, blockSize);
+    ktt::KernelId referenceKernelId = auto_tuner.addKernelFromFile(referenceKernelFile, kernelName, gridSize, blockSizeReference);
 
     // Use the same seed for random number as in the SHOC benchmark
     srand48(8650341L);
@@ -132,7 +133,12 @@ int main(int argc, char* argv[]) {
     // To set the different block sizes (local size) multiplied by the base (1)
     auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_SIZE", ktt::ModifierAction::Multiply);
     // To set the different grid sizes (global size) divided by the amount of work per thread
-    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_PER_THREAD", ktt::ModifierAction::Divide);
+    //auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_PER_THREAD", ktt::ModifierAction::Divide);
+    auto globalModifier = [](const size_t size, const std::vector<size_t>& vector) {
+        return int(ceil(double(size) / double(vector.at(0)) / double(vector.at(1)))) * vector.at(0);
+    };
+    auto_tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, 
+        std::vector<std::string>{"BLOCK_SIZE", "WORK_PER_THREAD"}, globalModifier);
 
     // Set reference kernel for correctness verification and compare to the computed result
     // NOTE: Due to not being able to specify the precision to match the tuned kernel, this has only been used when developing and testing this benchmark
