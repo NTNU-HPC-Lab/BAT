@@ -1,8 +1,8 @@
 #include <fstream>
 #include "ktt_json_saver.hpp"
 
-void saveJSONFileFromKTTResults(const ktt::ComputationResult &computationResult, const string &fileName, const int &problemSize) {
-    string jsonOutput = "{\n\t\"PROBLEM_SIZE\": " + to_string(problemSize);
+void saveJSONFileFromKTTResults(const ktt::ComputationResult &computationResult, const string &fileName, const int &problemSize, const string &tuningTechnique) {
+    string jsonOutput = "{\n\t\"PROBLEM_SIZE\": " + to_string(problemSize) + ",\n\t\"TUNING_TECHNIQUE\": \"" + tuningTechnique + "\"";
 
     auto bestParameters = computationResult.getConfiguration();
 

@@ -4,6 +4,6 @@
 
 using namespace std;
 
-void saveJSONFileFromKTTResults(const ktt::ComputationResult &computationResult, const string &fileName, const int &problemSize);
+void saveJSONFileFromKTTResults(const ktt::ComputationResult &computationResult, const string &fileName, const int &problemSize, const string &tuningTechnique);
 
 #endif

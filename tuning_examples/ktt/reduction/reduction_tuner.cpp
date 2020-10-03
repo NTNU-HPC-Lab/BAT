@@ -20,24 +20,52 @@ int main(int argc, char* argv[]) {
     uint problemSizes[4] = { 1, 8, 32, 64 };
     uint inputProblemSize = 1; // Default to the first problem size if no input
 
+    string tuningTechnique = "";
+
     // If only one extra argument and the flag is set for size
     if (argc == 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
         cerr << "Error: You need to specify an integer for the problem size." << endl;
         exit(1);
     }
 
-    // If more than two extra arguments and flag is set for size
-    if (argc > 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
-        try {
-            inputProblemSize = stoi(argv[2]);
+    // If only one extra argument and the flag is set for tuning technique
+    if (argc == 2 && (string(argv[1]) == "--technique" || string(argv[1]) == "-t")) {
+        cerr << "Error: You need to specify a tuning technique." << endl;
+        exit(1);
+    }
 
-            // Ensure the input problem size is between 1 and 4
-            if (inputProblemSize < 1 || inputProblemSize > 4) {
-                cerr << "Error: The problem size needs to be an integer in the range 1 to 4." << endl;
+    // Check if the provided arguments does not match in size
+    if ((argc - 1) % 2 != 0) {
+        cerr << "Error: You need to specify correct number of input arguments." << endl;
+        exit(1);
+    }
+
+    // Loop arguments and add if found
+    for (int i = 1; i < argc; i++) {
+        // Skip the argument value iterations
+        if (i % 2 == 0) {
+            continue;
+        }
+
+        // Check for problem size
+        if (string(argv[i]) == "--size" || string(argv[i]) == "-s") {
+            try {
+                inputProblemSize = stoi(argv[i + 1]);
+
+                // Ensure the input problem size is between 1 and 4
+                if (inputProblemSize < 1 || inputProblemSize > 4) {
+                    cerr << "Error: The problem size needs to be an integer in the range 1 to 4." << endl;
+                    exit(1);
+                }
+            } catch (const invalid_argument &error) {
+                cerr << "Error: You need to specify an integer for the problem size." << endl;
                 exit(1);
             }
-        } catch (const invalid_argument &error) {
-            cerr << "Error: You need to specify an integer for the problem size." << endl;
+        // Check for tuning technique
+        } else if (string(argv[i]) == "--technique" || string(argv[i]) == "-t") {
+            tuningTechnique = argv[i + 1];
+        } else {
+            cerr << "Error: Unsupported argument " << "`" << argv[i] << "`" << endl;
             exit(1);
         }
     }
@@ -105,6 +133,21 @@ int main(int argc, char* argv[]) {
     // Remember to set the correct precision in the reference kernel when using the reference kernel
     // auto_tuner.setReferenceKernel(kernelId, referenceKernelId, vector<ktt::ParameterPair>{}, vector<ktt::ArgumentId>{odatafId, odatadId});
 
+    // Select the tuning technique for this benchmark
+    if (tuningTechnique == "annealing") {
+        double maxTemperature = 4.0f;
+        auto_tuner.setSearchMethod(ktt::SearchMethod::Annealing, {maxTemperature});
+    } else if (tuningTechnique == "mcmc") {
+        auto_tuner.setSearchMethod(ktt::SearchMethod::MCMC, {});
+    } else if (tuningTechnique == "random") {
+        auto_tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, {});
+    } else if (tuningTechnique == "brute_force") {
+        auto_tuner.setSearchMethod(ktt::SearchMethod::FullSearch, {});
+    } else {
+        cerr << "Error: Unsupported tuning technique: `" << tuningTechnique << "`." << endl;
+        exit(1);
+    }
+
     // Set the tuner to print in microseconds
     auto_tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
@@ -112,7 +155,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.tuneKernel(kernelId);
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json", inputProblemSize);
+    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(kernelId), "best-" + kernelName + "-results.json", inputProblemSize, tuningTechnique);
 
     // Print the results to cout and save it as a CSV file
     auto_tuner.printResult(kernelId, cout, ktt::PrintFormat::Verbose);
