@@ -94,8 +94,6 @@ class SortTuner(MeasurementInterface):
 
         run_result = self.call_program(run_cmd)
 
-        print(run_result['stdout'])
-
         # Check that error code and error output is ok
         assert run_result['stderr'] == b''
         assert run_result['returncode'] == 0
