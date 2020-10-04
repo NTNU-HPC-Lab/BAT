@@ -118,18 +118,11 @@ void tuneScan() {
     cltune::Tuner auto_tuner(0, 0);
 
     const size_t reorderFindGlobalWorkSize = size / 2;
-    const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
-    int numElements = 16 * reorderBlocks;
-    // unsigned int numBlocks = max(1, (int) ceil((float) numElements / (4.f * SCAN_BLOCK_SIZE)));
-    // unsigned int numBlocks = max(1, (int) ceil((float) numElements / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
-    // unsigned int numBlocks = max(1, (int) ceil((float) numElements / (4 * SCAN_BLOCK_SIZE)));
-    // unsigned int numBlocks = ceil((float) numElements / (4 * SCAN_BLOCK_SIZE));
-    unsigned int numBlocks = ceil((float) numElements / (4 * SCAN_BLOCK_SIZE));
-    // unsigned int numBlocks = ceil((float) numElements / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE));
+    int numElements = 16 * reorderFindGlobalWorkSize;
+    unsigned int numBlocksReference = ceil((float) (numElements / SCAN_BLOCK_SIZE) / (float)(4 * SCAN_BLOCK_SIZE));
+    // Grid size should be: ceil((float)numElements2 / (float) SCAN_BLOCK_SIZE / (float) SORT_DATA_SIZE / (float) SCAN_BLOCK_SIZE);
 
     // Add kernel
-    // size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
-    // size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numBlocks}, {1});
     size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {(size_t) numElements}, {1});
 
     // Add parameter for kernel
@@ -137,12 +130,11 @@ void tuneScan() {
     auto_tuner.AddParameter(kernel_id, "INLINE_LOCAL_MEMORY", {0, 1});
     auto_tuner.AddParameter(kernel_id, "SCAN_DATA_SIZE", {2, 4, 8});
     auto_tuner.AddParameter(kernel_id, "SORT_DATA_SIZE", {4});
-    auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {SCAN_BLOCK_SIZE});
-    // auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
-    auto_tuner.MulLocalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
+    auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
     auto_tuner.AddParameter(kernel_id, "SORT_BLOCK_SIZE", {128});
 
-    // auto_tuner.DivGlobalSize(kernel_id, {"SORT_DATA_SIZE", "SCAN_BLOCK_SIZE"});
+    auto_tuner.MulLocalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
+    auto_tuner.DivGlobalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
     auto_tuner.DivGlobalSize(kernel_id, {"SORT_DATA_SIZE"});
 
     // Constraint for block sizes and data sizes
@@ -185,7 +177,7 @@ void tuneScan() {
     auto_tuner.AddArgumentScalar(1); // storeSum = true
 
     // Set reference kernel for correctness verification and compare to the computed result
-    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocks}, {256});
+    auto_tuner.SetReference({referenceKernelFile}, kernelName, {(size_t) numBlocksReference * 256}, {256});
     auto_tuner.AddParameterReference("SCAN_DATA_SIZE", 2);
     auto_tuner.AddParameterReference("SORT_DATA_SIZE", 4);
     auto_tuner.AddParameterReference("SCAN_BLOCK_SIZE", 256);
