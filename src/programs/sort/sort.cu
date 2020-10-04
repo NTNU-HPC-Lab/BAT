@@ -60,7 +60,7 @@ void RunBenchmark(OptionParser &op)
     //Number of key-value pairs to sort, must be a multiple of 1024
     int probSizes[4] = { 1, 8, 48, 96 };
 
-    int size = probSizes[op.getOptionInt("size")-1];
+    int size = probSizes[op.getOptionInt("size") - 1];
     // Convert to MB
     size = (size * 1024 * 1024) / sizeof(uint);
 
@@ -81,7 +81,7 @@ void RunBenchmark(OptionParser &op)
 
     do
     {
-        uint numBlocks = max(1, (int) ceil((float) numScanElts / (4 * SCAN_BLOCK_SIZE)));
+        uint numBlocks = max(1, (int) ceil((float) numScanElts / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
         if (numBlocks > 1)
         {
             level++;
@@ -98,7 +98,7 @@ void RunBenchmark(OptionParser &op)
 
     do
     {
-        uint numBlocks = max(1, (int) ceil((float) numScanElts / (4 * SCAN_BLOCK_SIZE)));
+        uint numBlocks = max(1, (int) ceil((float) numScanElts / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
         if (numBlocks > 1)
         {
             // Malloc device mem for block sums
@@ -119,8 +119,8 @@ void RunBenchmark(OptionParser &op)
     CUDA_SAFE_CALL(cudaMalloc((void**)&dTempKeys, bytes));
     CUDA_SAFE_CALL(cudaMalloc((void**)&dTempVals, bytes));
 
-    // Each thread in the sort kernel handles 4 elements
-    size_t numSortGroups = size / (4 * SORT_BLOCK_SIZE);
+    // Each thread in the sort kernel handles "SORT_DATA_SIZE" elements
+    size_t numSortGroups = size / (SORT_DATA_SIZE * SORT_BLOCK_SIZE);
 
     uint* dCounters, *dCounterSums, *dBlockOffsets;
     CUDA_SAFE_CALL(cudaMalloc((void**)&dCounters, WARP_SIZE * numSortGroups * sizeof(uint)));
@@ -144,8 +144,8 @@ void RunBenchmark(OptionParser &op)
         // Perform Radix Sort (4 bits at a time)
         for (int i = 0; i < SORT_BITS; i += 4)
         {
-            radixSortStep(4, i, (uint4*)dKeys, (uint4*)dVals,
-                    (uint4*)dTempKeys, (uint4*)dTempVals, dCounters,
+            radixSortStep(4, i, (SORT_DATA_TYPE*)dKeys, (SORT_DATA_TYPE*)dVals,
+                    (SORT_DATA_TYPE*)dTempKeys, (SORT_DATA_TYPE*)dTempVals, dCounters,
                     dCounterSums, dBlockOffsets, scanBlockSums, size);
         }
 
@@ -206,15 +206,15 @@ void RunBenchmark(OptionParser &op)
 // Modifications:
 //
 // ****************************************************************************
-void radixSortStep(uint nbits, uint startbit, uint4* keys, uint4* values,
-        uint4* tempKeys, uint4* tempValues, uint* counters,
+void radixSortStep(uint nbits, uint startbit, SORT_DATA_TYPE* keys, SORT_DATA_TYPE* values,
+        SORT_DATA_TYPE* tempKeys, SORT_DATA_TYPE* tempValues, uint* counters,
         uint* countersSum, uint* blockOffsets, uint** scanBlockSums,
         uint numElements)
 {
     // Threads handle either 4 or two elements each
-    const size_t radixGlobalWorkSize   = numElements / 4;
-    const size_t findGlobalWorkSize    = numElements / 2;
-    const size_t reorderGlobalWorkSize = numElements / 2;
+    const size_t radixGlobalWorkSize   = numElements / SORT_DATA_SIZE;
+    const size_t findGlobalWorkSize    = numElements / SCAN_DATA_SIZE;
+    const size_t reorderGlobalWorkSize = numElements / SCAN_DATA_SIZE;
 
     // Radix kernel uses block size of 128, others use 256 (same as scan)
     const size_t radixBlocks   = radixGlobalWorkSize   / SORT_BLOCK_SIZE;
@@ -222,32 +222,28 @@ void radixSortStep(uint nbits, uint startbit, uint4* keys, uint4* values,
     const size_t reorderBlocks = reorderGlobalWorkSize / SCAN_BLOCK_SIZE;
 
     radixSortBlocks
-        <<<radixBlocks, SORT_BLOCK_SIZE, 4 * sizeof(uint)*SORT_BLOCK_SIZE>>>
+        <<<radixBlocks, SORT_BLOCK_SIZE, SORT_DATA_SIZE * sizeof(uint)*SORT_BLOCK_SIZE>>>
         (nbits, startbit, tempKeys, tempValues, keys, values);
 
     findRadixOffsets
-        <<<findBlocks, SCAN_BLOCK_SIZE, 2 * SCAN_BLOCK_SIZE*sizeof(uint)>>>
-        ((uint2*)tempKeys, counters, blockOffsets, startbit, numElements,
-         findBlocks);
+        <<<findBlocks, SCAN_BLOCK_SIZE, SCAN_DATA_SIZE * SCAN_BLOCK_SIZE*sizeof(uint)>>>
+        ((SCAN_DATA_TYPE*)tempKeys, counters, blockOffsets, startbit, numElements, findBlocks);
 
-    scanArrayRecursive(countersSum, counters, 16*reorderBlocks, 0,
-            scanBlockSums);
+    scanArrayRecursive(countersSum, counters, 16*reorderBlocks, 0, scanBlockSums);
 
     reorderData<<<reorderBlocks, SCAN_BLOCK_SIZE>>>
-        (startbit, (uint*)keys, (uint*)values, (uint2*)tempKeys,
-        (uint2*)tempValues, blockOffsets, countersSum, counters,
-        reorderBlocks);
+        (startbit, (uint*)keys, (uint*)values, (SCAN_DATA_TYPE*)tempKeys,
+        (SCAN_DATA_TYPE*)tempValues, blockOffsets, countersSum, counters, reorderBlocks);
 }
 
-void scanArrayRecursive(uint* outArray, uint* inArray, int numElements,
-        int level, uint** blockSums)
+void scanArrayRecursive(uint* outArray, uint* inArray, int numElements, int level, uint** blockSums)
 {
     // Kernels handle 8 elems per thread
-    unsigned int numBlocks = max(1, (unsigned int)ceil((float)numElements / (4.f * SCAN_BLOCK_SIZE)));
-    unsigned int sharedEltsPerBlock = SCAN_BLOCK_SIZE * 2;
+    unsigned int numBlocks = max(1, (unsigned int)ceil((float)numElements / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
+    unsigned int sharedEltsPerBlock = SCAN_BLOCK_SIZE * SCAN_DATA_SIZE;
     unsigned int sharedMemSize = sizeof(uint) * sharedEltsPerBlock;
 
-    bool fullBlock = (numElements == numBlocks * 4 * SCAN_BLOCK_SIZE);
+    bool fullBlock = (numElements == numBlocks * SORT_DATA_SIZE * SCAN_BLOCK_SIZE);
 
     dim3 grid(numBlocks, 1, 1);
     dim3 threads(SCAN_BLOCK_SIZE, 1, 1);
@@ -264,8 +260,7 @@ void scanArrayRecursive(uint* outArray, uint* inArray, int numElements,
     }
     if (numBlocks > 1)
     {
-        scanArrayRecursive(blockSums[level], blockSums[level],
-                numBlocks, level + 1, blockSums);
+        scanArrayRecursive(blockSums[level], blockSums[level], numBlocks, level + 1, blockSums);
         vectorAddUniform4<<< grid, threads >>>
                 (outArray, blockSums[level], numElements);
     }
