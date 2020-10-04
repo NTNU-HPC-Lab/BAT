@@ -30,6 +30,8 @@ class ReductionTuner(MeasurementInterface):
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
         manipulator.add_parameter(EnumParameter('COMPILER_OPTIMIZATION_HOST', [0, 1, 2, 3]))
         manipulator.add_parameter(EnumParameter('COMPILER_OPTIMIZATION_DEVICE', [0, 1, 2, 3]))
+        manipulator.add_parameter(EnumParameter('USE_FAST_MATH', [0, 1]))
+        manipulator.add_parameter(EnumParameter('MAX_REGISTERS', [-1, 20, 40, 60, 80, 100, 120]))
         manipulator.add_parameter(IntegerParameter('GPUS', 1, len(cuda.gpus)))
         manipulator.add_parameter(EnumParameter('LOOP_UNROLL_REDUCE_1', [0, 1]))
         manipulator.add_parameter(EnumParameter('LOOP_UNROLL_REDUCE_2', [0, 1]))
@@ -48,7 +50,15 @@ class ReductionTuner(MeasurementInterface):
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
-        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c {start_path}/reduction/reduction.cu'
+        use_fast_math = ''
+        if cfg['USE_FAST_MATH'] == 1:
+            use_fast_math = '-use_fast_math '
+
+        max_registers = ''
+        if cfg['MAX_REGISTERS'] != -1:
+            max_registers = f'-maxrregcount={cfg["MAX_REGISTERS"]} '
+
+        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common {use_fast_math}{max_registers} -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c {start_path}/reduction/reduction.cu'
         make_program += ' -D{0}={1}'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
         make_program += ' -D{0}={1}'.format('GRID_SIZE', cfg['GRID_SIZE'])
         make_program += ' -D{0}={1}'.format('PRECISION', cfg['PRECISION'])
@@ -71,7 +81,7 @@ class ReductionTuner(MeasurementInterface):
             compile_cmd += ' -D{0}={1}'.format('LOOP_UNROLL_REDUCE_1', cfg['LOOP_UNROLL_REDUCE_1'])
             compile_cmd += ' -D{0}={1}'.format('LOOP_UNROLL_REDUCE_2', cfg['LOOP_UNROLL_REDUCE_2'])
             compile_cmd += ' -D{0}={1} \n'.format('TEXTURE_MEMORY', cfg['TEXTURE_MEMORY'])
-            compile_cmd += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c {start_path}/reduction/tpRedLaunchKernel.cu'
+            compile_cmd += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common {use_fast_math}{max_registers} -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c {start_path}/reduction/tpRedLaunchKernel.cu'
             compile_cmd += ' -D{0}={1} \n'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
             compile_cmd += f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o reduction main.o tpReduction.o tpRedLaunchKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
         else:
