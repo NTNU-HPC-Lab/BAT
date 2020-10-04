@@ -1,6 +1,8 @@
 // This kernel code based on CUDPP.  Please see the notice in
 // LICENSE_CUDPP.txt.
 
+typedef unsigned int uint;
+
 // Custom struct of two uint4s combined
 typedef struct __builtin_align__(16) {
     uint4 a;
@@ -130,7 +132,7 @@ SORT_DATA_TYPE scan4(SORT_DATA_TYPE idata, uint* ptr)
 // (startbit) -> (startbit + nbits)
 //----------------------------------------------------------------------------
 
-__global__ void radixSortBlocks(const uint nbits, const uint startbit,
+extern "C" __global__ void radixSortBlocks(const uint nbits, const uint startbit,
                                 SORT_DATA_TYPE* keysOut, SORT_DATA_TYPE* valuesOut,
                                 SORT_DATA_TYPE* keysIn, SORT_DATA_TYPE* valuesIn)
 {
@@ -314,11 +316,11 @@ __global__ void radixSortBlocks(const uint nbits, const uint startbit,
 // blockOffsets array.
 //
 //----------------------------------------------------------------------------
-__global__ void findRadixOffsets(SCAN_DATA_TYPE* keys, uint* counters,
+extern "C" __global__ void findRadixOffsets(SCAN_DATA_TYPE* keys, uint* counters,
         uint* blockOffsets, uint startbit, uint numElements, uint totalBlocks)
 {
     __shared__ uint  sStartPointers[16];
-    extern __shared__ uint sRadix1[];
+    __shared__ uint sRadix1[SCAN_DATA_SIZE * SCAN_BLOCK_SIZE];
 
     uint groupId = blockIdx.x;
     uint localId = threadIdx.x;
@@ -418,7 +420,7 @@ __global__ void findRadixOffsets(SCAN_DATA_TYPE* keys, uint* counters,
 // have been found. On compute version 1.1 and earlier GPUs, this code depends
 // on SORT_BLOCK_SIZE being 16 * number of radices (i.e. 16 * 2^nbits).
 //----------------------------------------------------------------------------
-__global__ void reorderData(uint  startbit,
+extern "C" __global__ void reorderData(uint  startbit,
                             uint  *outKeys,
                             uint  *outValues,
                             SCAN_DATA_TYPE *keys,
@@ -512,7 +514,7 @@ uint scanLocalMem(const uint val, uint* s_data)
     return s_data[idx-1];
 }
 
-__global__ void
+extern "C" __global__ void
 scan(uint *g_odata, uint* g_idata, uint* g_blockSums, const int n, const bool fullBlock, const bool storeSum)
 {
     __shared__ uint s_data[SCAN_DATA_SIZE * SCAN_BLOCK_SIZE];
@@ -664,7 +666,16 @@ scan(uint *g_odata, uint* g_idata, uint* g_blockSums, const int n, const bool fu
 #endif
 }
 
-__global__ void
+extern "C" __global__ void
+scan_helper(uint *g_odata, uint* g_idata, uint* g_blockSums, const int size, const bool fullBlock, const bool storeSum) {
+    const size_t reorderFindGlobalWorkSize = size / 2;
+    const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
+    const int n = 16 * reorderBlocks;
+
+    scan(g_odata, g_idata, g_blockSums, n, fullBlock, storeSum);
+}
+
+extern "C" __global__ void
 vectorAddUniform4(uint *d_vector, const uint *d_uniforms, const int n)
 {
     __shared__ uint uni[1];
