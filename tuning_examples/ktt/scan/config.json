@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./scan",
+    "results": [
+        "best-scan-results.json"
+    ]
+}

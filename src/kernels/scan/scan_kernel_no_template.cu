@@ -6,19 +6,43 @@
     #define vecT double4
 #endif
 
+#define T_SIZE 4
+
 // NB: The following class is a workaround for using dynamically sized
 // shared memory in templated code. Without this workaround, the
 // compiler would generate two shared memory arrays (one for SP
 // and one for DP) of the same name and would generate an error.
-class SharedMem
-{
-    public:
-      __device__ inline T* getPointer()
-      {
-          extern __shared__ T s[];
-          return s;
-      };
-};
+#if SET_SHARED_MEMORY_SIZE == 1
+    class SharedMemReduce
+    {
+        public:
+        __device__ inline T* getPointer()
+        {
+            extern __shared__ T sReduce[T_SIZE * BLOCK_SIZE];
+            return sReduce;
+        };
+    };
+    class SharedMemScan
+    {
+        public:
+        __device__ inline T* getPointer()
+        {
+            extern __shared__ T sScan[T_SIZE * BLOCK_SIZE * 2];
+            return sScan;
+        };
+    };
+#else
+    class SharedMem
+    {
+        public:
+        __device__ inline T* getPointer()
+        {
+            extern __shared__ T s[];
+            return s;
+        };
+    };
+#endif
+
 
 // Reduction Kernel
 // Note: This kernel is slightly different than the kernel in the
@@ -55,10 +79,19 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata,
     // works around this issue. Further, it is acceptable to specify
     // float, since CC's < 1.3 do not support double precision.
 #if __CUDA_ARCH__ <= 130
-    extern volatile __shared__ float sdata[];
+    #if SET_SHARED_MEMORY_SIZE == 1
+        extern volatile __shared__ float sdata[T_SIZE * BLOCK_SIZE];
+    #else
+        extern volatile __shared__ float sdata[];
+    #endif
 #else
-    SharedMem shared;
-    volatile T* sdata = shared.getPointer();
+    #if SET_SHARED_MEMORY_SIZE == 1
+        SharedMemReduce shared;
+        volatile T* sdata = shared.getPointer();
+    #else
+        SharedMem shared;
+        volatile T* sdata = shared.getPointer();
+    #endif
 #endif
     // This thread's sum
     T sum = 0.0f;
@@ -169,10 +202,19 @@ extern "C" __global__ void scan_single_block(T* __restrict__ g_block_sums, const
     // float, since CC's < 1.3 do not support double precision.
 
 #if __CUDA_ARCH__ <= 130
-    extern volatile __shared__ float s_data[];
+    #if SET_SHARED_MEMORY_SIZE == 1
+        extern volatile __shared__ float s_data[T_SIZE * BLOCK_SIZE * 2];
+    #else
+        extern volatile __shared__ float s_data[];
+    #endif
 #else
-    SharedMem shared;
-    volatile T* s_data = shared.getPointer();
+    #if SET_SHARED_MEMORY_SIZE == 1
+        SharedMemScan shared;
+        volatile T* s_data = shared.getPointer();
+    #else
+        SharedMem shared;
+        volatile T* s_data = shared.getPointer();
+    #endif
 #endif
 
     T val = (threadIdx.x < n) ? g_block_sums[threadIdx.x] : 0.0f;
@@ -200,10 +242,19 @@ bottom_scan(const T* __restrict__ g_idata,
     // works around this issue. Further, it is acceptable to specify
     // float, since CC's < 1.3 do not support double precision.
 #if __CUDA_ARCH__ <= 130
-    extern volatile __shared__ float sdata[];
+    #if SET_SHARED_MEMORY_SIZE == 1
+        extern volatile __shared__ float sdata[T_SIZE * BLOCK_SIZE * 2];
+    #else
+        extern volatile __shared__ float sdata[];
+    #endif
 #else
-    SharedMem shared;
-    volatile T* sdata = shared.getPointer();
+    #if SET_SHARED_MEMORY_SIZE == 1
+        SharedMemScan shared;
+        volatile T* sdata = shared.getPointer();
+    #else
+        SharedMem shared;
+        volatile T* sdata = shared.getPointer();
+    #endif
 #endif
 
     __shared__ T s_seed;
@@ -274,4 +325,35 @@ bottom_scan(const T* __restrict__ g_idata,
         window += BLOCK_SIZE;
         i += BLOCK_SIZE;
     }
+}
+
+extern "C" __global__ void scan_single_block_helper(float* __restrict__ g_block_sums_f, double* __restrict__ g_block_sums_d) {
+    #if PRECISION == 32
+        scan_single_block(g_block_sums_f, BLOCK_SIZE);
+    #else 
+        scan_single_block(g_block_sums_d, BLOCK_SIZE);
+    #endif
+}
+
+extern "C" __global__ void reduce_helper(
+    const float* __restrict__ g_idata_f, const double* __restrict__ g_idata_d,
+    float* __restrict__ g_odata_f, double* __restrict__ g_odata_d, 
+    int n_f, int n_d){
+    #if PRECISION == 32
+        reduce(g_idata_f, g_odata_f, n_f);
+    #else
+        reduce(g_idata_d, g_odata_d, n_d);
+    #endif
+}
+
+extern "C" __global__ void bottom_scan_helper(
+    const float* __restrict__ g_idata_f, const double* __restrict__ g_idata_d,
+    float* __restrict__ g_odata_f, double* __restrict__ g_odata_d, 
+    const float* __restrict__ g_block_sums_f, const double* __restrict__ g_block_sums_d,
+    int n_f, int n_d) {
+    #if PRECISION == 32
+        bottom_scan(g_idata_f, g_odata_f, g_block_sums_f, n_f);
+    #else
+        bottom_scan(g_idata_d, g_odata_d, g_block_sums_d, n_d);
+    #endif
 }
