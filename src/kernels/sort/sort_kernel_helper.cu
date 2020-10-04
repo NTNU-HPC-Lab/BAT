@@ -667,6 +667,15 @@ scan(uint *g_odata, uint* g_idata, uint* g_blockSums, const int n, const bool fu
 }
 
 extern "C" __global__ void
+scan_helper(uint *g_odata, uint* g_idata, uint* g_blockSums, const int size, const bool fullBlock, const bool storeSum) {
+    const size_t reorderFindGlobalWorkSize = size / 2;
+    const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
+    const int n = 16 * reorderBlocks;
+
+    scan(g_odata, g_idata, g_blockSums, n, fullBlock, storeSum);
+}
+
+extern "C" __global__ void
 vectorAddUniform4(uint *d_vector, const uint *d_uniforms, const int n)
 {
     __shared__ uint uni[1];

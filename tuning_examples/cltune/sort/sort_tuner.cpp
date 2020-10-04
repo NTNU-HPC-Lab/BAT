@@ -15,7 +15,7 @@ uint problemSizes[4] = { 1, 8, 48, 96 };
 uint inputProblemSize = 1; // Default to first problem size if no input
 string tuningTechnique = "";
 int size;
-string kernelFile = "../../../src/kernels/sort/sort_kernel.cu";
+string kernelFile = "../../../src/kernels/sort/sort_kernel_helper.cu";
 string referenceKernelFile = "./reference_kernel.cu";
 string dataDirectory = "../../../src/kernels/sort/data/";
 
