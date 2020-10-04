@@ -134,7 +134,6 @@ extern "C" __global__ void compute_lj_force(forceVecType* __restrict__ force3,
             }
             j++;
         }
-        
         // store the results
         force3[idx] = f;
     }

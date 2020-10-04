@@ -4,8 +4,10 @@ typedef unsigned int uint;
 // And define the replacements for the template inputs
 #if PRECISION == 32
     #define T float
+    #define T_SIZE 4
 #elif PRECISION == 64
     #define T double
+    #define T_SIZE 8
 #endif
 
 // The following class is a workaround for using dynamically sized
@@ -51,7 +53,7 @@ reduce(const T* __restrict__ g_idata, cudaTextureObject_t idataTextureObject, T*
     // It sets the size equal to the block size
     // This is needed because there is no way to set the shared memory from CLTune
 #if KERNEL_SHARED_MEMORY_SIZE
-    extern volatile __shared__ float sdata[BLOCK_SIZE];
+    extern volatile __shared__ float sdata[BLOCK_SIZE*T_SIZE];
 #else
 #if __CUDA_ARCH__ <= 130
     extern volatile __shared__ float sdata[];
@@ -119,11 +121,11 @@ reduce(const T* __restrict__ g_idata, cudaTextureObject_t idataTextureObject, T*
 extern "C" __global__ void reduce_helper(
     const float* __restrict__ g_idataf, cudaTextureObject_t idataTextureObjectf, float* __restrict__ g_odataf,
     const double* __restrict__ g_idatad, cudaTextureObject_t idataTextureObjectd, double* __restrict__ g_odatad,
-    const unsigned int n
+    const unsigned int nf, const unsigned int nd 
 ) {
     #if PRECISION == 32
-        reduce(g_idataf, idataTextureObjectf, g_odataf, n);
+        reduce(g_idataf, idataTextureObjectf, g_odataf, nf);
     #elif PRECISION == 64
-        reduce(g_idatad, idataTextureObjectd, g_odatad, n);
+        reduce(g_idatad, idataTextureObjectd, g_odatad, nd);
     #endif
 }

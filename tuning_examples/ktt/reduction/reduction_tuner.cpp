@@ -42,28 +42,35 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    size_t globalWorkSize = problemSizes[inputProblemSize - 1];
-
     int size = problemSizes[inputProblemSize - 1];
-    size = (size * 1024 * 1024) / sizeof(float);
+    int sizeFloat = (size * 1024 * 1024) / sizeof(float);
+    int sizeDouble = (size * 1024 * 1024) / sizeof(double);
 
-    const ktt::DimensionVector gridSize(globalWorkSize);
+    const ktt::DimensionVector gridSize;
     const ktt::DimensionVector blockSize;
+
+    const ktt::DimensionVector gridSizeReference(64*256);
+    const ktt::DimensionVector blockSizeReference(256);
 
     // Add kernel and reference kernel
     ktt::KernelId kernelId = auto_tuner.addKernelFromFile(kernelFile, kernelName, gridSize, blockSize);
-    ktt::KernelId referenceKernelId = auto_tuner.addKernelFromFile(referenceKernelFile, kernelName, gridSize, blockSize);
+    ktt::KernelId referenceKernelId = auto_tuner.addKernelFromFile(referenceKernelFile, kernelName, gridSizeReference, blockSizeReference);
 
-    vector<float> idataf(size);
-    vector<float> odataf(size);
-    vector<double> idatad(size);
-    vector<double> odatad(size);
+    vector<float> idataf(sizeFloat);
+    vector<float> odataf(sizeFloat);
+    vector<double> idatad(sizeDouble);
+    vector<double> odatad(sizeDouble);
 
     // Initialize start values for input
-    for(int i = 0; i < size; i++)
+    for(int i = 0; i < sizeFloat; i++)
     {
         // Fill with same pattern as in the SHOC benchmark
-        idatad[i] = idataf[i] = i % 3;
+        idataf[i] = i % 3;
+    }
+    for(int i = 0; i < sizeDouble; i++)
+    {
+        // Fill with same pattern as in the SHOC benchmark
+        idatad[i] = i % 3;
     }
 
     // Add arguments for kernel
@@ -73,11 +80,12 @@ int main(int argc, char* argv[]) {
     ktt::ArgumentId idatadId = auto_tuner.addArgumentVector(idatad, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId idataTextureObjectdId = auto_tuner.addArgumentScalar(0); // KTT does not support texture memory, so this is always disabled
     ktt::ArgumentId odatadId = auto_tuner.addArgumentVector(odatad, ktt::ArgumentAccessType::ReadWrite);
-    ktt::ArgumentId sizeId = auto_tuner.addArgumentScalar(size);
+    ktt::ArgumentId sizefId = auto_tuner.addArgumentScalar(sizeFloat);
+    ktt::ArgumentId sizedId = auto_tuner.addArgumentScalar(sizeDouble);
 
     // Add arguments to kernel and reference kernel
-    auto_tuner.setKernelArguments(kernelId, vector<ktt::ArgumentId>{idatafId, idataTextureObjectfId, odatafId, idatadId, idataTextureObjectdId, odatadId, sizeId});
-    auto_tuner.setKernelArguments(referenceKernelId, vector<ktt::ArgumentId>{idatafId, idataTextureObjectfId, odatafId, idatadId, idataTextureObjectdId, odatadId, sizeId});
+    auto_tuner.setKernelArguments(kernelId, vector<ktt::ArgumentId>{idatafId, idataTextureObjectfId, odatafId, idatadId, idataTextureObjectdId, odatadId, sizefId, sizedId});
+    auto_tuner.setKernelArguments(referenceKernelId, vector<ktt::ArgumentId>{idatafId, idataTextureObjectfId, odatafId, idatadId, idataTextureObjectdId, odatadId, sizefId, sizedId});
 
     // Add parameters to tune
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", {1, 2, 4, 8, 16, 64, 128, 256, 512, 1024});
@@ -105,8 +113,8 @@ int main(int argc, char* argv[]) {
     // Remember to set the correct precision in the reference kernel when using the reference kernel
     // auto_tuner.setReferenceKernel(kernelId, referenceKernelId, vector<ktt::ParameterPair>{}, vector<ktt::ArgumentId>{odatafId, odatadId});
 
-    // Set the tuner to print in microseconds
-    auto_tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+    // Set the tuner to print in nanoseconds
+    auto_tuner.setPrintingTimeUnit(ktt::TimeUnit::Nanoseconds);
 
     // Tune the kernel
     auto_tuner.tuneKernel(kernelId);

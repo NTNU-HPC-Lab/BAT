@@ -42,13 +42,14 @@ int main(int argc, char* argv[]) {
     // Set the tuning kernel to run on device id 0 and platform 0
     cltune::Tuner auto_tuner(0, 0);
 
-    size_t globalWorkSize = problemSizes[inputProblemSize - 1];
+    //size_t globalWorkSize = problemSizes[inputProblemSize - 1];
 
     int size = problemSizes[inputProblemSize - 1];
-    size = (size * 1024 * 1024) / sizeof(float);
+    int sizeFloat = (size * 1024 * 1024) / sizeof(float);
+    int sizeDouble = (size * 1024 * 1024) / sizeof(double);
 
     // Add kernel
-    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {globalWorkSize}, {1});
+    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {1}, {1});
 
     // Add parameter to tune
     auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", {1, 2, 4, 8, 16, 64, 128, 256, 512, 1024});
@@ -56,8 +57,8 @@ int main(int argc, char* argv[]) {
     auto_tuner.MulLocalSize(kernel_id, {"BLOCK_SIZE"});
 
     auto_tuner.AddParameter(kernel_id, "GRID_SIZE", {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024});
-    // To set the different grid sizes (global size) multiplied by the base
-    auto_tuner.MulGlobalSize(kernel_id, {"GRID_SIZE"});
+    // To set the different grid sizes (global size) multiplied by the base (1)
+    auto_tuner.MulGlobalSize(kernel_id, {"GRID_SIZE", "BLOCK_SIZE"});
 
     auto_tuner.AddParameter(kernel_id, "PRECISION", {32, 64});
     auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_REDUCE_1", {0, 1});
@@ -73,18 +74,24 @@ int main(int argc, char* argv[]) {
     // Set reference kernel for correctness verification and compare to the computed result
     // NOTE: Due to not being able to specify the precision to match the tuned kernel, this has only been used when developing and testing this benchmark
     // Remember to set the correct precision in the reference kernel when using the reference kernel
-    // auto_tuner.SetReference({referenceKernelFile}, kernelName, {globalWorkSize}, {1});
+    // auto_tuner.SetReference({referenceKernelFile}, kernelName, {64}, {256});
+    // auto_tuner.AddParameterReference("PRECISION", 64);
 
-    vector<float> idataf(size);
-    vector<float> odataf(size);
-    vector<double> idatad(size);
-    vector<double> odatad(size);
+    vector<float> idataf(sizeFloat);
+    vector<float> odataf(sizeFloat);
+    vector<double> idatad(sizeDouble);
+    vector<double> odatad(sizeDouble);
 
     // Initialize start values for input
-    for(int i = 0; i < size; i++)
+    for(int i = 0; i < sizeFloat; i++)
     {
         // Fill with same pattern as in the SHOC benchmark
-        idatad[i] = idataf[i] = i % 3;
+        idataf[i] = i % 3;
+    }
+    for(int i = 0; i < sizeDouble; i++)
+    {
+        // Fill with same pattern as in the SHOC benchmark
+        idatad[i] = i % 3;
     }
 
     // Add arguments for kernel
@@ -94,7 +101,8 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddArgumentInput(idatad);
     auto_tuner.AddArgumentScalar(0); // CLTune does not support texture memory, so this is always disabled
     auto_tuner.AddArgumentOutput(odatad);
-    auto_tuner.AddArgumentScalar(size);
+    auto_tuner.AddArgumentScalar(sizeFloat);
+    auto_tuner.AddArgumentScalar(sizeDouble);
 
     auto_tuner.Tune();
 
