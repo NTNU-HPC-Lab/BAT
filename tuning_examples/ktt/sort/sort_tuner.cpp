@@ -1,5 +1,6 @@
 #include <iostream> // For terminal output
 #include <fstream> // For file saving
+#include <cuda_runtime_api.h>
 #include "tuner_api.h" // KTT API
 #include "tunable_sort.h" // To help with the launch of kernels
 #include "reference_sort.h" // To check the correctness of the computed kernels
@@ -178,6 +179,19 @@ int main(int argc, char* argv[]) {
         {"SCAN_DATA_SIZE", "SORT_DATA_SIZE", "SCAN_BLOCK_SIZE", "SORT_BLOCK_SIZE"},
         dataSizeBlockSizeConstraint
     );
+
+    auto workGroupConstraint = [](const std::vector<size_t>& vector) {return (float)vector.at(1)/vector.at(0) == (float)vector.at(2)/vector.at(3);};
+    auto_tuner.addConstraint(compositionId, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_DATA_SIZE", "SCAN_DATA_SIZE"}, workGroupConstraint);
+    
+    // Get CUDA properties from device 0 
+    cudaDeviceProp properties;
+    cudaGetDeviceProperties(&properties, 0);
+    int available_shared_memory = properties.sharedMemPerBlock;
+    auto sharedMemoryConstraint = [&](const std::vector<size_t>& vector) {
+        return ((vector.at(0) * vector.at(1) * 4 * 2) + (4 * 16 * 2)) <= available_shared_memory;
+    };
+    // f"((SCAN_BLOCK_SIZE * SCAN_DATA_SIZE * 4 * 2) + (4 * 16 * 2)) <= {available_shared_memory}"]
+    auto_tuner.addConstraint(compositionId, {"SCAN_BLOCK_SIZE", "SCAN_DATA_SIZE"}, sharedMemoryConstraint);
 
     // Set reference class for correctness verification and compare to the computed result
     auto_tuner.setReferenceClass(compositionId, make_unique<ReferenceSort>(valuesIn), vector<ktt::ArgumentId>{valuesOutId});
