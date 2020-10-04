@@ -1,11 +1,13 @@
 
-// Uncomment which precision to use for testing, as KTT does not provide the compiler directives
+// Select precision to use for testing, as KTT does not provide an option that works for this
 // Select which precision that are used in the calculations
-// #if PRECISION == 32
+#define PRECISION 32
+
+#if PRECISION == 32
     #define DATA_TYPE float
-// #elif PRECISION == 64
+#elif PRECISION == 64
     #define DATA_TYPE double
-// #endif
+#endif
 
 // ****************************************************************************
 // Function: triad
@@ -38,10 +40,9 @@ extern "C" __global__ void triad(DATA_TYPE* A, DATA_TYPE* B, DATA_TYPE* C, DATA_
 }
 
 extern "C" __global__ void triad_helper(float* Af, float* Bf, float* Cf, float sf, double* Ad, double* Bd, double* Cd, double sd, int numberOfElements) {
-    // Uncomment which precision to use for testing, as KTT does not provide the compiler directives
-    // #if PRECISION == 32
+    #if PRECISION == 32
         triad(Af, Bf, Cf, sf, numberOfElements);
-    // #elif PRECISION == 64
+    #elif PRECISION == 64
         triad(Ad, Bd, Cd, sd, numberOfElements);
-    // #endif
+    #endif
 }

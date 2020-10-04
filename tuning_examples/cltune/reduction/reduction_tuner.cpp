@@ -12,24 +12,46 @@ int main(int argc, char* argv[]) {
     uint problemSizes[4] = { 1, 8, 32, 64 };
     uint inputProblemSize = 1; // Default to the first problem size if no input
 
-    // If only one extra argument and the flag is set for size
-    if (argc == 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
-        cerr << "Error: You need to specify an integer for the problem size." << endl;
+    string tuningTechnique = "";
+
+    // If only one extra argument and the flag is set for tuning technique
+    if (argc == 2 && (string(argv[1]) == "--technique" || string(argv[1]) == "-t")) {
+        cerr << "Error: You need to specify a tuning technique." << endl;
         exit(1);
     }
 
-    // If more than two extra arguments and flag is set for size
-    if (argc > 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
-        try {
-            inputProblemSize = stoi(argv[2]);
+    // Check if the provided arguments does not match in size
+    if ((argc - 1) % 2 != 0) {
+        cerr << "Error: You need to specify correct number of input arguments." << endl;
+        exit(1);
+    }
 
-            // Ensure the input problem size is between 1 and 4
-            if (inputProblemSize < 1 || inputProblemSize > 4) {
-                cerr << "Error: The problem size needs to be an integer in the range 1 to 4." << endl;
+    // Loop arguments and add if found
+    for (int i = 1; i < argc; i++) {
+        // Skip the argument value iterations
+        if (i % 2 == 0) {
+            continue;
+        }
+
+        // Check for problem size
+        if (string(argv[i]) == "--size" || string(argv[i]) == "-s") {
+            try {
+                inputProblemSize = stoi(argv[i + 1]);
+
+                // Ensure the input problem size is between 1 and 4
+                if (inputProblemSize < 1 || inputProblemSize > 4) {
+                    cerr << "Error: The problem size needs to be an integer in the range 1 to 4." << endl;
+                    exit(1);
+                }
+            } catch (const invalid_argument &error) {
+                cerr << "Error: You need to specify an integer for the problem size." << endl;
                 exit(1);
             }
-        } catch (const invalid_argument &error) {
-            cerr << "Error: You need to specify an integer for the problem size." << endl;
+        // Check for tuning technique
+        } else if (string(argv[i]) == "--technique" || string(argv[i]) == "-t") {
+            tuningTechnique = argv[i + 1];
+        } else {
+            cerr << "Error: Unsupported argument " << "`" << argv[i] << "`" << endl;
             exit(1);
         }
     }
@@ -104,10 +126,29 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddArgumentScalar(sizeFloat);
     auto_tuner.AddArgumentScalar(sizeDouble);
 
+    // Use 50% of the total search space
+    double searchFraction = 0.5;
+
+    // Select the tuning technique for this benchmark
+    if (tuningTechnique == "annealing") {
+        double maxTemperature = 4.0f;
+        auto_tuner.UseAnnealing(searchFraction, {maxTemperature});
+    } else if (tuningTechnique == "pso") {
+        double swarmSize = 4.0f;
+        auto_tuner.UsePSO(searchFraction, swarmSize, 0.4, 0.0, 0.4);
+    } else if (tuningTechnique == "random") {
+        auto_tuner.UseRandomSearch(searchFraction);
+    } else if (tuningTechnique == "brute_force") {
+        auto_tuner.UseFullSearch();
+    } else {
+        cerr << "Error: Unsupported tuning technique: `" << tuningTechnique << "`." << endl;
+        exit(1);
+    }
+
     auto_tuner.Tune();
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json", inputProblemSize);
+    saveJSONFileFromCLTuneResults(auto_tuner.GetBestResult(), "best-" + kernelName + "-results.json", inputProblemSize, tuningTechnique);
 
     // Print the results to cout and save it as a JSON file
     auto_tuner.PrintToScreen();

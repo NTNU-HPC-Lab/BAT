@@ -3,6 +3,6 @@
 
 using namespace std;
 
-void saveJSONFileFromCLTuneResults(const unordered_map<string, size_t> &computationResult, const string &fileName, const int &problemSize);
+void saveJSONFileFromCLTuneResults(const unordered_map<string, size_t> &computationResult, const string &fileName, const int &problemSize, const string &tuningTechnique);
 
 #endif

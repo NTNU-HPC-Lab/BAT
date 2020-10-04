@@ -1,15 +1,15 @@
 #ifndef SORT_H_
 #define SORT_H_
 
+#include "sort_kernel.h"
+
 typedef unsigned int uint;
 
-static const int SORT_BLOCK_SIZE = 128;
-static const int SCAN_BLOCK_SIZE = 256;
 static const int SORT_BITS = 32;
 
 void
-radixSortStep(uint nbits, uint startbit, uint4* keys, uint4* values,
-        uint4* tempKeys, uint4* tempValues, uint* counters,
+radixSortStep(uint nbits, uint startbit, SORT_DATA_TYPE* keys, SORT_DATA_TYPE* values,
+        SORT_DATA_TYPE* tempKeys, SORT_DATA_TYPE* tempValues, uint* counters,
         uint* countersSum, uint* blockOffsets, uint** scanBlockSums,
         uint numElements);
 

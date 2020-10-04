@@ -243,7 +243,7 @@ float runTest(const string& testName)
     cudaEventCreate(&stop);
     float totalElapsedTime = 0.0;
 
-    int passes = 10;
+    int passes = 5;
     int iter   = 1;
     
     for (int i = 0; i < passes; i++)

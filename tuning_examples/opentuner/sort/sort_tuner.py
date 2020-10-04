@@ -19,16 +19,22 @@ class SortTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
-        gpu = cuda.get_current_device()        
+        gpu = cuda.get_current_device()
         max_size = gpu.MAX_THREADS_PER_BLOCK
-        # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK`
-        block_sizes = list(filter(lambda x: x <= max_size, [2**i for i in range(0, 11)]))
-        # TODO: use block size later
+        # Using 2^i values less than `gpu.MAX_THREADS_PER_BLOCK` and over 16
+        block_sizes = list(filter(lambda x: x <= max_size, [2**i for i in range(4, 11)]))
 
         manipulator = ConfigurationManipulator()
         manipulator.add_parameter(EnumParameter('LOOP_UNROLL_LSB', [0, 1]))
         manipulator.add_parameter(EnumParameter('LOOP_UNROLL_LOCAL_MEMORY', [0, 1]))
         manipulator.add_parameter(EnumParameter('LOOP_UNROLL_ADD_UNIFORM', [0, 1]))
+        manipulator.add_parameter(EnumParameter('SCAN_DATA_SIZE', [2, 4, 8]))
+        manipulator.add_parameter(EnumParameter('SORT_DATA_SIZE', [2, 4, 8]))
+        manipulator.add_parameter(EnumParameter('SCAN_BLOCK_SIZE', block_sizes))
+        manipulator.add_parameter(EnumParameter('SORT_BLOCK_SIZE', block_sizes))
+        manipulator.add_parameter(EnumParameter('INLINE_LSB', [0, 1]))
+        manipulator.add_parameter(EnumParameter('INLINE_SCAN', [0, 1]))
+        manipulator.add_parameter(EnumParameter('INLINE_LOCAL_MEMORY', [0, 1]))
 
         return manipulator
 
@@ -43,11 +49,26 @@ class SortTuner(MeasurementInterface):
         compute_capability = cuda.get_current_device().compute_capability
         cc = str(compute_capability[0]) + str(compute_capability[1])
 
-        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort.cu\n'
+        # Check constraint for block sizes and data sizes
+        if cfg['SCAN_BLOCK_SIZE'] / cfg['SORT_BLOCK_SIZE'] != cfg['SORT_DATA_SIZE'] / cfg['SCAN_DATA_SIZE']:
+            return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
+        
+        make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort.cu'
+        make_program += ' -D{0}={1}'.format('SCAN_DATA_SIZE', cfg['SCAN_DATA_SIZE'])
+        make_program += ' -D{0}={1}'.format('SORT_DATA_SIZE', cfg['SORT_DATA_SIZE'])
+        make_program += ' -D{0}={1}'.format('SCAN_BLOCK_SIZE', cfg['SCAN_BLOCK_SIZE'])
+        make_program += ' -D{0}={1} \n'.format('SORT_BLOCK_SIZE', cfg['SORT_BLOCK_SIZE'])
         make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort_kernel.cu'
         make_program += ' -D{0}={1}'.format('LOOP_UNROLL_LSB', cfg['LOOP_UNROLL_LSB'])
         make_program += ' -D{0}={1}'.format('LOOP_UNROLL_LOCAL_MEMORY', cfg['LOOP_UNROLL_LOCAL_MEMORY'])
-        make_program += ' -D{0}={1} \n'.format('LOOP_UNROLL_ADD_UNIFORM', cfg['LOOP_UNROLL_ADD_UNIFORM'])
+        make_program += ' -D{0}={1}'.format('LOOP_UNROLL_ADD_UNIFORM', cfg['LOOP_UNROLL_ADD_UNIFORM'])
+        make_program += ' -D{0}={1}'.format('SCAN_DATA_SIZE', cfg['SCAN_DATA_SIZE'])
+        make_program += ' -D{0}={1}'.format('SORT_DATA_SIZE', cfg['SORT_DATA_SIZE'])
+        make_program += ' -D{0}={1}'.format('SCAN_BLOCK_SIZE', cfg['SCAN_BLOCK_SIZE'])
+        make_program += ' -D{0}={1}'.format('SORT_BLOCK_SIZE', cfg['SORT_BLOCK_SIZE'])
+        make_program += ' -D{0}={1}'.format('INLINE_LSB', cfg['INLINE_LSB'])
+        make_program += ' -D{0}={1}'.format('INLINE_SCAN', cfg['INLINE_SCAN'])
+        make_program += ' -D{0}={1} \n'.format('INLINE_LOCAL_MEMORY', cfg['INLINE_LOCAL_MEMORY'])
 
         if args.parallel:
             make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
@@ -61,7 +82,7 @@ class SortTuner(MeasurementInterface):
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
-        program_command = './sort -s ' + str(args.problem_size)
+        program_command = './sort -s ' + str(args.size)
         if args.parallel:
             # Select number below max connected GPUs
             chosen_gpu_number = min(args.gpu_num, len(cuda.gpus))
@@ -82,12 +103,17 @@ class SortTuner(MeasurementInterface):
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+
+        # Update configuration with problem size and tuning technique
+        configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
+        configuration.data["TUNING_TECHNIQUE"] = argparser.parse_args().technique
+
         self.manipulator().save_to_file(configuration.data, 'results.json')
 
 
 if __name__ == '__main__':
     argparser = opentuner.default_argparser()
-    argparser.add_argument('--problem-size', type=int, default=1, help='problem size of the program (1-4)')
+    argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
     argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
     argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
     SortTuner.main(argparser.parse_args())

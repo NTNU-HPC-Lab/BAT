@@ -2,8 +2,8 @@
 #include <unordered_map>
 #include "cltune_json_saver.hpp"
 
-void saveJSONFileFromCLTuneResults(const unordered_map<string, size_t> &computationResult, const string &fileName, const int &problemSize) {
-    string jsonOutput = "{\n\t\"PROBLEM_SIZE\": " + to_string(problemSize);
+void saveJSONFileFromCLTuneResults(const unordered_map<string, size_t> &computationResult, const string &fileName, const int &problemSize, const string &tuningTechnique) {
+    string jsonOutput = "{\n\t\"PROBLEM_SIZE\": " + to_string(problemSize) + ",\n\t\"TUNING_TECHNIQUE\": \"" + tuningTechnique + "\"";
 
     // Counters to check if the last item in the map
     int counter = 0;
