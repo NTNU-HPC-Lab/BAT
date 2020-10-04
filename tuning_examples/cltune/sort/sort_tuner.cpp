@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iterator>
 #include <math.h>
+#include <cuda_runtime_api.h>
 #include "cltune.h" // CLTune API
 #include "cltune_json_saver.hpp" // Custom JSON CLTune results saver
 
@@ -15,7 +16,7 @@ uint problemSizes[4] = { 1, 8, 48, 96 };
 uint inputProblemSize = 1; // Default to first problem size if no input
 string tuningTechnique = "";
 int size;
-string kernelFile = "../../../src/kernels/sort/sort_kernel.cu";
+string kernelFile = "../../../src/kernels/sort/sort_kernel_helper.cu";
 string referenceKernelFile = "./reference_kernel.cu";
 string dataDirectory = "../../../src/kernels/sort/data/";
 
@@ -143,6 +144,17 @@ void tuneScan() {
         dataSizeBlockSizeConstraint,
         {"SCAN_DATA_SIZE", "SORT_DATA_SIZE", "SCAN_BLOCK_SIZE", "SORT_BLOCK_SIZE"}
     );
+
+    // Get CUDA properties from device 0 
+    cudaDeviceProp properties;
+    cudaGetDeviceProperties(&properties, 0);
+    int available_shared_memory = properties.sharedMemPerBlock;
+
+    // Constraint for shared memory used
+    auto sharedMemoryConstraint = [&](const std::vector<size_t>& vector) {
+        return ((vector.at(0) * vector.at(1) * 4 * 2) + (4 * 16 * 2)) <= available_shared_memory;
+    };
+    auto_tuner.AddConstraint(kernel_id, sharedMemoryConstraint, {"SCAN_BLOCK_SIZE", "SCAN_DATA_SIZE"});
 
     vector<int> scanOutput(0);
     vector<int> scanInput(0);
@@ -338,9 +350,9 @@ int main(int argc, char* argv[]) {
     size = (problemSizes[inputProblemSize - 1] * 1024 * 1024) / sizeof(uint);
 
     // Tune all kernels
-    tuneRadixSortBlocks();
+    // tuneRadixSortBlocks();
     tuneScan();
-    tuneVectorAddUniform4();
+    // tuneVectorAddUniform4();
     
     return 0;
 }

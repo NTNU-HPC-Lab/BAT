@@ -38,8 +38,15 @@ tune_params["INLINE_LSB"] = [0, 1]
 tune_params["INLINE_SCAN"] = [0, 1]
 tune_params["INLINE_LOCAL_MEMORY"] = [0, 1]
 
+# Constraint to ensure not attempting to use too much shared memory
+# 4 is the size of uints and 2 is because shared memory is used for both keys and values in the "reorderData" function
+# 16 * 2 is also added due to two other shared memory uint arrays used for offsets
+gpu = cuda.get_current_device()
+available_shared_memory = gpu.MAX_SHARED_MEMORY_PER_BLOCK
+
 # Constraint for block sizes and data sizes
-constraint = ["(SCAN_BLOCK_SIZE / SORT_BLOCK_SIZE) == (SORT_DATA_SIZE / SCAN_DATA_SIZE)"]
+constraint = ["(SCAN_BLOCK_SIZE / SORT_BLOCK_SIZE) == (SORT_DATA_SIZE / SCAN_DATA_SIZE)",
+            f"((SCAN_BLOCK_SIZE * SCAN_DATA_SIZE * 4 * 2) + (4 * 16 * 2)) <= {available_shared_memory}"]
 
 # Tune all kernels and correctness verify by throwing error if verification failed
 tuning_results = tune_kernel("sort", kernel_files, size, [], tune_params, strategy=arguments.technique,

@@ -52,6 +52,16 @@ class SortTuner(MeasurementInterface):
         # Check constraint for block sizes and data sizes
         if cfg['SCAN_BLOCK_SIZE'] / cfg['SORT_BLOCK_SIZE'] != cfg['SORT_DATA_SIZE'] / cfg['SCAN_DATA_SIZE']:
             return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
+
+        # Constraint to ensure not attempting to use too much shared memory
+        # 4 is the size of uints and 2 is because shared memory is used for both keys and values in the "reorderData" function
+        # 16 * 2 is also added due to two other shared memory uint arrays used for offsets
+        shared_memory_needed = (cfg['SCAN_BLOCK_SIZE'] * cfg['SCAN_DATA_SIZE'] * 4 * 2) + (4 * 16 * 2)
+        gpu = cuda.get_current_device()
+        available_shared_memory = gpu.MAX_SHARED_MEMORY_PER_BLOCK
+
+        if shared_memory_needed > available_shared_memory:
+            return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
         
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort.cu'
         make_program += ' -D{0}={1}'.format('SCAN_DATA_SIZE', cfg['SCAN_DATA_SIZE'])
