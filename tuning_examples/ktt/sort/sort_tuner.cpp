@@ -31,24 +31,52 @@ int main(int argc, char* argv[]) {
     uint problemSizes[4] = { 1, 8, 48, 96 };
     uint inputProblemSize = 1; // Default to first problem size if no input
 
+    string tuningTechnique = "";
+
     // If only one extra argument and the flag is set for size
     if (argc == 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
         cerr << "Error: You need to specify an integer for the problem size." << endl;
         exit(1);
     }
 
-    // If more than two extra arguments and flag is set for size
-    if (argc > 2 && (string(argv[1]) == "--size" || string(argv[1]) == "-s")) {
-        try {
-            inputProblemSize = stoi(argv[2]);
+    // If only one extra argument and the flag is set for tuning technique
+    if (argc == 2 && (string(argv[1]) == "--technique" || string(argv[1]) == "-t")) {
+        cerr << "Error: You need to specify a tuning technique." << endl;
+        exit(1);
+    }
 
-            // Ensure the input problem size is between 1 and 4
-            if (inputProblemSize < 1 || inputProblemSize > 4) {
-                cerr << "Error: The problem size needs to be an integer in the range 1 to 4." << endl;
+    // Check if the provided arguments does not match in size
+    if ((argc - 1) % 2 != 0) {
+        cerr << "Error: You need to specify correct number of input arguments." << endl;
+        exit(1);
+    }
+
+    // Loop arguments and add if found
+    for (int i = 1; i < argc; i++) {
+        // Skip the argument value iterations
+        if (i % 2 == 0) {
+            continue;
+        }
+
+        // Check for problem size
+        if (string(argv[i]) == "--size" || string(argv[i]) == "-s") {
+            try {
+                inputProblemSize = stoi(argv[i + 1]);
+
+                // Ensure the input problem size is between 1 and 4
+                if (inputProblemSize < 1 || inputProblemSize > 4) {
+                    cerr << "Error: The problem size needs to be an integer in the range 1 to 4." << endl;
+                    exit(1);
+                }
+            } catch (const invalid_argument &error) {
+                cerr << "Error: You need to specify an integer for the problem size." << endl;
                 exit(1);
             }
-        } catch (const invalid_argument &error) {
-            cerr << "Error: You need to specify an integer for the problem size." << endl;
+        // Check for tuning technique
+        } else if (string(argv[i]) == "--technique" || string(argv[i]) == "-t") {
+            tuningTechnique = argv[i + 1];
+        } else {
+            cerr << "Error: Unsupported argument " << "`" << argv[i] << "`" << endl;
             exit(1);
         }
     }
@@ -93,23 +121,29 @@ int main(int argc, char* argv[]) {
     ktt::ArgumentId storeSumId = auto_tuner.addArgumentScalar(0);
 
     // Create a composition of the kernels
-    ktt::KernelId compositionId = auto_tuner.addComposition("sort", kernelIds, make_unique<TunableSort>(kernelIds,
-                                                                                                        size,
-                                                                                                        startBitId,
-                                                                                                        keysInId,
-                                                                                                        valuesInId,
-                                                                                                        keysOutId,
-                                                                                                        valuesOutId,
-                                                                                                        countersId,
-                                                                                                        counterSumsId,
-                                                                                                        blockOffsetsId,
-                                                                                                        reorderFindBlocksId,
-                                                                                                        numberOfElementsId,
-                                                                                                        blockSumsId,
-                                                                                                        scanOutputId,
-                                                                                                        scanInputId,
-                                                                                                        fullBlockId,
-                                                                                                        storeSumId));
+    ktt::KernelId compositionId = auto_tuner.addComposition(
+        "sort",
+        kernelIds,
+        make_unique<TunableSort>(
+            kernelIds,
+            size,
+            startBitId,
+            keysInId,
+            valuesInId,
+            keysOutId,
+            valuesOutId,
+            countersId,
+            counterSumsId,
+            blockOffsetsId,
+            reorderFindBlocksId,
+            numberOfElementsId,
+            blockSumsId,
+            scanOutputId,
+            scanInputId,
+            fullBlockId,
+            storeSumId
+        )
+    );
 
     // Add arguments for each composition kernel
     // Add arguments for "radixSortBlocks" kernel
@@ -127,15 +161,50 @@ int main(int argc, char* argv[]) {
     auto_tuner.addParameter(compositionId, "LOOP_UNROLL_LSB", {0, 1});
     auto_tuner.addParameter(compositionId, "LOOP_UNROLL_LOCAL_MEMORY", {0, 1});
     auto_tuner.addParameter(compositionId, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
+    auto_tuner.addParameter(compositionId, "SCAN_DATA_SIZE", {2, 4, 8});
+    auto_tuner.addParameter(compositionId, "SORT_DATA_SIZE", {2, 4, 8});
+    auto_tuner.addParameter(compositionId, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
+    auto_tuner.addParameter(compositionId, "SORT_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
+    auto_tuner.addParameter(compositionId, "INLINE_LSB", {0, 1});
+    auto_tuner.addParameter(compositionId, "INLINE_SCAN", {0, 1});
+    auto_tuner.addParameter(compositionId, "INLINE_LOCAL_MEMORY", {0, 1});
+
+    // Constraint for block sizes and data sizes
+    auto dataSizeBlockSizeConstraint = [](const vector<size_t> &parameters) {
+        return parameters.at(2) / parameters.at(3) == parameters.at(1) / parameters.at(0);
+    };
+    auto_tuner.addConstraint(
+        compositionId,
+        {"SCAN_DATA_SIZE", "SORT_DATA_SIZE", "SCAN_BLOCK_SIZE", "SORT_BLOCK_SIZE"},
+        dataSizeBlockSizeConstraint
+    );
 
     // Set reference class for correctness verification and compare to the computed result
     auto_tuner.setReferenceClass(compositionId, make_unique<ReferenceSort>(valuesIn), vector<ktt::ArgumentId>{valuesOutId});
+
+    // Select the tuning technique for this benchmark
+    if (tuningTechnique == "annealing") {
+        double maxTemperature = 4.0f;
+        auto_tuner.setSearchMethod(ktt::SearchMethod::Annealing, {maxTemperature});
+    } else if (tuningTechnique == "mcmc") {
+        auto_tuner.setSearchMethod(ktt::SearchMethod::MCMC, {});
+    } else if (tuningTechnique == "random") {
+        auto_tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, {});
+    } else if (tuningTechnique == "brute_force") {
+        auto_tuner.setSearchMethod(ktt::SearchMethod::FullSearch, {});
+    } else {
+        cerr << "Error: Unsupported tuning technique: `" << tuningTechnique << "`." << endl;
+        exit(1);
+    }
+
+    // Set the tuner to print in nanoseconds
+    auto_tuner.setPrintingTimeUnit(ktt::TimeUnit::Nanoseconds);
 
     // Tune the composition of kernels
     auto_tuner.tuneKernel(compositionId);
 
     // Get the best computed result and save it as a JSON to file
-    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(compositionId), "best-sort-results.json");
+    saveJSONFileFromKTTResults(auto_tuner.getBestComputationResult(compositionId), "best-sort-results.json", inputProblemSize, tuningTechnique);
 
     // Print the results to cout and save it as a CSV file
     auto_tuner.printResult(compositionId, cout, ktt::PrintFormat::Verbose);

@@ -4,10 +4,7 @@
 
 using namespace std;
 
-// TODO: Can these also be used as parameters?
-// Constants from SHOC's Sort.h
-const uint SORT_BLOCK_SIZE = 128;
-const uint SCAN_BLOCK_SIZE = 256;
+// Constant from SHOC's Sort.h
 const uint SORT_BITS = 32;
 
 class TunableSort : public ktt::TuningManipulator {
@@ -52,13 +49,18 @@ public:
     void launchComputation(const ktt::KernelId kernelId) override {
         vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
+        const uint SCAN_BLOCK_SIZE = getParameterValue("SCAN_BLOCK_SIZE", parameterValues);
+        const uint SORT_BLOCK_SIZE = getParameterValue("SORT_BLOCK_SIZE", parameterValues);
+        const uint SCAN_DATA_SIZE = getParameterValue("SCAN_DATA_SIZE", parameterValues);
+        const uint SORT_DATA_SIZE = getParameterValue("SORT_DATA_SIZE", parameterValues);
+
         // Allocate space for block sums in the scan kernel.
         uint numScanElts = size;
         uint level = 0;
         vector<vector<uint>> scanBlockSums;
 
         do {
-            uint numBlocks = max(1, (int) ceil((float) numScanElts / (4 * SCAN_BLOCK_SIZE)));
+            uint numBlocks = max(1, (int) ceil((float) numScanElts / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
 
             if (numBlocks > 1) {
                 // Add space for block sums
@@ -72,8 +74,8 @@ public:
         // Add one extra item due to malloc((level + 1) * sizeof(uint*)) from original code
         scanBlockSums.push_back(vector<uint>(1));
 
-        // Each thread in the sort kernel handles 4 elements
-        size_t numSortGroups = size / (4 * SORT_BLOCK_SIZE);
+        // Each thread in the sort kernel handles "SORT_DATA_SIZE" elements
+        size_t numSortGroups = size / (SORT_DATA_SIZE * SORT_BLOCK_SIZE);
         uint itemSize = 32 * numSortGroups;
 
         vector<uint> counters(itemSize);
@@ -92,9 +94,9 @@ public:
         swapKernelArguments(kernelIds[2], valuesOutId, valuesInId);
 
         // Threads handle either 4 or two elements each
-        const size_t radixGlobalWorkSize   = size / 4;
-        const size_t findGlobalWorkSize    = size / 2;
-        const size_t reorderFindGlobalWorkSize = size / 2;
+        const size_t radixGlobalWorkSize   = size / SORT_DATA_SIZE;
+        const size_t findGlobalWorkSize    = size / SCAN_DATA_SIZE;
+        const size_t reorderFindGlobalWorkSize = size / SCAN_DATA_SIZE;
 
         const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
 
@@ -128,10 +130,13 @@ public:
     void scanArrayRecursive(vector<uint> &outArray, vector<uint> &inArray, int numElements, int level, vector<vector<uint>> &blockSums) {        
         vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
-        // Kernels handle 8 elems per thread
-        unsigned int numBlocks = max(1, (int) ceil((float) numElements / (4.f * SCAN_BLOCK_SIZE)));
+        const uint SCAN_BLOCK_SIZE = getParameterValue("SCAN_BLOCK_SIZE", parameterValues);
+        const uint SORT_DATA_SIZE = getParameterValue("SORT_DATA_SIZE", parameterValues);
 
-        bool fullBlock = (numElements == numBlocks * 4 * SCAN_BLOCK_SIZE);
+        // Kernels handle 8 elems per thread
+        unsigned int numBlocks = max(1, (int) ceil((float) numElements / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
+
+        bool fullBlock = (numElements == numBlocks * SORT_DATA_SIZE * SCAN_BLOCK_SIZE);
 
         const ktt::DimensionVector grid(numBlocks * SCAN_BLOCK_SIZE, 1, 1);
         const ktt::DimensionVector threads(SCAN_BLOCK_SIZE, 1, 1);
