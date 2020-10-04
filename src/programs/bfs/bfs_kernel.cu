@@ -9,16 +9,6 @@
 texture<unsigned int, 1, cudaReadModeElementType> textureRefEA;
 texture<unsigned int, 1, cudaReadModeElementType> textureRefEAA;
 
-/*
-extern "C" __global__ void BFS_kernel_warp(
-    unsigned int *levels,
-    unsigned int *edgeArray,
-    unsigned int *edgeArrayAux,
-    int W_SZ,
-    unsigned int numVertices,
-    int curr,
-    int *flag);*/
-
 //Sungpack Hong, Sang Kyun Kim, Tayo Oguntebi, and Kunle Olukotun. 2011.
 //Accelerating CUDA graph algorithms at maximum warp.
 //In Proceedings of the 16th ACM symposium on Principles and practice of

@@ -3,7 +3,7 @@ __device__ void
 spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       #if NOT_TEXTURE_MEMORY
+                       #if TEXTURE_MEMORY == 0
                        fpType * vec,
                        #endif
                        const int dim, fpType * __restrict__ out);
@@ -13,7 +13,7 @@ __device__ void
 spmv_csr_vector_kernel(const fpType * __restrict__ val,
                         const int    * __restrict__ cols,
                         const int    * __restrict__ rowDelimiters,
-                        #if NOT_TEXTURE_MEMORY
+                        #if TEXTURE_MEMORY == 0
                         fpType * vec,
                         #endif
                         const int dim, fpType * __restrict__ out);
@@ -23,7 +23,7 @@ __device__ void
 spmv_ellpackr_kernel(const fpType * __restrict__ val,
                         const int    * __restrict__ cols,
                         const int    * __restrict__ rowLengths,
-                        #if NOT_TEXTURE_MEMORY
+                        #if TEXTURE_MEMORY == 0
                         fpType * vec,
                         #endif
                         const int dim, fpType * __restrict__ out);
@@ -67,7 +67,7 @@ spmv_kernel(float * valSP_csr,
             const int    * __restrict__ rowDelimiters,
             const int    * __restrict__ rowDelimiters_pad,
             const int    * __restrict__ rowLengths,
-            #if NOT_TEXTURE_MEMORY
+            #if TEXTURE_MEMORY == 0
             float * vecSP,
             double * vecDP,
             #endif
@@ -84,14 +84,14 @@ spmv_kernel(float * valSP_csr,
             #if (FORMAT == 1) 
             // Normal
                 spmv_csr_scalar_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecSP, 
                     #endif
                     dim, outSP);
             #else 
             // Padded
                 spmv_csr_scalar_kernel<float, texReader>(valSP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecSP, 
                     #endif
                     dim_pad, outSP);
@@ -101,14 +101,14 @@ spmv_kernel(float * valSP_csr,
             #if (FORMAT == 3)
             // Normal
                 spmv_csr_vector_kernel<float, texReader>(valSP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecSP, 
                     #endif
                     dim, outSP);
             #else  
             // Padded
                 spmv_csr_vector_kernel<float, texReader>(valSP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecSP, 
                     #endif 
                     dim_pad, outSP);
@@ -116,7 +116,7 @@ spmv_kernel(float * valSP_csr,
         #else
         // Ellpackr
             spmv_ellpackr_kernel<float, texReader>(valSP_ellpackr, cols_ellpackr, rowLengths, 
-                #if NOT_TEXTURE_MEMORY
+                #if TEXTURE_MEMORY == 0
                 vecSP, 
                 #endif
                 dim, outSP);
@@ -128,14 +128,14 @@ spmv_kernel(float * valSP_csr,
             #if (FORMAT == 1) 
             // Normal
                 spmv_csr_scalar_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecDP, 
                     #endif 
                     dim, outDP);
             #else 
             // Padded
                 spmv_csr_scalar_kernel<double, texReader>(valDP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecDP, 
                     #endif
                     dim_pad, outDP);
@@ -145,14 +145,14 @@ spmv_kernel(float * valSP_csr,
             #if (FORMAT == 3)
             // Normal
                 spmv_csr_vector_kernel<double, texReader>(valDP_csr, cols_csr, rowDelimiters, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecDP, 
                     #endif 
                     dim, outDP);
             #else  
             // Padded
                 spmv_csr_vector_kernel<double, texReader>(valDP_csr_pad, cols_csr_pad, rowDelimiters_pad, 
-                    #if NOT_TEXTURE_MEMORY
+                    #if TEXTURE_MEMORY == 0
                     vecDP, 
                     #endif 
                     dim_pad, outDP);
@@ -160,7 +160,7 @@ spmv_kernel(float * valSP_csr,
         #else
         // Ellpackr
             spmv_ellpackr_kernel<double, texReader>(valDP_ellpackr, cols_ellpackr, rowLengths, 
-                #if NOT_TEXTURE_MEMORY
+                #if TEXTURE_MEMORY == 0
                 vecDP, 
                 #endif 
                 dim, outDP);
@@ -199,14 +199,13 @@ __device__ void
 spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       #if NOT_TEXTURE_MEMORY
+                       #if TEXTURE_MEMORY == 0
                        fpType * vec,
                        #endif
                        const int dim, fpType * __restrict__ out)
 {
     int myRow = blockIdx.x * blockDim.x + threadIdx.x;
-    #if NOT_TEXTURE_MEMORY
-    #else
+    #if TEXTURE_MEMORY == 1
     texReader vecTexReader;
     #endif
 
@@ -223,7 +222,7 @@ spmv_csr_scalar_kernel(const fpType * __restrict__ val,
         for (int j = start; j < end; j++)
         {
             int col = cols[j];
-            #if NOT_TEXTURE_MEMORY
+            #if TEXTURE_MEMORY == 0
             t += val[j] * vec[col];
             #else 
             t += val[j] * vecTexReader(col);
@@ -264,7 +263,7 @@ __device__ void
 spmv_csr_vector_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
-                       #if NOT_TEXTURE_MEMORY
+                       #if TEXTURE_MEMORY == 0
                        fpType * vec,
                        #endif
                        const int dim, fpType * __restrict__ out)
@@ -277,8 +276,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
     // One row per warp
     int myRow = (blockIdx.x * warpsPerBlock) + (t / warpSize);
     // Texture reader for the dense vector
-    #if NOT_TEXTURE_MEMORY
-    #else
+    #if TEXTURE_MEMORY == 1
     texReader vecTexReader;
     #endif
 
@@ -296,7 +294,7 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
         {
             int col = cols[j];
-            #if NOT_TEXTURE_MEMORY
+            #if TEXTURE_MEMORY == 0
             mySum += val[j] * vec[col]; 
             #else 
             mySum += val[j] * vecTexReader(col);
@@ -354,14 +352,13 @@ __device__ void
 spmv_ellpackr_kernel(const fpType * __restrict__ val,
                      const int    * __restrict__ cols,
                      const int    * __restrict__ rowLengths,
-                     #if NOT_TEXTURE_MEMORY
+                     #if TEXTURE_MEMORY == 0
                      fpType * vec,
                      #endif
                      const int dim, fpType * __restrict__ out)
 {
     int t = blockIdx.x * blockDim.x + threadIdx.x;
-    #if NOT_TEXTURE_MEMORY
-    #else
+    #if TEXTURE_MEMORY == 1
     texReader vecTexReader;
     #endif
 
@@ -378,7 +375,7 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
         for (int i = 0; i < max; i++)
         {
             int ind = i*dim+t;
-            #if NOT_TEXTURE_MEMORY
+            #if TEXTURE_MEMORY == 0
             result += val[ind] * vec[cols[ind]];
             #else
             result += val[ind] * vecTexReader(cols[ind]);

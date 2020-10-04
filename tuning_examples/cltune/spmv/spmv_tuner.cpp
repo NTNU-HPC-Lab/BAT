@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_1", {0, 1});
     auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_2", {0, 1});
     auto_tuner.AddParameter(kernel_id, "THREADS_PER_ROW", {1, 32});
-    auto_tuner.AddParameter(kernel_id, "NOT_TEXTURE_MEMORY", {1});
+    auto_tuner.AddParameter(kernel_id, "TEXTURE_MEMORY", {0});
 
     // Add constraint for only using block sizes that are a multiple of 32 for CSR vector format (format 3 or 4)
     auto blockSizeLimit = [] (std::vector<size_t> v) {

@@ -215,7 +215,11 @@ float csrTest(floatType* h_val,
             {
                 spmv_csr_scalar_kernel
                 <<<nBlocksScalar, BLOCK_SIZE>>>
-                (d_val, d_cols, d_rowDelimiters, numRows, d_out);
+                (d_val, d_cols, d_rowDelimiters, 
+                    #if TEXTURE_MEMORY == 0
+                    d_vec,
+                    #endif
+                    numRows, d_out);
             }
 
             // Stop the events and save elapsed time
@@ -256,7 +260,11 @@ float csrTest(floatType* h_val,
             {
                 spmv_csr_vector_kernel
                 <<<nBlocksVector, new_block_size>>>
-                (d_val, d_cols, d_rowDelimiters, numRows, d_out);
+                (d_val, d_cols, d_rowDelimiters, 
+                    #if TEXTURE_MEMORY == 0
+                    d_vec,
+                    #endif
+                    numRows, d_out);
             }
             
             // Stop the events and save elapsed time
@@ -371,7 +379,11 @@ float ellPackTest(floatType* h_val,
 
         for (int j = 0; j < iters; j++) {
             spmv_ellpackr_kernel<<<nBlocks, BLOCK_SIZE>>>
-                    (d_val, d_cols, d_rowLengths, cmSize, d_out);
+                    (d_val, d_cols, d_rowLengths,
+                        #if TEXTURE_MEMORY == 0
+                        d_vec,
+                        #endif
+                        cmSize, d_out);
         }
 
         // Stop the events and save elapsed time

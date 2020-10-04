@@ -29,6 +29,7 @@ tune_params["PRECISION"] = [32, 64]
 tune_params["FORMAT"] = [0, 1, 2, 3, 4] # 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
 tune_params["UNROLL_LOOP_1"] = [0, 1]
 tune_params["UNROLL_LOOP_2"] = [0, 1]
+tune_params["TEXTURE_MEMORY"] = [0, 1]
 
 restrict = ["FORMAT < 3 or BLOCK_SIZE % 32 == 0", "FORMAT > 2 or (UNROLL_LOOP_2 < 1)"]
 

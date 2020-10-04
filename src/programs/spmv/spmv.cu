@@ -4,39 +4,10 @@
 #include <cuda_runtime_api.h>
 #include <iostream>
 #include "OptionParser.h"
-#include "spmv.h"
 #include "Spmv/util.h"
 #include "spmv_kernel.cu"
 
 using namespace std;
-
-texture<float, 1> vecTex;  // vector textures
-texture<int2, 1>  vecTexD;
-
-// Texture Readers (used so kernels can be templated)
-struct texReaderSP {
-   __device__ __forceinline__ float operator()(const int idx) const
-   {
-       return tex1Dfetch(vecTex, idx);
-   }
-};
-
-struct texReaderDP {
-   __device__ __forceinline__ double operator()(const int idx) const
-   {
-       int2 v = tex1Dfetch(vecTexD, idx);
-#if (__CUDA_ARCH__ < 130)
-       // Devices before arch 130 don't support DP, and having the
-       // __hiloint2double() intrinsic will cause compilation to fail.
-       // This return statement added as a workaround -- it will compile,
-       // but since the arch doesn't support DP, it will never be called
-       return 0;
-#else
-       return __hiloint2double(v.y, v.x);
-#endif
-   }
-};
-
 
 // ****************************************************************************
 // Function: addBenchmarkSpecOptions
@@ -217,7 +188,11 @@ void csrTest(OptionParser& op, floatType* h_val,
             {
                 spmv_csr_scalar_kernel<floatType, texReader>
                 <<<nBlocksScalar, BLOCK_SIZE>>>
-                (d_val, d_cols, d_rowDelimiters, numRows, d_out);
+                (d_val, d_cols, d_rowDelimiters,
+                    #if TEXTURE_MEMORY == 0
+                    d_vec,
+                    #endif
+                    numRows, d_out);
             }
             CUDA_SAFE_CALL(cudaMemcpy(h_out, d_out, numRows * sizeof(floatType),
             cudaMemcpyDeviceToHost));
@@ -247,7 +222,11 @@ void csrTest(OptionParser& op, floatType* h_val,
             {
                 spmv_csr_vector_kernel<floatType, texReader>
                 <<<nBlocksVector, new_block_size>>>
-                (d_val, d_cols, d_rowDelimiters, numRows, d_out);
+                (d_val, d_cols, d_rowDelimiters,
+                    #if TEXTURE_MEMORY == 0
+                    d_vec,
+                    #endif
+                    numRows, d_out);
             }
             CUDA_SAFE_CALL(cudaMemcpy(h_out, d_out, numRows * sizeof(floatType),
                     cudaMemcpyDeviceToHost));
@@ -341,7 +320,11 @@ void ellPackTest(OptionParser& op, floatType* h_val,
     for (int k=0; k<passes; k++) {
         for (int j = 0; j < iters; j++) {
             spmv_ellpackr_kernel<floatType, texReader><<<nBlocks, BLOCK_SIZE>>>
-                    (d_val, d_cols, d_rowLengths, cmSize, d_out);
+                    (d_val, d_cols, d_rowLengths,
+                        #if TEXTURE_MEMORY == 0
+                        d_vec,
+                        #endif
+                        cmSize, d_out);
         }
 
         CUDA_SAFE_CALL(cudaMemcpy(h_out, d_out, cmSize * sizeof(floatType),

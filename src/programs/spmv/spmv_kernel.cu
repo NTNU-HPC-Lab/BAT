@@ -1,4 +1,65 @@
-#include "spmv.h"
+#include<cuda.h>
+
+static const int WARP_SIZE = 32;
+
+texture<float, 1> vecTex;  // vector textures
+texture<int2, 1>  vecTexD;
+
+// Texture Readers (used so kernels can be templated)
+struct texReaderSP {
+   __device__ __forceinline__ float operator()(const int idx) const
+   {
+       return tex1Dfetch(vecTex, idx);
+   }
+};
+
+struct texReaderDP {
+   __device__ __forceinline__ double operator()(const int idx) const
+   {
+       int2 v = tex1Dfetch(vecTexD, idx);
+#if (__CUDA_ARCH__ < 130)
+       // Devices before arch 130 don't support DP, and having the
+       // __hiloint2double() intrinsic will cause compilation to fail.
+       // This return statement added as a workaround -- it will compile,
+       // but since the arch doesn't support DP, it will never be called
+       return 0;
+#else
+       return __hiloint2double(v.y, v.x);
+#endif
+   }
+};
+
+// Forward declarations for kernels
+template <typename fpType, typename texReader>
+__global__ void
+spmv_csr_scalar_kernel(const fpType * __restrict__ val,
+                       const int    * __restrict__ cols,
+                       const int    * __restrict__ rowDelimiters,
+                       #if TEXTURE_MEMORY == 0
+                       fpType * vec,
+                       #endif
+                       const int dim, fpType * __restrict__ out);
+
+template <typename fpType, typename texReader>
+__global__ void
+spmv_csr_vector_kernel(const fpType * __restrict__ val,
+             	       const int    * __restrict__ cols,
+                       const int    * __restrict__ rowDelimiters,
+                       #if TEXTURE_MEMORY == 0
+                       fpType * vec,
+                       #endif
+                       const int dim, fpType * __restrict__ out);
+
+template <typename fpType, typename texReader>
+__global__ void
+spmv_ellpackr_kernel(const fpType * __restrict__ val,
+		             const int    * __restrict__ cols,
+                     const int    * __restrict__ rowLengths,
+                     #if TEXTURE_MEMORY == 0
+                     fpType * vec,
+                     #endif
+                     const int dim, fpType * __restrict__ out);
+
 
 // ****************************************************************************
 // Function: spmv_csr_scalar_kernel
@@ -31,10 +92,15 @@ __global__ void
 spmv_csr_scalar_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
+                       #if TEXTURE_MEMORY == 0
+                       fpType * vec,
+                       #endif
                        const int dim, fpType * __restrict__ out)
 {
     int myRow = blockIdx.x * blockDim.x + threadIdx.x;
+    #if TEXTURE_MEMORY == 1
     texReader vecTexReader;
+    #endif
 
     if (myRow < dim)
     {
@@ -49,7 +115,11 @@ spmv_csr_scalar_kernel(const fpType * __restrict__ val,
         for (int j = start; j < end; j++)
         {
             int col = cols[j];
+            #if TEXTURE_MEMORY == 0
+            t += val[j] * vec[col];
+            #else 
             t += val[j] * vecTexReader(col);
+            #endif
         }
         out[myRow] = t;
     }
@@ -86,6 +156,9 @@ __global__ void
 spmv_csr_vector_kernel(const fpType * __restrict__ val,
                        const int    * __restrict__ cols,
                        const int    * __restrict__ rowDelimiters,
+                       #if TEXTURE_MEMORY == 0
+                       fpType * vec,
+                       #endif
                        const int dim, fpType * __restrict__ out)
 {
     // Thread ID in block
@@ -96,7 +169,9 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
     // One row per warp
     int myRow = (blockIdx.x * warpsPerBlock) + (t / warpSize);
     // Texture reader for the dense vector
+    #if TEXTURE_MEMORY == 1
     texReader vecTexReader;
+    #endif
 
     __shared__ volatile fpType partialSums[BLOCK_SIZE];
 
@@ -112,7 +187,11 @@ spmv_csr_vector_kernel(const fpType * __restrict__ val,
         for (int j = warpStart + id; j < warpEnd; j += warpSize)
         {
             int col = cols[j];
+            #if TEXTURE_MEMORY == 0
+            mySum += val[j] * vec[col]; 
+            #else 
             mySum += val[j] * vecTexReader(col);
+            #endif
         }
         partialSums[t] = mySum;
 
@@ -166,10 +245,15 @@ __global__ void
 spmv_ellpackr_kernel(const fpType * __restrict__ val,
                      const int    * __restrict__ cols,
                      const int    * __restrict__ rowLengths,
+                     #if TEXTURE_MEMORY == 0
+                     fpType * vec,
+                     #endif
                      const int dim, fpType * __restrict__ out)
 {
     int t = blockIdx.x * blockDim.x + threadIdx.x;
+    #if TEXTURE_MEMORY == 1
     texReader vecTexReader;
+    #endif
 
     if (t < dim)
     {
@@ -184,7 +268,11 @@ spmv_ellpackr_kernel(const fpType * __restrict__ val,
         for (int i = 0; i < max; i++)
         {
             int ind = i*dim+t;
+            #if TEXTURE_MEMORY == 0
+            result += val[ind] * vec[cols[ind]];
+            #else
             result += val[ind] * vecTexReader(cols[ind]);
+            #endif
         }
         out[t] = result;
     }
