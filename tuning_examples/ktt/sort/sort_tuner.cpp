@@ -190,7 +190,6 @@ int main(int argc, char* argv[]) {
     auto sharedMemoryConstraint = [&](const std::vector<size_t>& vector) {
         return ((vector.at(0) * vector.at(1) * 4 * 2) + (4 * 16 * 2)) <= available_shared_memory;
     };
-    // f"((SCAN_BLOCK_SIZE * SCAN_DATA_SIZE * 4 * 2) + (4 * 16 * 2)) <= {available_shared_memory}"]
     auto_tuner.addConstraint(compositionId, {"SCAN_BLOCK_SIZE", "SCAN_DATA_SIZE"}, sharedMemoryConstraint);
 
     // Set reference class for correctness verification and compare to the computed result
