@@ -8,9 +8,9 @@
 
 using namespace std;
 
+// Constants for reference checking
 const uint SORT_BLOCK_SIZE = 128;
 const uint SCAN_BLOCK_SIZE = 256;
-// TODO: remove ^ ?
 // Problem sizes from SHOC
 uint problemSizes[4] = { 1, 8, 48, 96 };
 uint inputProblemSize = 1; // Default to first problem size if no input
@@ -121,7 +121,7 @@ void tuneScan() {
     const size_t reorderFindGlobalWorkSize = size / 2;
     int numElements = 16 * reorderFindGlobalWorkSize;
     unsigned int numBlocksReference = ceil((float) (numElements / SCAN_BLOCK_SIZE) / (float)(4 * SCAN_BLOCK_SIZE));
-    // Grid size should be: ceil((float)numElements2 / (float) SCAN_BLOCK_SIZE / (float) SORT_DATA_SIZE / (float) SCAN_BLOCK_SIZE);
+    // Grid size should be: ceil((float)numElements / (float) SCAN_BLOCK_SIZE / (float) SORT_DATA_SIZE / (float) SCAN_BLOCK_SIZE);
 
     // Add kernel
     size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {(size_t) numElements}, {1});
@@ -229,24 +229,42 @@ void tuneVectorAddUniform4() {
     string kernelName("vectorAddUniform4");
     // Set the tuning kernel to run on device id 0 and platform 0
     cltune::Tuner auto_tuner(0, 0);
-
+    
     const size_t reorderFindGlobalWorkSize = size / 2;
-    const size_t reorderBlocks = reorderFindGlobalWorkSize / SCAN_BLOCK_SIZE;
-    int numElements = 16 * reorderBlocks;
-    // unsigned int numBlocks = max(1, (unsigned int) ceil((float) numElements / (SORT_DATA_SIZE * SCAN_BLOCK_SIZE)));
-    unsigned int numBlocks = max(1, (int) ceil((float) numElements / (4.f * SCAN_BLOCK_SIZE)));
-    // TODO: update this numBlocks: 4.0f?
-    // TODO: update others over here
+    int numElements = 16 * reorderFindGlobalWorkSize;
+    unsigned int numBlocksReference = ceil((float) (numElements / SCAN_BLOCK_SIZE) / (float)(4 * SCAN_BLOCK_SIZE));
+    // Grid size should be: ceil((float)numElements / (float) SCAN_BLOCK_SIZE / (float) SORT_DATA_SIZE / (float) SCAN_BLOCK_SIZE);
 
     // Add kernel
-    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
+    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numElements}, {1});
 
     // Add parameter for kernel
     auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {SCAN_BLOCK_SIZE});
-    auto_tuner.AddParameter(kernel_id, "SORT_BLOCK_SIZE", {SORT_BLOCK_SIZE});
-    auto_tuner.AddParameter(kernel_id, "SORT_DATA_SIZE", {2});
-    auto_tuner.AddParameter(kernel_id, "SCAN_DATA_SIZE", {4});
+    auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
+    auto_tuner.AddParameter(kernel_id, "SORT_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
+    auto_tuner.AddParameter(kernel_id, "SORT_DATA_SIZE", {2, 4, 8});
+    auto_tuner.AddParameter(kernel_id, "SCAN_DATA_SIZE", {2, 4, 8});
+    auto_tuner.MulLocalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
+    auto_tuner.DivGlobalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
+    auto_tuner.DivGlobalSize(kernel_id, {"SORT_DATA_SIZE"});
+
+    // Get CUDA properties from device 0 
+    cudaDeviceProp properties;
+    cudaGetDeviceProperties(&properties, 0);
+    int available_shared_memory = properties.sharedMemPerBlock;
+
+    // Constraint for shared memory used
+    auto sharedMemoryConstraint = [&](const std::vector<size_t>& vector) {
+        return ((vector.at(0) * vector.at(1) * 4 * 2) + (4 * 16 * 2)) <= available_shared_memory;
+    };
+    auto_tuner.AddConstraint(kernel_id, sharedMemoryConstraint, {"SCAN_BLOCK_SIZE", "SCAN_DATA_SIZE"});
+
+    // Constraint for block sizes and data sizes
+    auto_tuner.AddConstraint(
+        kernel_id,
+        dataSizeBlockSizeConstraint,
+        {"SCAN_DATA_SIZE", "SORT_DATA_SIZE", "SCAN_BLOCK_SIZE", "SORT_BLOCK_SIZE"}
+    );
 
     vector<int> scanOutput(0);
     vector<int> blockSums(0);
@@ -271,8 +289,11 @@ void tuneVectorAddUniform4() {
     auto_tuner.AddArgumentScalar(size);
 
     // Set reference kernel for correctness verification and compare to the computed result
-    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocks}, {SCAN_BLOCK_SIZE});
-    // TODO: update reference kernel launching over
+    auto_tuner.SetReference({referenceKernelFile}, kernelName, {numBlocksReference * 256}, {256});
+    auto_tuner.AddParameterReference("SCAN_DATA_SIZE", 2);
+    auto_tuner.AddParameterReference("SORT_DATA_SIZE", 4);
+    auto_tuner.AddParameterReference("SCAN_BLOCK_SIZE", 256);
+    auto_tuner.AddParameterReference("SORT_BLOCK_SIZE", 128);
 
     // Use 50% of the total search space
     double searchFraction = 0.5;
@@ -350,9 +371,9 @@ int main(int argc, char* argv[]) {
     size = (problemSizes[inputProblemSize - 1] * 1024 * 1024) / sizeof(uint);
 
     // Tune all kernels
-    // tuneRadixSortBlocks();
+    tuneRadixSortBlocks();
     tuneScan();
-    // tuneVectorAddUniform4();
+    tuneVectorAddUniform4();
     
     return 0;
 }
