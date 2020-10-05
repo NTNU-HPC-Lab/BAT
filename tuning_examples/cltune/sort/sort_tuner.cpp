@@ -130,9 +130,9 @@ void tuneScan() {
     auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_LOCAL_MEMORY", {0, 1});
     auto_tuner.AddParameter(kernel_id, "INLINE_LOCAL_MEMORY", {0, 1});
     auto_tuner.AddParameter(kernel_id, "SCAN_DATA_SIZE", {2, 4, 8});
-    auto_tuner.AddParameter(kernel_id, "SORT_DATA_SIZE", {4});
+    auto_tuner.AddParameter(kernel_id, "SORT_DATA_SIZE", {2, 4, 8});
     auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
-    auto_tuner.AddParameter(kernel_id, "SORT_BLOCK_SIZE", {128});
+    auto_tuner.AddParameter(kernel_id, "SORT_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
 
     auto_tuner.MulLocalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
     auto_tuner.DivGlobalSize(kernel_id, {"SCAN_BLOCK_SIZE"});
@@ -236,7 +236,7 @@ void tuneVectorAddUniform4() {
     // Grid size should be: ceil((float)numElements / (float) SCAN_BLOCK_SIZE / (float) SORT_DATA_SIZE / (float) SCAN_BLOCK_SIZE);
 
     // Add kernel
-    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {numElements}, {1});
+    size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {(size_t) numElements}, {1});
 
     // Add parameter for kernel
     auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
