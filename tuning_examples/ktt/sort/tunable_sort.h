@@ -86,7 +86,7 @@ public:
         updateArgumentVector(blockOffsetsId, blockOffsets.data(), itemSize);
 
         // Update blocks for "findRadixOffsets" kernel and "reorderData" kernel
-        uint reorderFindBlocks = (size / 2) / SCAN_BLOCK_SIZE;
+        uint reorderFindBlocks = (size / SCAN_DATA_SIZE) / SCAN_BLOCK_SIZE;
         updateArgumentScalar(reorderFindBlocksId, &reorderFindBlocks);
         
         // Swap the input and output keys and values before the loop
