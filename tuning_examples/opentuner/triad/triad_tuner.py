@@ -29,7 +29,7 @@ class TriadTuner(MeasurementInterface):
         # Using block size less than `gpu.MAX_THREADS_PER_BLOCK`
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, max_block_size))
         manipulator.add_parameter(IntegerParameter('WORK_PER_THREAD', 1, 10))
-        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_TRIAD', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_TRIAD', 0, 1))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
 
         return manipulator

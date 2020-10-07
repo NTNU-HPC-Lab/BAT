@@ -22,6 +22,11 @@ class ScanTuner(MeasurementInterface):
         ConfigurationManipulator
         """
 
+        args = argparser.parse_args()
+        max_gpus = len(cuda.gpus)
+        if args.parallel == 0:
+            max_gpus = 1
+
         block_sizes = [2**i for i in range(4, 10)]
         block_sizes.remove(32)
         grid_sizes = [2**i for i in range(0, 10)]
@@ -30,13 +35,13 @@ class ScanTuner(MeasurementInterface):
         manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
         manipulator.add_parameter(EnumParameter('GRID_SIZE', grid_sizes)) 
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
-        manipulator.add_parameter(EnumParameter('USE_FAST_MATH', [0, 1]))
-        manipulator.add_parameter(EnumParameter('OPTIMIZATION_LEVEL_HOST', ['-O0', '-O1', '-O2', '-O3']))
-        manipulator.add_parameter(EnumParameter('OPTIMIZATION_LEVEL_DEVICE', ['-O0', '-O1', '-O2', '-O3']))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_1', 0, 1))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_2', 0, 1))
+        manipulator.add_parameter(IntegerParameter('USE_FAST_MATH', 0, 1))
+        manipulator.add_parameter(IntegerParameter('OPTIMIZATION_LEVEL_HOST', 0, 3))
+        manipulator.add_parameter(IntegerParameter('OPTIMIZATION_LEVEL_DEVICE', 0, 3))
         manipulator.add_parameter(EnumParameter('MAX_REGISTERS', [-1, 20, 40, 60, 80, 100, 120]))
-        manipulator.add_parameter(IntegerParameter('GPUS', 1, len(cuda.gpus)))
+        manipulator.add_parameter(IntegerParameter('GPUS', 1, max_gpus))
 
         return manipulator
 
@@ -63,7 +68,7 @@ class ScanTuner(MeasurementInterface):
         if cfg['MAX_REGISTERS'] == -1:
             max_registers = ''
 
-        make_program = f'nvcc {cfg["OPTIMIZATION_LEVEL_HOST"]} {use_fast_math}{max_registers}-Xptxas {cfg["OPTIMIZATION_LEVEL_DEVICE"]},-v -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -c {start_path}/scan/scan.cu'
+        make_program = f'nvcc -O{cfg["OPTIMIZATION_LEVEL_HOST"]} {use_fast_math}{max_registers}-Xptxas -O{cfg["OPTIMIZATION_LEVEL_DEVICE"]},-v -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -c {start_path}/scan/scan.cu'
         make_program += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])
         make_program += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
         make_program += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
@@ -72,19 +77,19 @@ class ScanTuner(MeasurementInterface):
 
         if args.parallel == 1:
             # If parallel
-            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ {cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
             make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o scan main.o scan.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         elif args.parallel == 2:
             # If true parallel
-            compile_cmd = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ {cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
-            compile_cmd += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ {cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o tpScan.o {start_path}/scan/tpScan.cpp'
+            compile_cmd = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            compile_cmd += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o tpScan.o {start_path}/scan/tpScan.cpp'
             compile_cmd += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
             compile_cmd += ' -D{0}={1}'.format('GRID_SIZE',cfg['GRID_SIZE'])
             compile_cmd += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
-            compile_cmd += f'nvcc {cfg["OPTIMIZATION_LEVEL_HOST"]} {use_fast_math}{max_registers}-Xptxas {cfg["OPTIMIZATION_LEVEL_DEVICE"]},-v -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -c {start_path}/scan/tpScanLaunchKernel.cu'
+            compile_cmd += f'nvcc -O{cfg["OPTIMIZATION_LEVEL_HOST"]} {use_fast_math}{max_registers}-Xptxas -O{cfg["OPTIMIZATION_LEVEL_DEVICE"]},-v -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -c {start_path}/scan/tpScanLaunchKernel.cu'
             compile_cmd += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
             compile_cmd += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
@@ -93,7 +98,7 @@ class ScanTuner(MeasurementInterface):
             compile_cmd += f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o scan main.o tpScan.o tpScanLaunchKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
         else:
             # If serial
-            make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ {cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_serial_start = f'nvcc -I {start_path}/common/ -I {start_path}/cuda-common/ -O{cfg["OPTIMIZATION_LEVEL_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o scan main.o scan.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
 

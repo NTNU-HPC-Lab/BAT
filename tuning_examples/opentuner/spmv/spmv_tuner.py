@@ -30,10 +30,10 @@ class SPMVTuner(MeasurementInterface):
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
         # 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
-        manipulator.add_parameter(EnumParameter('FORMAT', [0, 1, 2, 3, 4]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
-        manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('FORMAT', 0, 4))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_1', 0, 1))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_2', 0, 1))
+        manipulator.add_parameter(IntegerParameter('TEXTURE_MEMORY', 0, 1))
 
         return manipulator
 
@@ -45,6 +45,8 @@ class SPMVTuner(MeasurementInterface):
         args = argparser.parse_args()
 
         cfg = desired_result.configuration.data
+        compute_capability = cuda.get_current_device().compute_capability
+        cc = str(compute_capability[0]) + str(compute_capability[1])
 
         # Check constraints for the parameters
         if not (cfg['FORMAT'] < 3 or cfg['BLOCK_SIZE'] % 32 == 0):
@@ -52,9 +54,6 @@ class SPMVTuner(MeasurementInterface):
 
         if not (cfg['FORMAT'] > 2 or cfg['UNROLL_LOOP_2'] < 1):
             return Result(time=float("inf"), state="ERROR", accuracy=float("-inf"))
-
-        compute_capability = cuda.get_current_device().compute_capability
-        cc = str(compute_capability[0]) + str(compute_capability[1])
 
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/spmv/spmv.cu'
         make_program += ' -D{0}={1}'.format('PRECISION',cfg['PRECISION'])

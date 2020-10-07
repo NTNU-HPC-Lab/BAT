@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", block_sizes);
     auto_tuner.addParameter(kernelId, "PRECISION", {32, 64});
     // Formats: 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
-    auto_tuner.addParameter(kernelId, "FORMAT", {3});//, 1, 2, 3, 4});
+    auto_tuner.addParameter(kernelId, "FORMAT", {0, 1, 2, 3, 4});
     auto_tuner.addParameter(kernelId, "UNROLL_LOOP_1", {0, 1});
     auto_tuner.addParameter(kernelId, "UNROLL_LOOP_2", {0, 1});
     auto_tuner.addParameter(kernelId, "TEXTURE_MEMORY", {0});

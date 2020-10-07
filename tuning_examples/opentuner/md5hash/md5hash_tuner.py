@@ -25,13 +25,13 @@ class MD5HashTuner(MeasurementInterface):
         gpu = cuda.get_current_device()
         manipulator = ConfigurationManipulator()
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, gpu.MAX_THREADS_PER_BLOCK))
-        manipulator.add_parameter(EnumParameter('ROUND_STYLE', [0, 1]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_1', [0, 1]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_2', [0, 1]))
-        manipulator.add_parameter(EnumParameter('UNROLL_LOOP_3', [0, 1]))
-        manipulator.add_parameter(EnumParameter('INLINE_1', [0, 1]))
-        manipulator.add_parameter(EnumParameter('INLINE_2', [0, 1]))
-        manipulator.add_parameter(EnumParameter('WORK_PER_THREAD_FACTOR', [1, 2, 3, 4, 5]))
+        manipulator.add_parameter(IntegerParameter('ROUND_STYLE', 0, 1))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_1', 0, 1))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_2', 0, 1))
+        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_3', 0, 1))
+        manipulator.add_parameter(IntegerParameter('INLINE_1', 0, 1))
+        manipulator.add_parameter(IntegerParameter('INLINE_2', 0, 1))
+        manipulator.add_parameter(IntegerParameter('WORK_PER_THREAD_FACTOR', 1, 5))
 
         return manipulator
 

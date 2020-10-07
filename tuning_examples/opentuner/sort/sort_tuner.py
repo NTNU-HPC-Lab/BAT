@@ -28,16 +28,16 @@ class SortTuner(MeasurementInterface):
         block_sizes = list(filter(lambda x: x <= max_size, [2**i for i in range(4, 11)]))
 
         manipulator = ConfigurationManipulator()
-        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_LSB', [0, 1]))
-        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_LOCAL_MEMORY', [0, 1]))
-        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_ADD_UNIFORM', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_LSB', 0, 1))
+        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_LOCAL_MEMORY', 0, 1))
+        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_ADD_UNIFORM', 0, 1))
         manipulator.add_parameter(EnumParameter('SCAN_DATA_SIZE', [2, 4, 8]))
         manipulator.add_parameter(EnumParameter('SORT_DATA_SIZE', [2, 4, 8]))
         manipulator.add_parameter(EnumParameter('SCAN_BLOCK_SIZE', block_sizes))
         manipulator.add_parameter(EnumParameter('SORT_BLOCK_SIZE', block_sizes))
-        manipulator.add_parameter(EnumParameter('INLINE_LSB', [0, 1]))
-        manipulator.add_parameter(EnumParameter('INLINE_SCAN', [0, 1]))
-        manipulator.add_parameter(EnumParameter('INLINE_LOCAL_MEMORY', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('INLINE_LSB', 0, 1))
+        manipulator.add_parameter(IntegerParameter('INLINE_SCAN', 0, 1))
+        manipulator.add_parameter(IntegerParameter('INLINE_LOCAL_MEMORY', 0, 1))
 
         return manipulator
 

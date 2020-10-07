@@ -3,7 +3,7 @@
         "make clean",
         "make dependencies"
     ],
-    "run": "python3 stencil2d_tuner.py --no-dups --stop-after=30",
+    "run": "python3 stencil2d_tuner.py --no-dups --stop-after=300",
     "results": [
         "results.json"
     ]

@@ -28,7 +28,7 @@ class MDTuner(MeasurementInterface):
         # Using block size less than `gpu.MAX_THREADS_PER_BLOCK`
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', 1, max_block_size))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
-        manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('TEXTURE_MEMORY', 0, 1))
         manipulator.add_parameter(IntegerParameter('WORK_PER_THREAD', 1, 5))
 
         return manipulator

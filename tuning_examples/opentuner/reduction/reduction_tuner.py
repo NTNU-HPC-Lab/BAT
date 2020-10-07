@@ -21,6 +21,10 @@ class ReductionTuner(MeasurementInterface):
         Define the search space by creating a
         ConfigurationManipulator
         """
+        args = argparser.parse_args()
+        max_gpus = len(cuda.gpus)
+        if args.parallel == 0:
+            max_gpus = 1
 
         gpu = cuda.get_current_device()
         max_block_size = gpu.MAX_THREADS_PER_BLOCK
@@ -31,14 +35,14 @@ class ReductionTuner(MeasurementInterface):
         manipulator.add_parameter(EnumParameter('BLOCK_SIZE', block_sizes))
         manipulator.add_parameter(EnumParameter('GRID_SIZE', [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]))
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
-        manipulator.add_parameter(EnumParameter('COMPILER_OPTIMIZATION_HOST', [0, 1, 2, 3]))
-        manipulator.add_parameter(EnumParameter('COMPILER_OPTIMIZATION_DEVICE', [0, 1, 2, 3]))
-        manipulator.add_parameter(EnumParameter('USE_FAST_MATH', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('COMPILER_OPTIMIZATION_HOST', 0, 3))
+        manipulator.add_parameter(IntegerParameter('COMPILER_OPTIMIZATION_DEVICE', 0, 3))
+        manipulator.add_parameter(IntegerParameter('USE_FAST_MATH', 0, 1))
         manipulator.add_parameter(EnumParameter('MAX_REGISTERS', [-1, 20, 40, 60, 80, 100, 120]))
-        manipulator.add_parameter(IntegerParameter('GPUS', 1, len(cuda.gpus)))
-        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_REDUCE_1', [0, 1]))
-        manipulator.add_parameter(EnumParameter('LOOP_UNROLL_REDUCE_2', [0, 1]))
-        manipulator.add_parameter(EnumParameter('TEXTURE_MEMORY', [0, 1]))
+        manipulator.add_parameter(IntegerParameter('GPUS', 1, max_gpus))
+        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_REDUCE_1', 0, 1))
+        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_REDUCE_2', 0, 1))
+        manipulator.add_parameter(IntegerParameter('TEXTURE_MEMORY', 0, 1))
 
         return manipulator
 
