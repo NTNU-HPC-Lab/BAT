@@ -9,10 +9,13 @@ from opentuner import MeasurementInterface
 from opentuner import Result
 from numba import cuda
 import math
+import json
 
 start_path = '../../../src/programs'
 
 class TriadTuner(MeasurementInterface):
+    all_results = []
+
     def manipulator(self):
         """
         Define the search space by creating a
@@ -79,11 +82,15 @@ class TriadTuner(MeasurementInterface):
         assert run_result['stderr'] == b''
         assert run_result['returncode'] == 0
 
+        result = {'parameters': cfg, 'time': run_result['time']}
+        self.all_results.append(result)
         return Result(time=run_result['time'])
 
     def save_final_config(self, configuration):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
+        with open('all-results.json', 'w') as f:
+            json.dump(self.all_results, f, indent=4)
 
         # Update configuration with tuning technique
         configuration.data["TUNING_TECHNIQUE"] = argparser.parse_args().technique

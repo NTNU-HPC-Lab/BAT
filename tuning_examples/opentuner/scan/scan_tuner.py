@@ -123,7 +123,7 @@ class ScanTuner(MeasurementInterface):
         """called at the end of tuning"""
         print("Optimal parameter values written to results.json:", configuration.data)
         with open('all-results.json', 'w') as f:
-            json.dump(self.all_results, f)
+            json.dump(self.all_results, f, indent=4)
 
         # Update configuration with problem size and tuning technique
         configuration.data["PROBLEM_SIZE"] = argparser.parse_args().size
