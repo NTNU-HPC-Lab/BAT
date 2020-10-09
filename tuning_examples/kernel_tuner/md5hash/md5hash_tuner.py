@@ -32,9 +32,13 @@ tune_params["INLINE_1"] = [0, 1]
 tune_params["INLINE_2"] = [0, 1]
 tune_params["WORK_PER_THREAD_FACTOR"] = [1, 2, 3, 4, 5]
 
+strategy_options = {}
+if arguments.technique == "genetic_algorithm":
+    strategy_options = {"maxiter": 50, "popsize": 10}
 
 tuning_results = tune_kernel("RunBenchmark", kernel_files, byte_length, [], tune_params, strategy=arguments.technique, lang="C", block_size_names=["BLOCK_SIZE"], 
-    compiler_options=["-I ../../../src/kernels/md5hash/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"])
+    compiler_options=["-I ../../../src/kernels/md5hash/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"],
+    iterations=2, strategy_options=strategy_options)
 
 
 # Save the results as a JSON file

@@ -29,9 +29,14 @@ tune_params["PRECISION"] = [32, 64]
 tune_params["TEXTURE_MEMORY"] = [0, 1]
 tune_params["WORK_PER_THREAD"] = [i for i in range(1, 6)] # Range: [1, ..., 5]
 
+strategy_options = {}
+if arguments.technique == "genetic_algorithm":
+    strategy_options = {"maxiter": 50, "popsize": 10}
+
 # Tune all kernels and correctness verify by throwing error if verification failed
 tuning_results = tune_kernel("md_host", kernel_files, size, [], tune_params, strategy=arguments.technique, lang="C",
-                            block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/md/", f"-DPROBLEM_SIZE={input_problem_size}"])
+                            block_size_names=["BLOCK_SIZE"], compiler_options=["-I ../../../src/kernels/md/", f"-DPROBLEM_SIZE={input_problem_size}"],
+                            iterations=2, strategy_options=strategy_options)
 
 # Save the results as a JSON file
 with open("md-results.json", 'w') as f:

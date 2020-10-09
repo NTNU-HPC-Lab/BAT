@@ -262,7 +262,7 @@ float RunBenchmark() {
     //srandom(12345);
     srandom(time(NULL));
 
-    int passes = 10;
+    int passes = 1;
     float totalTime = 0.0;
     for (int pass = 0 ; pass < passes ; ++pass)
     {

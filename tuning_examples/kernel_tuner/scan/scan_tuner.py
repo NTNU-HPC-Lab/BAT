@@ -18,7 +18,7 @@ problem_size = problem_sizes[size - 1]
 # Use host code in combination with CUDA kernel
 kernel_files = ['scan_host.cu', '../../../src/kernels/scan/scan_kernel_no_template.cu']
 
-block_sizes = [2**i for i in range(4, 10)]
+block_sizes = [2**i for i in range(0, 10)]
 block_sizes.remove(32)
 grid_sizes = [2**i for i in range(0, 10)]
 
@@ -31,8 +31,13 @@ tune_params["UNROLL_LOOP_2"] = [0, 1]
 
 restrict = ["GRID_SIZE <= BLOCK_SIZE"]
 
+strategy_options = {}
+if arguments.technique == "genetic_algorithm":
+    strategy_options = {"maxiter": 50, "popsize": 10}
+
 tuning_results = tune_kernel("RunBenchmark", kernel_files, problem_size, [], tune_params, strategy=arguments.technique, restrictions=restrict, lang="C", block_size_names=["BLOCK_SIZE"], 
-    compiler_options=["-I ../../../src/kernels/scan/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"])
+    compiler_options=["-I ../../../src/kernels/scan/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"],
+    iterations=2, strategy_options=strategy_options)
 
 # Save the results as a JSON file
 with open("scan-results.json", 'w') as f:
