@@ -1,7 +1,6 @@
 #include <mpi.h>
 #include <sstream>
 #include "MPIStencilUtil.h"
-#include "ParallelResultDatabase.h"
 
 template<class T>
 void
@@ -55,16 +54,16 @@ MPIStencilValidater<T>::ValidateResult( const Matrix2D<T>& exp,
 //    parallel code, don't report per-process values.
 //
 void
-MPIStencilTimingReporter::ReportTimings( ResultDatabase& resultDB ) const
+MPIStencilTimingReporter::ReportTimings( ) const
 {
-    ParallelResultDatabase pdb;
-    pdb.MergeSerialDatabases( resultDB, MPI_COMM_WORLD );
+    // ParallelResultDatabase pdb;
+    // pdb.MergeSerialDatabases( resultDB, MPI_COMM_WORLD );
 
-    int cwrank;
-    MPI_Comm_rank( MPI_COMM_WORLD, &cwrank );
-    if( cwrank == 0 )
-    {
-        pdb.DumpSummary( std::cout );
-    }
+    // int cwrank;
+    // MPI_Comm_rank( MPI_COMM_WORLD, &cwrank );
+    // if( cwrank == 0 )
+    // {
+    //     pdb.DumpSummary( std::cout );
+    // }
 }
 
