@@ -327,6 +327,8 @@ bottom_scan(const T* __restrict__ g_idata,
     }
 }
 
+// Option to prevent including these functions
+#if NOT_USING_HELPERS == 0
 extern "C" __global__ void scan_single_block_helper(float* __restrict__ g_block_sums_f, double* __restrict__ g_block_sums_d) {
     #if PRECISION == 32
         scan_single_block(g_block_sums_f, BLOCK_SIZE);
@@ -357,3 +359,4 @@ extern "C" __global__ void bottom_scan_helper(
         bottom_scan(g_idata_d, g_odata_d, g_block_sums_d, n_d);
     #endif
 }
+#endif

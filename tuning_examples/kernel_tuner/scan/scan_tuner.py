@@ -32,7 +32,7 @@ tune_params["UNROLL_LOOP_2"] = [0, 1]
 restrict = ["GRID_SIZE <= BLOCK_SIZE"]
 
 tuning_results = tune_kernel("RunBenchmark", kernel_files, problem_size, [], tune_params, strategy=arguments.technique, restrictions=restrict, lang="C", block_size_names=["BLOCK_SIZE"], 
-    compiler_options=["-I ../../../src/kernels/scan/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"])
+    compiler_options=["-I ../../../src/kernels/scan/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}", "-DNOT_USING_HELPERS=1"])
 
 # Save the results as a JSON file
 with open("scan-results.json", 'w') as f:
