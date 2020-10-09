@@ -42,10 +42,10 @@ class Stencil2DTuner(MeasurementInterface):
 
         if args.parallel:
             make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CUDAStencil.o {start_path}/stencil2d/CUDAStencil.cpp \n'
-            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CommonCUDAStencilFactory.o {start_path}/stencil2d/CommonCUDAStencilFactory.cpp \n'.format(start_path)
-            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o Stencil2Dmain.o {start_path}/stencil2d/Stencil2Dmain.cpp \n'.format(start_path)
-            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CUDAStencilFactory.o {start_path}/stencil2d/CUDAStencilFactory.cpp \n'.format(start_path)
-            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'.format(start_path)
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CommonCUDAStencilFactory.o {start_path}/stencil2d/CommonCUDAStencilFactory.cpp \n'
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o Stencil2Dmain.o {start_path}/stencil2d/Stencil2Dmain.cpp \n'
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o CUDAStencilFactory.o {start_path}/stencil2d/CUDAStencilFactory.cpp \n'
+            make_paralell_start += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -g -O2 -c -o main.o {start_path}/cuda-common/main.cpp \n'
             make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         else:
@@ -104,5 +104,5 @@ if __name__ == '__main__':
   argparser = opentuner.default_argparser()
   argparser.add_argument('--size', type=int, default=1, help='problem size of the program (1-4)')
   argparser.add_argument('--gpu-num', type=int, default=1, help='number of GPUs')
-  argparser.add_argument('--parallel', type=bool, default=False, help='run on multiple GPUs')
+  argparser.add_argument('--parallel', action="store_true", help='run on multiple GPUs')
   Stencil2DTuner.main(argparser.parse_args())

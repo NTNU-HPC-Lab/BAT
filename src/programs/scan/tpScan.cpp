@@ -10,15 +10,13 @@
 #include <vector>
 
 #include "OptionParser.h"
-#include "ResultDatabase.h"
-#include "Timer.h"
 #include "TPScan.h"
 
 using namespace std;
 
 // Forward declarations
 template <class T, class vecT>
-void RunTest(string testName, ResultDatabase &resultDB, OptionParser &op);
+void RunTest(string testName, OptionParser &op);
 
 // ****************************************************************************
 // Function: addBenchmarkSpecOptions
@@ -197,7 +195,7 @@ void RunTest(string testName, OptionParser &op)
         cudaEventElapsedTime(&temp, start, stop);
         pcie_time += (temp / (double)iters) * 1.e-3;
 
-        int globscan_th = Timer::Start();
+        // int globscan_th = Timer::Start();
         T reduced=0., scanned=0.;
         // To get the true sum for this node, we have to add up
         // the block sums before MPI scanning.
@@ -212,7 +210,7 @@ void RunTest(string testName, OptionParser &op)
         {
             globalExscan(&reduced, &scanned);
         }
-        mpi_time += Timer::Stop(globscan_th, "Global Scan") / iters;
+        // mpi_time += Timer::Stop(globscan_th, "Global Scan") / iters;
 
         // Now, scanned contains all the information we need from other nodes
         // Next step is to perform the local top level (i.e. across blocks) scan,
@@ -235,7 +233,7 @@ void RunTest(string testName, OptionParser &op)
                              d_block_sums,
                              num_blocks );
 
-        LaunchBottomScanKernel<T, vecT, num_threads>( num_blocks,
+        LaunchBottomScanKernel<T, vecT>( num_blocks,
                                               num_threads,
                                               smem_size * 2,
                                               d_idata,

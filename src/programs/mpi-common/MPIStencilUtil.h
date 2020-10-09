@@ -38,7 +38,7 @@ public:
 class MPIStencilTimingReporter : public StencilTimingReporter
 {
 public:
-    virtual void ReportTimings( ResultDatabase& resultDB ) const;
+    virtual void ReportTimings( ) const;
 };
 
 

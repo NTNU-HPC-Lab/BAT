@@ -32,7 +32,6 @@
 #include "CUDAPMSMemMgr.h"
 
 #if defined(PARALLEL)
-#include "ParallelResultDatabase.h"
 #include "MPIHostStencilFactory.cpp"
 #include "MPIHostStencil.cpp"
 #include "MPICUDAStencilFactory.cpp"

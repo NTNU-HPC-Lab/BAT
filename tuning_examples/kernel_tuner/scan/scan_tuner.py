@@ -36,7 +36,7 @@ if arguments.technique == "genetic_algorithm":
     strategy_options = {"maxiter": 50, "popsize": 10}
 
 tuning_results = tune_kernel("RunBenchmark", kernel_files, problem_size, [], tune_params, strategy=arguments.technique, restrictions=restrict, lang="C", block_size_names=["BLOCK_SIZE"], 
-    compiler_options=["-I ../../../src/kernels/scan/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}"],
+    compiler_options=["-I ../../../src/kernels/scan/", "-I ../../../src/programs/common/", "-I ../../../src/programs/cuda-common/", f"-DPROBLEM_SIZE={size}", "-DNOT_USING_HELPERS=1"],
     iterations=2, strategy_options=strategy_options)
 
 # Save the results as a JSON file
