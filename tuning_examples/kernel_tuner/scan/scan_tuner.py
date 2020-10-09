@@ -18,7 +18,7 @@ problem_size = problem_sizes[size - 1]
 # Use host code in combination with CUDA kernel
 kernel_files = ['scan_host.cu', '../../../src/kernels/scan/scan_kernel_no_template.cu']
 
-block_sizes = [2**i for i in range(0, 10)]
+block_sizes = [2**i for i in range(4, 10)]
 block_sizes.remove(32)
 grid_sizes = [2**i for i in range(0, 10)]
 

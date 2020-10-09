@@ -27,7 +27,7 @@ class ScanTuner(MeasurementInterface):
         if args.parallel == 0:
             max_gpus = 1
 
-        block_sizes = [2**i for i in range(0, 10)]
+        block_sizes = [2**i for i in range(4, 10)]
         block_sizes.remove(32)
         grid_sizes = [2**i for i in range(0, 10)]
         manipulator = ConfigurationManipulator()

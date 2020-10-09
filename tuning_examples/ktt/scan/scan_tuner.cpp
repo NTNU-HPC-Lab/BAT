@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.setCompositionKernelArguments(compositionId, kernelIds[2], vector<ktt::ArgumentId>{inDataIdf, inDataIdd, outDataIdf, outDataIdd, blockSumsIdf, blockSumsIdd, sizeIdf, sizeIdd});
    
     // Add parameters to tune
-    auto_tuner.addParameter(compositionId, "BLOCK_SIZE", {1, 2, 4, 8, 16, 64, 128, 256, 512});
+    auto_tuner.addParameter(compositionId, "BLOCK_SIZE", {16, 64, 128, 256, 512});
     auto_tuner.addParameter(compositionId, "GRID_SIZE", {1, 2, 4, 8, 16, 32, 64, 128, 256, 512});
     auto_tuner.addParameter(compositionId, "PRECISION", {32, 64});
     auto_tuner.addParameter(compositionId, "UNROLL_LOOP_1", {0, 1});
