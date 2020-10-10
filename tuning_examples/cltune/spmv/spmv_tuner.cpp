@@ -5,6 +5,7 @@
 #include <limits.h>
 #include "cltune.h" // CLTune API
 #include "cltune_json_saver.hpp" // Custom JSON CLTune results saver
+#include "search_constants.h"
 #include "Spmv/util.h"
 
 using namespace std;
@@ -224,15 +225,15 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddArgumentOutput(out_sp);
     auto_tuner.AddArgumentOutput(out_dp);
 
-    // Use 50% of the total search space
-    double searchFraction = 0.5;
+    // Use a percentage of the total search space
+    double searchFraction = SEARCH_FRACTION;
 
     // Select the tuning technique for this benchmark
     if (tuningTechnique == "annealing") {
-        double maxTemperature = 4.0f;
+        double maxTemperature = MAX_TEMPERATURE;
         auto_tuner.UseAnnealing(searchFraction, {maxTemperature});
     } else if (tuningTechnique == "pso") {
-        double swarmSize = 4.0f;
+        double swarmSize = SWARM_SIZE;
         auto_tuner.UsePSO(searchFraction, swarmSize, 0.4, 0.0, 0.4);
     } else if (tuningTechnique == "random") {
         auto_tuner.UseRandomSearch(searchFraction);
