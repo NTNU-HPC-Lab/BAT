@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddArgumentOutput(foundDigest);
 
     // Use a fraction of the total search space
-    double searchFraction = SEARCH_FRACTION;
+    double searchFraction = SEARCH_FRACTION/8;
 
     // Select the tuning technique for this benchmark
     if (tuningTechnique == "annealing") {

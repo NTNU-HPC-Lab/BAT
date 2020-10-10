@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddArgumentScalar(globalWorkSize); // The number of elements
 
     // Use a fraction of the total search space
-    double searchFraction = SEARCH_FRACTION;
+    double searchFraction = SEARCH_FRACTION/2;
 
     // Select the tuning technique for this benchmark
     if (tuningTechnique == "annealing") {
