@@ -57,9 +57,6 @@ class Stencil2DTuner(MeasurementInterface):
             make_serial_end = f'nvcc -L {start_path}/cuda-common -L {start_path}/common -o Stencil2D CUDAStencil.o CommonCUDAStencilFactory.o Stencil2Dmain.o CUDAStencilFactory.o main.o CUDAStencilKernel.o -lSHOCCommon'
             compile_cmd = make_serial_start + make_program + make_serial_end
 
-        # TODO: remove this
-        print(compile_cmd)
-
         compile_result = self.call_program(compile_cmd)
         assert compile_result['returncode'] == 0
 
@@ -69,14 +66,11 @@ class Stencil2DTuner(MeasurementInterface):
         
         if args.parallel:
             # Select number below max connected GPUs
-      
             devices = ','.join([str(i) for i in range(0, chosen_gpu_number)])
             run_cmd = f'mpirun -np {chosen_gpu_number} --allow-run-as-root {program_command} -d {devices}'
         else:
             run_cmd = program_command
 
-        # TODO: remove this
-        print(run_cmd)
         run_result = self.call_program(run_cmd)
 
         # Check that error code and error output is ok
