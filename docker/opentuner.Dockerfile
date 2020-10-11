@@ -18,5 +18,8 @@ COPY . .
 RUN cd tuning_examples/opentuner && \
     pip3 install -r requirements.txt
 
+# Due to a bug in OpenMPI (https://github.com/open-mpi/ompi/issues/4948)
+ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
+
 # Set the correct encoding for Python
 ENV PYTHONIOENCODING=utf-8
