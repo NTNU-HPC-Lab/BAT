@@ -38,7 +38,7 @@ MPI2DGridProgramBase::MPI2DGridProgramBase( size_t _mpiGridRows,
     {
         if( dims[0]*dims[1] < cwsize )
         {
-            std::out << "warning: using "
+            std::cout << "warning: using "
                 << dims[0]*dims[1]
                 << " of  " << cwsize
                 << " available tasks; the rest will idle"
