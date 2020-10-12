@@ -7,6 +7,7 @@ template<class T>
 void RunTestLaunchKernel(int num_blocks,
                          int num_threads,
                          int smem_size,
+                         cudaTextureObject_t idataTextureObject,
                          T* d_idata,
                          T* d_odata,
                          int size );

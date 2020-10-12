@@ -5,13 +5,14 @@ void
 RunTestLaunchKernel( int num_blocks,
                     int num_threads,
                     int smem_size,
+                    cudaTextureObject_t idataTextureObject,
                     T* d_idata,
                     T* d_odata,
                     int size )
 {
     // In CUDA 4.0 we will be able to remove this level of indirection
     // if we use the cuConfigureCall and cuLaunchKernel functions.
-    reduce<T,BLOCK_SIZE><<<num_blocks,num_threads,smem_size>>>(d_idata, d_odata, size);
+    reduce<T,BLOCK_SIZE><<<num_blocks,num_threads,smem_size>>>(d_idata, idataTextureObject, d_odata, size);
 }
 
 
@@ -20,6 +21,6 @@ RunTestLaunchKernel( int num_blocks,
 // we need to instantiate template functions.  Declaration of the needed
 // specializations seem to work for several recent versions of g++ that
 // people are likely to be using underneath nvcc.
-template void RunTestLaunchKernel<float>( int, int, int, float*, float*, int );
-template void RunTestLaunchKernel<double>( int, int, int, double*, double*, int );
+template void RunTestLaunchKernel<float>( int, int, int, cudaTextureObject_t, float*, float*, int );
+template void RunTestLaunchKernel<double>( int, int, int, cudaTextureObject_t, double*, double*, int );
 
