@@ -21,6 +21,6 @@ RunTestLaunchKernel( int num_blocks,
 // we need to instantiate template functions.  Declaration of the needed
 // specializations seem to work for several recent versions of g++ that
 // people are likely to be using underneath nvcc.
-template void RunTestLaunchKernel<float>( int, int, int, cudaTextureObject_t, float*, float*, int );
-template void RunTestLaunchKernel<double>( int, int, int, cudaTextureObject_t, double*, double*, int );
+template void RunTestLaunchKernel<float>( int, int, int, float*, cudaTextureObject_t, float*, int );
+template void RunTestLaunchKernel<double>( int, int, int, double*, cudaTextureObject_t, double*, int );
 
