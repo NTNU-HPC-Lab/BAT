@@ -75,13 +75,13 @@ class ReductionTuner(MeasurementInterface):
 
         if args.parallel == 1:
             # If parallel
-            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            make_paralell_start = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
             make_paralell_end = f'mpicxx -L {start_path}/cuda-common -L {start_path}/common -o reduction main.o reduction.o -lSHOCCommon "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda/bin/../targets/x86_64-linux/lib" -lcudadevrt -lcudart_static -lrt -lpthread -ldl -lrt -lrt'
             compile_cmd = make_paralell_start + make_program + make_paralell_end
         elif args.parallel == 2:
             # If true parallel
-            compile_cmd = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
-            compile_cmd += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -Xptxas -O{cfg["COMPILER_OPTIMIZATION_DEVICE"]} -c -o tpReduction.o {start_path}/reduction/tpReduction.cpp'
+            compile_cmd = f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -c -o main.o {start_path}/cuda-common/main.cpp \n'
+            compile_cmd += f'mpicxx -I {start_path}/common/ -I {start_path}/cuda-common/ -I /usr/local/cuda/include -DPARALLEL -I {start_path}/mpi-common/ -O{cfg["COMPILER_OPTIMIZATION_HOST"]} -c -o tpReduction.o {start_path}/reduction/tpReduction.cpp'
             compile_cmd += ' -D{0}={1}'.format('BLOCK_SIZE', cfg['BLOCK_SIZE'])
             compile_cmd += ' -D{0}={1}'.format('GRID_SIZE', cfg['GRID_SIZE'])
             compile_cmd += ' -D{0}={1}'.format('PRECISION', cfg['PRECISION'])
