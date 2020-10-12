@@ -194,37 +194,37 @@ void RunTest(string test_name, OptionParser &op)
 
         cudaTextureObject_t idataTextureObject = 0;
 
+    #if TEXTURE_MEMORY
+        // Setup the texture memory
+        // Create the texture resource descriptor
+        cudaResourceDesc resourceDescriptor;
+        memset(&resourceDescriptor, 0, sizeof(resourceDescriptor));
+        resourceDescriptor.resType = cudaResourceTypeLinear;
+        resourceDescriptor.res.linear.devPtr = d_idata;
+        #if PRECISION == 32
+            resourceDescriptor.res.linear.desc.f = cudaChannelFormatKindFloat;
+        #elif PRECISION == 64
+            resourceDescriptor.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+        #endif
+        resourceDescriptor.res.linear.desc.x = 32;
+        #if PRECISION == 64
+            resourceDescriptor.res.linear.desc.y = 32;
+        #endif
+        resourceDescriptor.res.linear.sizeInBytes = size * sizeof(T);
+
+        // Create the texture resource descriptor
+        cudaTextureDesc textureDescriptor;
+        memset(&textureDescriptor, 0, sizeof(textureDescriptor));
+        textureDescriptor.readMode = cudaReadModeElementType;
+
+        // Create the texture object
+        cudaCreateTextureObject(&idataTextureObject, &resourceDescriptor, &textureDescriptor, NULL);
+    #endif
+
         // Repeatedly transfer input data to GPU and measure average time
         for (int m = 0; m < iters; m++)
         {
             CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_idata, size * sizeof(T), cudaMemcpyHostToDevice));
-
-        #if TEXTURE_MEMORY
-            // Setup the texture memory
-            // Create the texture resource descriptor
-            cudaResourceDesc resourceDescriptor;
-            memset(&resourceDescriptor, 0, sizeof(resourceDescriptor));
-            resourceDescriptor.resType = cudaResourceTypeLinear;
-            resourceDescriptor.res.linear.devPtr = d_idata;
-            #if PRECISION == 32
-                resourceDescriptor.res.linear.desc.f = cudaChannelFormatKindFloat;
-            #elif PRECISION == 64
-                resourceDescriptor.res.linear.desc.f = cudaChannelFormatKindUnsigned;
-            #endif
-            resourceDescriptor.res.linear.desc.x = 32;
-            #if PRECISION == 64
-                resourceDescriptor.res.linear.desc.y = 32;
-            #endif
-            resourceDescriptor.res.linear.sizeInBytes = size * sizeof(T);
-
-            // Create the texture resource descriptor
-            cudaTextureDesc textureDescriptor;
-            memset(&textureDescriptor, 0, sizeof(textureDescriptor));
-            textureDescriptor.readMode = cudaReadModeElementType;
-
-            // Create the texture object
-            cudaCreateTextureObject(&idataTextureObject, &resourceDescriptor, &textureDescriptor, NULL);
-        #endif
         }
 
         // Execute reduction kernel on GPU
