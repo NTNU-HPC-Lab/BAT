@@ -129,11 +129,7 @@ float RunTest(string testName)
 
     // TODO: remove this NB comment???
     int num_threads = BLOCK_SIZE; // NB: Update template to kernel launch if this is changed
-    // int num_blocks = 64; // TODO: this before
-    int num_blocks = GRID_SIZE; // TODO: this before
-    // int num_blocks = 4;
-    // int num_blocks = ceil(4 / num_threads);
-    // int num_blocks = ceil(16384 / num_threads); // 16384 = 265 * 64
+    int num_blocks = GRID_SIZE;
     int smem_size = sizeof(T) * num_threads;
     // allocate mem for the result on host side
     T* h_odata;
