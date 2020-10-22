@@ -8,3 +8,47 @@
 </h1>
 
 > A standardized benchmark suite for auto-tuners
+
+## Prerequisites
+- [Python 3](https://www.python.org/)
+
+## Running benchmarks
+```sh
+# Run all benchmark for all auto-tuners
+python3 main.py
+
+# Run the `sort` benchmark for all auto-tuners
+python3 main.py -b sort
+
+# Run all benchmarks for auto-tuner `OpenTuner`
+python3 main.py -a opentuner
+
+# Run benchmark `scan` for auto-tuner `CLTune`
+python3 main.py -b scan -a cltune
+```
+
+## Command-line arguments
+### `--benchmark [name]`, `-b [name]`
+Default: `none`
+
+Benchmark to run. Example: `sort`. If no benchmark is selected, all benchmarks are ran for selected auto-tuner(s).
+
+### `--auto-tuner [name]`, `-a [name]`
+Default: `none`
+
+Auto-tuner to run benchmarks for. Example: `ktt`. If no auto-tuner is selected, all auto-tuners are selected for benchmarking.
+
+### `--verbose`, `-v`
+Default: `false`
+
+If all `stdout` and `stderr` should be printed out during building of the benchmark(s). By default it does not print out the information during the building.
+
+### `--size [number]`, `-s [number]`
+Default: `1`
+
+Problem size for the data in the benchmarks. By default it uses a problem size of `1`. This is up to the specific auto-tuner to handle.
+
+### `--technique [name]`, `-t [name]`
+Default: `brute_force`
+
+Tuning technique to use for benchmarking. If no technique is specified, the brute force technique is selected. This is up to the specific auto-tuner to handle.
