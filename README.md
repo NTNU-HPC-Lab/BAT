@@ -52,3 +52,20 @@ Problem size for the data in the benchmarks. By default it uses a problem size o
 Default: `brute_force`
 
 Tuning technique to use for benchmarking. If no technique is specified, the brute force technique is selected. This is up to the specific auto-tuner to handle.
+
+## Add your own auto-tuner
+It is easy to add new auto-tuner implementations for the benchmarks, just follow these steps:
+1. Store your auto-tuner implementation of a benchmark inside a auto-tuner subdirectory in [tuning_examples](./tuning_examples). The path to the benchmark implementation should look similar to `./tuning_examples/kernel_tuner/sort/`.
+2. Create a `config.json` file in the same directory as the auto-tuner with content similar to this:
+```json
+{
+    "build": [
+        "make clean",
+        "make"
+    ],
+    "run": "./sort",
+    "results": [
+        "best-sort-results.json"
+    ]
+}
+```
