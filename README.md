@@ -70,6 +70,11 @@ It is easy to add new auto-tuner implementations for the benchmarks, just follow
 }
 ```
 
+### Content of `config.json`
+- `build`: A list of commands that will be ran before the `run` command. Note, it does not work correctly with `&&` between commands. This is because of a limitation in the package [subprocess](https://docs.python.org/3/library/subprocess.html) to run the commands in Python. A solution is therefore to split them in a list.
+- `run`: The command to run the auto-tuning benchmark.
+- `results`: A list of result files that contains the best parameters found in the auto-tuner benchmark. These will be printed out by BAT after the auto-tuning is completed.
+
 ## Within a Docker container
 ### Building
 Here are some examples of how to build the different auto-tuner Docker images:
