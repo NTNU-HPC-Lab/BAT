@@ -9,7 +9,7 @@
 
 > A standardized benchmark suite for auto-tuners
 
-BAT is a standardized benchmark suite for auto-tuners that is based on benchmarks from [SHOC](https://github.com/Knutakir/shoc) and contains benchmarks for [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) programs. BAT will save all your `JSON` and `CSV` results to an own results directory after auto-tuning is completed. Then it will parse specified files and print out the best parameters found by the auto-tuner. The parameters and other benchmarking information will be printed out prettified in the terminal.
+BAT is a standardized benchmark suite for auto-tuners that is based on benchmarks from [SHOC](https://github.com/Knutakir/shoc) and contains benchmarks for [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) programs. The benchmarks are for both whole programs and kernel-code. BAT will save all your `JSON` and `CSV` results to an own results directory after auto-tuning is completed. Then it will parse specified files and print out the best parameters found by the auto-tuner. The parameters and other benchmarking information will be printed out prettified in the terminal.
 
 This benchmark suite will be useful for you if you're making your own auto-tuner and want to use the benchmarks for testing or would like to compare your auto-tuner to other known auto-tuners. BAT can also be used to check how a parameter's value changes for different architectures.
 
@@ -70,7 +70,8 @@ Tuning technique to use for benchmarking. If no technique is specified, the brut
 
 ## Add your own auto-tuner
 It is easy to add new auto-tuner implementations for the benchmarks, just follow these steps:
-1. Store your auto-tuner implementation of a benchmark inside a auto-tuner subdirectory in [tuning_examples](./tuning_examples). The path to the benchmark implementation should look similar to `./tuning_examples/kernel_tuner/sort/`.
+1. Implement the benchmark(s) you want with your auto-tuner. If your auto-tuner tunes a whole program, the benchmarks can be found in [src/programs](src/programs). However if you have an auto-tuner that tunes kernels, the benchmarks can be found in [src/kernels](src/kernels), and you have to generate the input data. Generating of input data can be done like in the KTT examples found [here](tuning_examples/ktt).
+2. Store your auto-tuner implementation of a benchmark inside a auto-tuner subdirectory in [tuning_examples](./tuning_examples). The path to the benchmark implementation should look similar to `./tuning_examples/kernel_tuner/sort/`.
 2. Create a `config.json` file in the same directory as the auto-tuner with content similar to this:
 ```json
 {
