@@ -69,3 +69,37 @@ It is easy to add new auto-tuner implementations for the benchmarks, just follow
     ]
 }
 ```
+
+## Within a Docker container
+### Building
+Here are some examples of how to build the different auto-tuner Docker images:
+```sh
+# Build OpenTuner Dockerfile
+$ docker build -t bat-opentuner -f docker/opentuner.Dockerfile .
+
+# Build Kernel Tuner Dockerfile
+$ docker build -t bat-kernel_tuner -f docker/kernel_tuner.Dockerfile .
+
+# Build CLTune Dockerfile
+$ docker build -t bat-cltune -f docker/cltune.Dockerfile .
+
+# Build KTT Dockerfile
+$ docker build -t bat-ktt -f docker/ktt.Dockerfile .
+```
+
+#### Running
+Here are some examples of how to run the different auto-tuner Docker containers:
+```sh
+# Run the KTT container
+$ docker run -ti --gpus all bat-ktt
+
+# Example of running container detatched
+$ docker run -d -ti --gpus all bat-ktt
+
+# Open a shell into a detatched container
+$ docker exec -it <container-id> sh
+
+# After this the commands shown in the `Running benchmarks` section can be used
+# Example:
+$ main.py -b sort -a ktt -t mcmc -s 4
+```
