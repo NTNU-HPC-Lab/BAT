@@ -87,7 +87,7 @@ $ docker build -t bat-cltune -f docker/cltune.Dockerfile .
 $ docker build -t bat-ktt -f docker/ktt.Dockerfile .
 ```
 
-#### Running
+### Running
 Here are some examples of how to run the different auto-tuner Docker containers:
 ```sh
 # Run the KTT container
