@@ -9,6 +9,10 @@
 
 > A standardized benchmark suite for auto-tuners
 
+BAT is a standardized benchmark suite for auto-tuners that is based on benchmarks from [SHOC](https://github.com/Knutakir/shoc) and contains benchmarks for [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) programs. BAT will save all your `JSON` and `CSV` results to an own results directory after auto-tuning is completed. Then it will parse specified files and print out the best parameters found by the auto-tuner. The parameters and other benchmarking information will be printed out prettified in the terminal.
+
+This benchmark suite will be useful for you if you're making your own auto-tuner and want to use the benchmarks for testing or would like to compare your auto-tuner to other known auto-tuners. BAT can also be used to check how a parameter's value changes for different architectures.
+
 ## Prerequisites
 - [Python 3](https://www.python.org/) (Or [Docker](https://www.docker.com/), see section <a href="#within-a-docker-container">Within a Docker container</a>)
 
