@@ -10,7 +10,7 @@
 > A standardized benchmark suite for auto-tuners
 
 ## Prerequisites
-- [Python 3](https://www.python.org/)
+- [Python 3](https://www.python.org/) (Or [Docker](https://www.docker.com/), see section <a href="#within-a-docker-container">Within a Docker container</a>)
 
 ## Running benchmarks
 ```sh
