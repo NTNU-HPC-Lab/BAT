@@ -12,6 +12,17 @@
 ## Prerequisites
 - [Python 3](https://www.python.org/) (Or [Docker](https://www.docker.com/), see section <a href="#within-a-docker-container">Within a Docker container</a>)
 
+## Set up auto-tuner benchmarks
+Without using Docker, the following steps are required to download and install the auto-tuners:
+- [OpenTuner](https://github.com/ingunnsund/opentuner)
+    - Can be downloaded along other needed dependencies by calling `pip3 install -r requirements.txt` from the [tuning_examples/opentuner](tuning_examples/opentuner) directory.
+- [Kernel Tuner](https://github.com/benvanwerkhoven/kernel_tuner)
+    - Can be downloaded along other needed dependencies by calling `pip3 install -r requirements.txt` from the [tuning_examples/opentuner](tuning_examples/opentuner) directory.
+- [CLTune](https://github.com/ingunnsund/CLTune)
+    - Need to set the environment variable `KTT_PATH=/path/to/KTT` for using the benchmarks.
+- [KTT](https://github.com/Fillo7/KTT)
+    - Need to set the environment variable `CLTUNE_PATH=/path/to/CLTune` for using the benchmarks.
+
 ## Running benchmarks
 ```sh
 # Run all benchmark for all auto-tuners
