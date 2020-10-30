@@ -27,8 +27,6 @@ tune_params["BLOCK_SIZE"] = [i for i in range(min_block_size, max_block_size+1)]
 tune_params["CHUNK_FACTOR"] = [1, 2, 4, 8]
 tune_params["TEXTURE_MEMORY_EA1"] = [0, 1] # 1 after name so Kernel Tuner wont replace TEXTURE_MEMORY_EA in TEXTURE_MEMORY_EAA with value
 tune_params["TEXTURE_MEMORY_EAA"] = [0, 1]
-tune_params["UNROLL_OUTER_LOOP"] = [0, 1]
-tune_params["UNROLL_INNER_LOOP"] = [0, 1]
 
 strategy_options = {}
 if arguments.technique == "genetic_algorithm":

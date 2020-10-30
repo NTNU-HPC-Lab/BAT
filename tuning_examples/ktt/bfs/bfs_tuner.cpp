@@ -134,8 +134,6 @@ int main(int argc, char* argv[]) {
 
     // Add parameters to tune
     auto_tuner.addParameter(kernelId, "BLOCK_SIZE", block_sizes);
-    auto_tuner.addParameter(kernelId, "UNROLL_OUTER_LOOP", {0, 1});
-    auto_tuner.addParameter(kernelId, "UNROLL_INNER_LOOP", {0, 1});
     auto_tuner.addParameter(kernelId, "CHUNK_FACTOR", {1, 2, 4, 8});
 
     // Multiply block size base (1) by BLOCK_SIZE parameter value

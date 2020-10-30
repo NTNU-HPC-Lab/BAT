@@ -32,8 +32,6 @@ class BFSTuner(MeasurementInterface):
         manipulator = ConfigurationManipulator()
         manipulator.add_parameter(IntegerParameter('BLOCK_SIZE', min_size, max_size))
         manipulator.add_parameter(EnumParameter('CHUNK_FACTOR', [1, 2, 4, 8]))
-        manipulator.add_parameter(IntegerParameter('UNROLL_OUTER_LOOP', 0, 1))
-        manipulator.add_parameter(IntegerParameter('UNROLL_INNER_LOOP', 0, 1))
         manipulator.add_parameter(IntegerParameter('TEXTURE_MEMORY_EA1', 0, 2))
         manipulator.add_parameter(IntegerParameter('TEXTURE_MEMORY_EAA', 0, 2))
 
@@ -53,8 +51,6 @@ class BFSTuner(MeasurementInterface):
         make_program = f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/bfs/BFS.cu'
         make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY_EA1',cfg['TEXTURE_MEMORY_EA1'])
         make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY_EAA',cfg['TEXTURE_MEMORY_EAA'])
-        make_program += ' -D{0}={1}'.format('UNROLL_OUTER_LOOP',cfg['UNROLL_OUTER_LOOP'])
-        make_program += ' -D{0}={1}'.format('UNROLL_INNER_LOOP',cfg['UNROLL_INNER_LOOP'])
         make_program += ' -D{0}={1}'.format('CHUNK_FACTOR',cfg['CHUNK_FACTOR'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
 

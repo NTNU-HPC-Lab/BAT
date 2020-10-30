@@ -63,11 +63,6 @@ extern "C" __global__ void BFS_kernel_warp(
         }
     }
 
-    #if UNROLL_OUTER_LOOP
-    #pragma unroll
-    #else
-    #pragma unroll(1)
-    #endif
     for (int v=v1; v< chk_sz-1+v1; v++) {
         if (levels[v] == curr) {
             #if TEXTURE_MEMORY_EA1 == 2
@@ -81,11 +76,6 @@ extern "C" __global__ void BFS_kernel_warp(
                 unsigned int nbr_off = edgeArray[v];
             #endif
             
-            #if UNROLL_INNER_LOOP
-            #pragma unroll
-            #else
-            #pragma unroll(1)
-            #endif
             for (int i=W_OFF; i<num_nbr; i+=W_SZ) {
                 #if TEXTURE_MEMORY_EAA == 2
                     int v = tex1Dfetch<unsigned int>(textureObjEAA, (i + nbr_off));

@@ -161,7 +161,6 @@ int main(int argc, char* argv[]) {
     auto_tuner.AddParameter(kernel_id, "PRECISION", {32, 64});
     // Formats: 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
     auto_tuner.AddParameter(kernel_id, "FORMAT", {0, 1, 2, 3, 4});
-    auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_1", {0, 1});
     auto_tuner.AddParameter(kernel_id, "UNROLL_LOOP_2", {0, 1});
     auto_tuner.AddParameter(kernel_id, "THREADS_PER_ROW", {1, 32});
     auto_tuner.AddParameter(kernel_id, "TEXTURE_MEMORY", {0});

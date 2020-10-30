@@ -31,7 +31,6 @@ class SPMVTuner(MeasurementInterface):
         manipulator.add_parameter(EnumParameter('PRECISION', [32, 64]))
         # 0: ellpackr, 1: csr-normal-scalar, 2:  csr-padded-scalar, 3: csr-normal-vector, 4: csr-padded-vector
         manipulator.add_parameter(IntegerParameter('FORMAT', 0, 4))
-        manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_1', 0, 1))
         manipulator.add_parameter(IntegerParameter('UNROLL_LOOP_2', 0, 1))
         manipulator.add_parameter(IntegerParameter('TEXTURE_MEMORY', 0, 1))
 
@@ -61,7 +60,6 @@ class SPMVTuner(MeasurementInterface):
         make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY',cfg['TEXTURE_MEMORY'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])
         make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/spmv/spmv_kernel.cu'
-        make_program += ' -D{0}={1}'.format('UNROLL_LOOP_1',cfg['UNROLL_LOOP_1'])
         make_program += ' -D{0}={1}'.format('UNROLL_LOOP_2',cfg['UNROLL_LOOP_2'])
         make_program += ' -D{0}={1}'.format('TEXTURE_MEMORY',cfg['TEXTURE_MEMORY'])
         make_program += ' -D{0}={1} \n'.format('BLOCK_SIZE',cfg['BLOCK_SIZE'])

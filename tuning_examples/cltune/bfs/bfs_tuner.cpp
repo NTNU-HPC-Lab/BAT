@@ -107,8 +107,6 @@ int main(int argc, char* argv[]) {
 
     // Add parameters to tune
     auto_tuner.AddParameter(kernel_id, "BLOCK_SIZE", block_sizes);
-    auto_tuner.AddParameter(kernel_id, "UNROLL_OUTER_LOOP", {0, 1});
-    auto_tuner.AddParameter(kernel_id, "UNROLL_INNER_LOOP", {0, 1});
     auto_tuner.AddParameter(kernel_id, "CHUNK_FACTOR", {1, 2, 4, 8});
 
     // Set the different block sizes (local size) multiplied by the base (1)
