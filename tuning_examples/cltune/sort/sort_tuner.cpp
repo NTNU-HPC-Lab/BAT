@@ -239,7 +239,6 @@ void tuneVectorAddUniform4() {
     size_t kernel_id = auto_tuner.AddKernel({kernelFile}, kernelName, {(size_t) numElements}, {1});
 
     // Add parameter for kernel
-    auto_tuner.AddParameter(kernel_id, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
     auto_tuner.AddParameter(kernel_id, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
     auto_tuner.AddParameter(kernel_id, "SORT_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});
     auto_tuner.AddParameter(kernel_id, "SORT_DATA_SIZE", {2, 4, 8});

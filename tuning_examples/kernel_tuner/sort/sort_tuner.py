@@ -29,7 +29,6 @@ block_sizes = list(filter(lambda x: x <= max_size, [2**i for i in range(4, 11)])
 tune_params = dict()
 tune_params["LOOP_UNROLL_LSB"] = [0, 1]
 tune_params["LOOP_UNROLL_LOCAL_MEMORY"] = [0, 1]
-tune_params["LOOP_UNROLL_ADD_UNIFORM"] = [0, 1]
 tune_params["SCAN_DATA_SIZE"] = [2, 4, 8]
 tune_params["SORT_DATA_SIZE"] = [2, 4, 8]
 tune_params["SCAN_BLOCK_SIZE"] = block_sizes

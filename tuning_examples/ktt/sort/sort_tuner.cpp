@@ -161,7 +161,6 @@ int main(int argc, char* argv[]) {
     // Add parameters to tune
     auto_tuner.addParameter(compositionId, "LOOP_UNROLL_LSB", {0, 1});
     auto_tuner.addParameter(compositionId, "LOOP_UNROLL_LOCAL_MEMORY", {0, 1});
-    auto_tuner.addParameter(compositionId, "LOOP_UNROLL_ADD_UNIFORM", {0, 1});
     auto_tuner.addParameter(compositionId, "SCAN_DATA_SIZE", {2, 4, 8});
     auto_tuner.addParameter(compositionId, "SORT_DATA_SIZE", {2, 4, 8});
     auto_tuner.addParameter(compositionId, "SCAN_BLOCK_SIZE", {16, 32, 64, 128, 256, 512, 1024});

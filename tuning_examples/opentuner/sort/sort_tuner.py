@@ -30,7 +30,6 @@ class SortTuner(MeasurementInterface):
         manipulator = ConfigurationManipulator()
         manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_LSB', 0, 1))
         manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_LOCAL_MEMORY', 0, 1))
-        manipulator.add_parameter(IntegerParameter('LOOP_UNROLL_ADD_UNIFORM', 0, 1))
         manipulator.add_parameter(EnumParameter('SCAN_DATA_SIZE', [2, 4, 8]))
         manipulator.add_parameter(EnumParameter('SORT_DATA_SIZE', [2, 4, 8]))
         manipulator.add_parameter(EnumParameter('SCAN_BLOCK_SIZE', block_sizes))
@@ -74,7 +73,6 @@ class SortTuner(MeasurementInterface):
         make_program += f'nvcc -gencode=arch=compute_{cc},code=sm_{cc} -I {start_path}/cuda-common -I {start_path}/common -g -O2 -c {start_path}/sort/sort_kernel.cu'
         make_program += ' -D{0}={1}'.format('LOOP_UNROLL_LSB', cfg['LOOP_UNROLL_LSB'])
         make_program += ' -D{0}={1}'.format('LOOP_UNROLL_LOCAL_MEMORY', cfg['LOOP_UNROLL_LOCAL_MEMORY'])
-        make_program += ' -D{0}={1}'.format('LOOP_UNROLL_ADD_UNIFORM', cfg['LOOP_UNROLL_ADD_UNIFORM'])
         make_program += ' -D{0}={1}'.format('SCAN_DATA_SIZE', cfg['SCAN_DATA_SIZE'])
         make_program += ' -D{0}={1}'.format('SORT_DATA_SIZE', cfg['SORT_DATA_SIZE'])
         make_program += ' -D{0}={1}'.format('SCAN_BLOCK_SIZE', cfg['SCAN_BLOCK_SIZE'])

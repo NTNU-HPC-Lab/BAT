@@ -657,11 +657,6 @@ vectorAddUniform4(uint *d_vector, const uint *d_uniforms, const int n)
     __syncthreads();
 
     // "SORT_DATA_SIZE" elements per thread
-    #if LOOP_UNROLL_ADD_UNIFORM
-    #pragma unroll
-    #else
-    #pragma unroll(1)
-    #endif
     for (int i = 0; i < SORT_DATA_SIZE && address < n; i++)
     {
         d_vector[address] += uni[0];
