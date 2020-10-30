@@ -21,7 +21,7 @@ Without using Docker, the following steps are required to download and install t
 - [OpenTuner](https://github.com/ingunnsund/opentuner)
     - Can be downloaded along other needed dependencies by calling `pip3 install -r requirements.txt` from the [tuning_examples/opentuner](tuning_examples/opentuner) directory.
 - [Kernel Tuner](https://github.com/benvanwerkhoven/kernel_tuner)
-    - Can be downloaded along other needed dependencies by calling `pip3 install -r requirements.txt` from the [tuning_examples/opentuner](tuning_examples/opentuner) directory.
+    - Can be downloaded along other needed dependencies by calling `pip3 install -r requirements.txt` from the [tuning_examples/kernel_tuner](tuning_examples/kernel_tuner) directory.
 - [CLTune](https://github.com/ingunnsund/CLTune)
     - Need to set the environment variable `KTT_PATH=/path/to/KTT` for using the benchmarks.
 - [KTT](https://github.com/Fillo7/KTT)
