@@ -1,11 +1,9 @@
 // This kernel code based on CUDPP.  Please see the notice in
 // LICENSE_CUDPP.txt.
 
-// TODO
 #define WARP_SIZE 32
 #define SORT_BLOCK_SIZE 128
 #define SCAN_BLOCK_SIZE 256
-// TODO
 
 typedef unsigned int uint;
 
