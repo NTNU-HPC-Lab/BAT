@@ -13,6 +13,9 @@ BAT is a standardized benchmark suite for auto-tuners that is based on benchmark
 
 This benchmark suite will be useful for you if you're making your own auto-tuner and want to use the benchmarks for testing or would like to compare your auto-tuner to other known auto-tuners. BAT can also be used to check how a parameter's value changes for different architectures.
 
+## Parameters
+Parameters and search space for the algorithms can be seen in the `src` directory [here](./src).
+
 ## Prerequisites
 - [Python 3](https://www.python.org/) (Or [Docker](https://www.docker.com/), see section <a href="#within-a-docker-container">Within a Docker container</a>)
 
