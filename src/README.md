@@ -1,4 +1,5 @@
 ## Parameters and Search Spaces
+The algorithms that has constrainsts for parameters, includes it in the related section.
 
 ### Triad
 | Parameter | Description | Search Space |
@@ -32,6 +33,12 @@
 | `INLINE_LSB` | Whether to inline the `scanLSB` function or not. | {False (0), True (1)} |
 | `INLINE_SCAN` | Whether to inline the `scan4` function or not. | {False (0), True (1)} |
 | `INLINE_LOCAL_MEMORY` | Whether to inline the `scanLocalMem` function or not. | {False (0), True (1)} |
+
+#### Constraints
+| Constraint | Description |
+| --- | --- |
+| `SCAN_DATA_SIZE * SCAN_BLOCK_SIZE = SORT_DATA_SIZE * SORT_BLOCK_SIZE` | The ratio between sort and scan data- and block sizes needs to be equal. |
+| `(8 * SCAN_DATA_SIZE * SCAN_BLOCK_SIZE + 128) ≤ available_shared_memory` | Available shared memory for the selected GPU can not be less than needed shared memory in the `reorderData` kernel. |
 
 ### MD5 Hash
 
