@@ -127,3 +127,6 @@ $ docker exec -it <container-id> sh
 # Example:
 $ main.py -b sort -a ktt -t mcmc -s 4
 ```
+
+## BAT Results
+Data from running BAT with different auto-tuners can be found [here](https://github.com/ingunnsund/BAT-results).
