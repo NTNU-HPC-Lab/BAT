@@ -130,3 +130,22 @@ $ main.py -b sort -a ktt -t mcmc -s 4
 
 ## BAT Results
 Data from running BAT with different auto-tuners can be found [here](https://github.com/ingunnsund/BAT-results).
+
+## Citation
+Use the following citation when publishing work using BAT.
+```
+@article{sund_bat_2021,
+	title = {{BAT}: A Benchmark suite for {AutoTuners}},
+	rights = {Copyright (c) 2021},
+	issn = {1892-0721},
+	url = {https://ojs.bibsys.no/index.php/NIK/article/view/915},
+	pages = {44--57},
+	number = {1},
+	journaltitle = {Norsk {IKT}-konferanse for forskning og utdanning},
+	author = {Sund, Ingunn and Kirkhorn, Knut A. and Tørring, Jacob O. and Elster, Anne. C},
+	urldate = {2021-12-10},
+	date = {2021-11-14},
+	langid = {english},
+	note = {Number: 1},
+}
+```
