@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     string kernelFile = "../../../src/kernels/bfs/BFS_kernel.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/bfs/bfs_reference_kernel.cu";
     string kernelName("BFS_kernel_warp");
     ktt::Tuner auto_tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
 

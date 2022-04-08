@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     }
 
     string kernelFile = "../../../src/kernels/spmv/spmv_kernel.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/spmv/spmv_reference_kernel.cu";
 
     // Tune "spmv_kernel" kernel
     string kernelName("spmv_kernel");

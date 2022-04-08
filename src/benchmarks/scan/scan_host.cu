@@ -1,13 +1,22 @@
+#if PRECISION == 32
+    #define T float
+    #define vecT float4
+#elif PRECISION == 64
+    #define T double
+    #define vecT double4
+#endif
+
 #include "cudacommon.h"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <cassert>
 #include <iostream>
 #include <vector>
+
+extern "C" {
 
 #include "OptionParser.h"
 #include "scan.h"
@@ -15,28 +24,8 @@
 
 using namespace std;
 
-
-// ****************************************************************************
-// Function: addBenchmarkSpecOptions
-//
-// Purpose:
-//   Add benchmark specific options parsing
-//
-// Arguments:
-//   op: the options parser / parameter database
-//
-// Returns:  nothing
-//
-// Programmer: Kyle Spafford
-// Creation: August 13, 2009
-//
-// Modifications:
-//
-// ****************************************************************************
-void addBenchmarkSpecOptions(OptionParser &op)
-{
-    op.addOption("iterations", OPT_INT, "256", "specify scan iterations");
-}
+bool scanCPU(T *data, T* reference, T* dev_result, const size_t size);
+float RunTest(string testName);
 
 // ****************************************************************************
 // Function: RunBenchmark
@@ -56,13 +45,22 @@ void addBenchmarkSpecOptions(OptionParser &op)
 // Modifications:
 // 5/18/2011 - KS - Changing to a non-recursive algorithm
 // ****************************************************************************
+#ifdef TEMPLATE
 void
-RunBenchmark(OptionParser &op) {
+#else
+float
+#endif
+RunBenchmark(
+#ifdef TEMPLATE
+OptionParser &op
+#endif
+) {
     int device;
     cudaGetDevice(&device);
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
 
+#ifdef TEMPLATE
     #if PRECISION == 32
         cout << "Running single precision test" << endl;
         RunTest<float, float4>("Scan", op);
@@ -70,14 +68,32 @@ RunBenchmark(OptionParser &op) {
         cout << "Running double precision test" << endl;
         RunTest<double, double4>("Scan-DP", op);
     #endif
+#else
+    float result = 0.0;
+    #if PRECISION == 32
+        cout << "Running single precision test" << endl;
+        result = RunTest("Scan");
+    #else
+        cout << "Running double precision test" << endl;
+        result = RunTest("Scan-DP");
+    #endif
+    return result;
+#endif
 }
-
+#ifdef TEMPLATE
 template <class T, class vecT>
-void RunTest(string testName, OptionParser &op)
-{
+void
+#else
+float
+#endif
+RunTest(string testName
+#ifdef TEMPLATE
+, OptionParser &op
+#endif
+) {
     int probSizes[4] = { 1, 8, 32, 64 };
 
-    int size = probSizes[op.getOptionInt("size")-1];
+    int size = probSizes[PROBLEM_SIZE-1];
 
     // Convert to MiB
     size = (size * 1024 * 1024) / sizeof(T);
@@ -119,17 +135,25 @@ void RunTest(string testName, OptionParser &op)
     // Copy data to GPU
     cout << "Copying data to device." << endl;
     CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_idata, bytes, cudaMemcpyHostToDevice));
-
+#ifdef TEMPLATE
     int passes = op.getOptionInt("passes");
     int iters = op.getOptionInt("iterations");
+#else
+    int passes = 10;
+    int iters = 100;
+
+    // Initialize timers
+    cudaEvent_t start, stop;
+    CUDA_SAFE_CALL(cudaEventCreate(&start));
+    CUDA_SAFE_CALL(cudaEventCreate(&stop));
+    float totalElapsedTime = 0.0;
+#endif
 
     cout << "Running benchmark with size " << size << endl;
     for (int k = 0; k < passes; k++) {
         for (int j = 0; j < iters; j++) {
             // For scan, we use a reduce-then-scan approach
-
-            // Each thread block gets an equal portion of the
-            // input array, and computes the sum.
+        #ifdef TEMPLATE
             reduce<T, BLOCK_SIZE><<<num_blocks, num_threads, smem_size>>>
                 (d_idata, d_block_sums, size);
 
@@ -142,14 +166,41 @@ void RunTest(string testName, OptionParser &op)
             // that is seeded with the scanned value in block sums
             bottom_scan<T, vecT, BLOCK_SIZE><<<num_blocks, num_threads, 2*smem_size>>>
                 (d_idata, d_odata, d_block_sums, size);
+        #else
+            // Start the timing
+            cudaEventRecord(start, 0);
+
+            // Each thread block gets an equal portion of the
+            // input array, and computes the sum.
+            reduce<<<num_blocks, num_threads, smem_size>>>
+                (d_idata, d_block_sums, size);
+
+            // Next, a top-level exclusive scan is performed on the array
+            // of block sums
+            scan_single_block<<<1, num_threads, smem_size*2>>>
+                (d_block_sums, num_blocks);
+
+            // Finally, a bottom-level scan is performed by each block
+            // that is seeded with the scanned value in block sums
+            bottom_scan<<<num_blocks, num_threads, 2*smem_size>>>
+                (d_idata, d_odata, d_block_sums, size);
+            
+            // Stop the events and save elapsed time
+            cudaEventRecord(stop, 0);
+            cudaEventSynchronize(stop);
+            float elapsedTime;
+            cudaEventElapsedTime(&elapsedTime, start, stop);
+            totalElapsedTime += elapsedTime;
+        #endif
         }
         CUDA_SAFE_CALL(cudaMemcpy(h_odata, d_odata, bytes,
                 cudaMemcpyDeviceToHost));
 
         // If results aren't correct, don't report perf numbers
-        if (! scanCPU<T>(h_idata, reference, h_odata, size))
+        if (! scanCPU(h_idata, reference, h_odata, size))
         {
-            return;
+            throw "Incorrect results";
+            return 1000000.0;
         }
     }
     CUDA_SAFE_CALL(cudaFree(d_idata));
@@ -158,6 +209,10 @@ void RunTest(string testName, OptionParser &op)
     CUDA_SAFE_CALL(cudaFreeHost(h_idata));
     CUDA_SAFE_CALL(cudaFreeHost(h_odata));
     CUDA_SAFE_CALL(cudaFreeHost(reference));
+    CUDA_SAFE_CALL(cudaEventDestroy(start));
+    CUDA_SAFE_CALL(cudaEventDestroy(stop));
+
+    return totalElapsedTime;
 }
 
 
@@ -181,7 +236,6 @@ void RunTest(string testName, OptionParser &op)
 // Modifications:
 //
 // ****************************************************************************
-template <class T>
 bool scanCPU(T *data, T* reference, T* dev_result, const size_t size)
 {
 
@@ -205,9 +259,11 @@ bool scanCPU(T *data, T* reference, T* dev_result, const size_t size)
         }
     }
     cout << "Test ";
-    if (passed)
+    if (passed) {
         cout << "Passed" << endl;
-    else
+    } else {
         cerr << "---FAILED---" << endl;
+    }
     return passed;
+}
 }

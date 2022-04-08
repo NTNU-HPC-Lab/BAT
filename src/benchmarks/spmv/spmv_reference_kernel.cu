@@ -1,5 +1,9 @@
+#ifndef PRECISION
 #define PRECISION 64
+#endif
+#ifndef FORMAT
 #define FORMAT 0
+#endif
 
 template <typename fpType>
 __device__ void

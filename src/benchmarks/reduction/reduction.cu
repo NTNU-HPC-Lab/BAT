@@ -1,3 +1,8 @@
+#include "cudacommon.h"
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -5,28 +10,19 @@
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include "reduction_kernel.h"
+#include "OptionParser.h"
 
-#include "cudacommon.h"
-
-// When using MPICH and MPICH-derived MPI implementations, there is a
-// naming conflict between stdio.h and MPI's C++ binding.
-// Since we do not use the C++ MPI binding, we can avoid the ordering
-// issue by ignoring the C++ MPI binding headers.
-// This #define should be quietly ignored when using other MPI implementations.
+#ifdef MPI
 #define MPICH_SKIP_MPICXX
 #include "mpi.h"
-
-#include "OptionParser.h"
 #include "TPReduction.h"
+#endif
 
 using namespace std;
 
-// Forward declarations
 template <class T>
-void RunTest(string test_name, OptionParser &op);
+void RunTest(string testName, OptionParser &op);
 
 // ****************************************************************************
 // Function: reduceCPU
@@ -84,8 +80,8 @@ addBenchmarkSpecOptions(OptionParser &op)
 // Function: RunBenchmark
 //
 // Purpose:
-//   Driver for the true parallel reduction benchmark.  Detects double
-//   precision capability and calls the RunTest function appropriately.
+//   Driver for the reduction benchmark.  Detects double precision capability
+//   and calls the RunTest function appropriately
 //
 // Arguments:
 //   resultDB: results from the benchmark are stored in this db
@@ -94,7 +90,7 @@ addBenchmarkSpecOptions(OptionParser &op)
 // Returns:  nothing
 //
 // Programmer: Kyle Spafford
-// Creation: March 1, 2011
+// Creation: August 13, 2009
 //
 // Modifications:
 //
@@ -102,16 +98,17 @@ addBenchmarkSpecOptions(OptionParser &op)
 void
 RunBenchmark(OptionParser &op)
 {
+#ifdef MPI
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
+#endif
     #if PRECISION == 32
         cout << "Running single precision test" << endl;
-        RunTest<float>("AllReduce-SP", op);
+        RunTest<float>("Reduction", op);
     #elif PRECISION == 64
         cout << "Running double precision test" << endl;
-        RunTest<double>("AllReduce-DP", op);
+        RunTest<double>("Reduction-DP", op);
     #endif
 }
 
@@ -135,42 +132,37 @@ RunBenchmark(OptionParser &op)
 // Modifications:
 //
 // ****************************************************************************
+#ifdef TEMPLATE
 template <class T>
-void RunTest(string test_name, OptionParser &op)
+#endif
+void RunTest(string testName
+#ifdef TEMPLATE
+, OptionParser &op
+#endif
+)
 {
-
-    int comm_size, rank;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    // Per rank size
-    int prob_sizes[4] = { 1, 8, 64, 128 };
+    int prob_sizes[4] = { 1, 8, 32, 64 };
 
     int size = prob_sizes[op.getOptionInt("size") - 1];
-    size = size * 1024 * 1024 / sizeof(T);
+    size = (size * 1024 * 1024) / sizeof(T);
 
     T* h_idata;
     CUDA_SAFE_CALL(cudaMallocHost((void**)&h_idata, size * sizeof(T)));
 
     // Initialize host memory
-    if (rank == 0)
-    {
-        cout << "Initializing host memory." << endl;
-    }
+    cout << "Initializing host memory." << endl;
     for(int i = 0; i < size; i++)
     {
-        h_idata[i] = i % 2; //Fill with some pattern
+        h_idata[i] = i % 3; //Fill with some pattern
     }
 
     // allocate device memory
     T* d_idata;
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_idata, size * sizeof(T)));
 
-    int num_threads = BLOCK_SIZE;
+    int num_threads = BLOCK_SIZE; // NB: Update template to kernel launch if this is changed
     int num_blocks = GRID_SIZE;
-    int smem_size = num_threads * sizeof(T);
-
+    int smem_size = sizeof(T) * num_threads;
     // allocate mem for the result on host side
     T* h_odata;
     CUDA_SAFE_CALL(cudaMallocHost((void**)&h_odata, num_blocks * sizeof(T)));
@@ -178,22 +170,23 @@ void RunTest(string test_name, OptionParser &op)
     T* d_odata;
     CUDA_SAFE_CALL(cudaMalloc((void**)&d_odata, num_blocks * sizeof(T)));
 
-    int passes = op.getOptionInt("passes");
-    int iters  = op.getOptionInt("iterations");
+    int passes = 10
+    int iters  = 100
 
-    if (rank == 0)
-    {
-        cout << "Running benchmark.\n";
-    }
+    // For measuring the time
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float totalElapsedTime = 0.0;
 
+    cout << "Running benchmark." << endl;
     for (int k = 0; k < passes; k++)
     {
-        double pcie_time=0.0, kernel_time=0.0, mpi_time=0.0;
-
-        MPI_Barrier(MPI_COMM_WORLD);
+        // Copy data to GPU
+        CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_idata, size * sizeof(T), cudaMemcpyHostToDevice));
 
         cudaTextureObject_t idataTextureObject = 0;
-
+        
     #if TEXTURE_MEMORY
         // Setup the texture memory
         // Create the texture resource descriptor
@@ -221,71 +214,45 @@ void RunTest(string test_name, OptionParser &op)
         cudaCreateTextureObject(&idataTextureObject, &resourceDescriptor, &textureDescriptor, NULL);
     #endif
 
-        // Repeatedly transfer input data to GPU and measure average time
+        cudaEventRecord(start, 0);
+
+        // Execute kernel
         for (int m = 0; m < iters; m++)
         {
-            CUDA_SAFE_CALL(cudaMemcpy(d_idata, h_idata, size * sizeof(T), cudaMemcpyHostToDevice));
+            reduce<T, BLOCK_SIZE><<<num_blocks,num_threads, smem_size>>>
+                (d_idata, idataTextureObject, d_odata, size);
         }
 
-        // Execute reduction kernel on GPU
-        for (int m = 0; m < iters; m++)
+        // Stop the events and save elapsed time
+        cudaEventRecord(stop, 0);
+        cudaEventSynchronize(stop);
+        float elapsedTime;
+        cudaEventElapsedTime(&elapsedTime, start, stop);
+        totalElapsedTime += elapsedTime;
+
+        // Copy back to host
+        CUDA_SAFE_CALL(cudaMemcpy(h_odata, d_odata, num_blocks * sizeof(T), cudaMemcpyDeviceToHost));
+
+        T dev_result = 0;
+        for (int i=0; i<num_blocks; i++)
         {
-            RunTestLaunchKernel<T>(num_blocks, num_threads, smem_size, d_idata, idataTextureObject, d_odata, size);
+            dev_result += h_odata[i];
         }
 
-        // Copy output data back to CPU
-        for (int m = 0; m < iters; m++)
-        {
-            // Copy back to host
-            CUDA_SAFE_CALL(cudaMemcpy(h_odata, d_odata, num_blocks * sizeof(T), cudaMemcpyDeviceToHost));
-        }
-
-        T local_result=0, global_result=0;
-
-        // Perform reduction of block sums and MPI allreduce call
-        for (int m = 0; m < iters; m++)
-        {
-            local_result = 0.0f;
-
-            for (int i=0; i<num_blocks; i++)
-            {
-                local_result += h_odata[i];
-            }
-            global_result = 0.0f;
-            globalReduction(&local_result, &global_result);
-        }
-
-        // Compute local reference solution
+        // compute reference solution
         T cpu_result = reduceCPU<T>(h_idata, size);
-        // Use some error threshold for floating point rounding
         double threshold = 1.0e-6;
-        T diff = fabs(local_result - cpu_result);
+        T diff = fabs(dev_result - cpu_result);
 
-        if (diff > threshold)
-        {
-            cout << "Error in local reduction detected in rank " << rank << "\n";
+        cout << "Test ";
+        if (diff < threshold) {
+            cout << "Passed" << endl;
+        } else {
+            cout << "FAILED" << endl;
             cout << "Diff: " << diff << endl;
             cerr << "Error: incorrect computed result." << endl;
+            return; // (don't report erroneous results)
         }
-
-        if (global_result != (comm_size * local_result))
-        {
-            cout << "Test Failed, error in global all reduce detected in rank " << rank << endl;
-            cerr << "Error: incorrect computed result." << endl;
-        }
-        else
-        {
-            if (rank == 0)
-            {
-                cout << "Test Passed.\n";
-            }
-        }
-
-        // Calculate results
-        char atts[1024];
-        sprintf(atts, "%d_itemsPerRank",size);
-        double local_gbytes = (double)(size*sizeof(T))/(1000.*1000.*1000.);
-        double global_gbytes = local_gbytes * comm_size;
     }
     CUDA_SAFE_CALL(cudaFreeHost(h_idata));
     CUDA_SAFE_CALL(cudaFreeHost(h_odata));

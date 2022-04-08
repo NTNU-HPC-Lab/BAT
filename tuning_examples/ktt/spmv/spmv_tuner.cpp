@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     string kernelFile = "../../../src/kernels/spmv/spmv_kernel.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/spmv/spmv_reference_kernel.cu";
     string kernelName("spmv_kernel");
     ktt::Tuner auto_tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
 

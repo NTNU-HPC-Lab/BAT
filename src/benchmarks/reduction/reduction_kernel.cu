@@ -1,4 +1,13 @@
 typedef unsigned int uint;
+#ifndef PRECISION
+#define PRECISION 32
+#endif
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 256
+#endif
+#ifndef KERNEL_SHARED_MEMORY_SIZE
+#define KERNEL_SHARED_MEMORY_SIZE 1
+#endif
 
 // Select which precision that are used in the calculations
 // And define the replacements for the template inputs
@@ -9,6 +18,7 @@ typedef unsigned int uint;
     #define T double
     #define T_SIZE 8
 #endif
+
 
 // The following class is a workaround for using dynamically sized
 // shared memory in templated code. Without this workaround, the
@@ -24,13 +34,41 @@ class SharedMem
       };
 };
 
+// Specialization for double
+template <>
+class SharedMem <double>
+{
+    public:
+      __device__ inline double* getPointer()
+      {
+          extern __shared__ double s_double[];
+          return s_double;
+      }
+};
+
+// specialization for float
+template <>
+class SharedMem <float>
+{
+    public:
+      __device__ inline float* getPointer()
+      {
+          extern __shared__ float s_float[];
+          return s_float;
+      }
+};
+
 __inline__ __device__ double convertTextureObjectToDouble(cudaTextureObject_t textureObject, const int &position) {
     uint2 values = tex1Dfetch<uint2>(textureObject, position);
     return __hiloint2double(values.y, values.x);
 }
 
 // Reduction Kernel
+#ifdef TEMPLATE
+template <class T, int blockSize>
+#else
 extern "C"
+#endif
 __global__ void
 reduce(const T* __restrict__ g_idata, cudaTextureObject_t idataTextureObject, T* __restrict__ g_odata, const unsigned int n)
 {
@@ -53,7 +91,7 @@ reduce(const T* __restrict__ g_idata, cudaTextureObject_t idataTextureObject, T*
     // It sets the size equal to the block size
     // This is needed because there is no way to set the shared memory from CLTune
 #if KERNEL_SHARED_MEMORY_SIZE
-    extern volatile __shared__ float sdata[BLOCK_SIZE*T_SIZE];
+    extern volatile __shared__ float sdata[BLOCK_SIZE];
 #else
 #if __CUDA_ARCH__ <= 130
     extern volatile __shared__ float sdata[];
@@ -121,7 +159,7 @@ reduce(const T* __restrict__ g_idata, cudaTextureObject_t idataTextureObject, T*
 extern "C" __global__ void reduce_helper(
     const float* __restrict__ g_idataf, cudaTextureObject_t idataTextureObjectf, float* __restrict__ g_odataf,
     const double* __restrict__ g_idatad, cudaTextureObject_t idataTextureObjectd, double* __restrict__ g_odatad,
-    const unsigned int nf, const unsigned int nd 
+    const unsigned int nf, const unsigned int nd
 ) {
     #if PRECISION == 32
         reduce(g_idataf, idataTextureObjectf, g_odataf, nf);

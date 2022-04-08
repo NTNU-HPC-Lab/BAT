@@ -4,6 +4,16 @@
 #include <cuda.h>
 #include "sort_kernel.h"
 
+#ifndef WARP_SIZE
+#define WARP_SIZE 32
+#endif
+#ifndef SORT_BLOCK_SIZE
+#define SORT_BLOCK_SIZE 128
+#endif
+#ifndef SCAN_BLOCK_SIZE
+#define SCAN_BLOCK_SIZE 256
+#endif
+
 __device__
 #if INLINE_LSB
 __forceinline__

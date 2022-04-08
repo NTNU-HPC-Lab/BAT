@@ -21,7 +21,7 @@ max_block_size = gpu.MAX_THREADS_PER_BLOCK
 size = problem_sizes[8]
 
 # Use host code in combination with CUDA kernel
-kernel_files = ['triad_host.cu', '../../../src/kernels/triad/triad_kernel.cu']
+kernel_files = ['triad_host.cu', '../../../src/kernels/triad/triad_kernel_program.cu']
 
 # Add parameters to tune
 tune_params = dict()

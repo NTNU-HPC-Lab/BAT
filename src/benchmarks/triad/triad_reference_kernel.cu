@@ -1,3 +1,10 @@
+
+// Select precision to use for testing, as KTT does not provide an option that works for this
+// Select which precision that are used in the calculations
+#ifndef PRECISION
+#define PRECISION 32
+#endif
+
 #if PRECISION == 32
     #define DATA_TYPE float
 #elif PRECISION == 64

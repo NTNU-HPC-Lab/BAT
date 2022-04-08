@@ -5,7 +5,7 @@ default: dependencies
 	@echo "\033[93m[i]\033[0m Compiling... 🔨"
 	@nvcc -I $(START_PATH)/common/ -I $(START_PATH)/cuda-common/ -g -O2 -c -o main.o $(START_PATH)/cuda-common/main.cpp
 	@nvcc -gencode=arch=compute_52,code=sm_52 -I $(START_PATH)/cuda-common -I $(START_PATH)/common -g -O2 -c $(START_PATH)/md5hash/md5hash.cu
-	@nvcc -L $(START_PATH)/cuda-common -L $(START_PATH)/common -o md5hash main.o md5hash_kernel.o md5hash.o -lSHOCCommon
+	@nvcc -L $(START_PATH)/cuda-common -L $(START_PATH)/common -o md5hash main.o md5hash.o -lSHOCCommon
 	@echo "\033[92m[✓]\033[0m Done compiling program! 🎉"
 
 dependencies:

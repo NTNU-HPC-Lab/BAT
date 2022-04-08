@@ -18,7 +18,7 @@ input_problem_size = arguments.size
 size = int((problem_sizes[input_problem_size - 1] * 1024 * 1024) / 4) # 4 = sizeof(uint)
 
 # Use host code in combination with CUDA kernel
-kernel_files = ['sort_host.cu', '../../../src/kernels/sort/sort_kernel.cu']
+kernel_files = ['sort_host.cu', '../../../src/kernels/sort/sort_kernel_program.cu']
 
 gpu = cuda.get_current_device()
 max_size = gpu.MAX_THREADS_PER_BLOCK

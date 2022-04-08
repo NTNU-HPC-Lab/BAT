@@ -1,5 +1,9 @@
 // Select which precision that are used in the calculations
 // And define the replacements for the template inputs
+#ifndef PRECISION
+#define PRECISION 32
+#endif
+
 #if PRECISION == 32
     #define T float
     #define forceVecType float3
@@ -12,7 +16,12 @@
     #define texReader texReader_dp
 #endif
 
+// KTT does not support texture memory, so this is always disabled
+#ifdef TEXTURE_MEMORY
 #define useTexture TEXTURE_MEMORY
+#else
+#define useTexture false
+#endif
 
 // Texture caches for position info
 texture<float4, 1, cudaReadModeElementType> posTexture;
@@ -139,4 +148,23 @@ extern "C" __global__ void compute_lj_force(forceVecType* __restrict__ force3,
             force3[threadId] = f;
         }
     }
+}
+
+extern "C" __global__ void md_helper(
+    float3* __restrict__ force3f,
+    const float4* __restrict__ positionf,
+    double3* __restrict__ force3d,
+    const double4* __restrict__ positiond,
+    const int neighCount,
+    const int* __restrict__ neighList,
+    const T cutsq,
+    const T lj1,
+    const T lj2,
+    const int inum
+) {
+    #if PRECISION == 32
+        compute_lj_force(force3f, positionf, neighCount, neighList, cutsq, lj1, lj2, inum);
+    #elif PRECISION == 64
+        compute_lj_force(force3d, positiond, neighCount, neighList, cutsq, lj1, lj2, inum);
+    #endif
 }

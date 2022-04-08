@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     }
 
     string kernelFile = "../../../src/kernels/bfs/BFS_kernel.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/bfs/bfs_reference_kernel.cu";
 
     // Tune "BFS_kernel_warp" kernel
     string kernelName("BFS_kernel_warp");

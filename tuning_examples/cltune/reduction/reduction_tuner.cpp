@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     }
 
     string kernelFile = "../../../src/kernels/reduction/reduction_kernel_helper.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/reduction/reduction_reference_kernel.cu";
 
     // Tune "reduction" kernel
     string kernelName("reduce_helper");

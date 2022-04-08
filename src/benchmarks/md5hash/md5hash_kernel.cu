@@ -1,3 +1,5 @@
+#include <cuda.h>
+
 // leftrotate function definition
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
@@ -16,16 +18,38 @@
     v = x + LEFTROTATE(v, r);                                    \
 }
 
+// This version ignores the mapping of a/b/c/d to v/x/y/z and simply
+// uses a temporary variable to keep the interpretation of a/b/c/d
+// consistent.  Whether this one or the previous one performs better
+// probably depends on the compiler....
+#define ROUND_USING_TEMP_VARS(w, r, k, v, x, y, z, func)         \
+{                                                                \
+    a = a + func(b,c,d) + k + w;                                 \
+    unsigned int temp = d;                                       \
+    d = c;                                                       \
+    c = b;                                                       \
+    b = b + LEFTROTATE(a, r);                                    \
+    a = temp;                                                    \
+}
+
 // Here, we pick which style of ROUND we use.
-#define ROUND ROUND_INPLACE_VIA_SHIFT
+#if ROUND_STYLE == 0
+    #define ROUND ROUND_USING_TEMP_VARS
+#else 
+    #define ROUND ROUND_INPLACE_VIA_SHIFT
+#endif
 
 /// NOTE: this really only allows a length up to 7 bytes, not 8, because
 /// we need to start the padding in the first byte following the message,
 /// and we only have two words to work with here....
 /// It also assumes words[] has all zero bits except the chars of interest.
 
-__host__ __device__ 
+__host__ __device__
+#if INLINE_1
 __forceinline__
+#else
+__noinline__ 
+#endif
 void md5_2words(unsigned int *words, unsigned int len, unsigned int *digest)
 {
     // For any block but the first one, these should be passed in, not
@@ -157,10 +181,20 @@ void md5_2words(unsigned int *words, unsigned int len, unsigned int *digest)
 // ****************************************************************************
 
 __host__ __device__ 
+#if INLINE_2
+__forceinline__
+#else
+__noinline__  
+#endif
 void IndexToKey(unsigned int index,
                                     int byteLength, int valsPerByte,
                                     unsigned char vals[8])
 {
+    #if UNROLL_LOOP_1
+    #pragma unroll
+    #else
+    #pragma unroll(1)
+    #endif
     for (int i = 0; i < 8; i++) {
         vals[i] = index % valsPerByte;
         index /= valsPerByte;
@@ -188,6 +222,7 @@ void IndexToKey(unsigned int index,
 //
 // Modifications:
 // ****************************************************************************
+
 extern "C" __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
     unsigned int searchDigest1,
     unsigned int searchDigest2,
@@ -198,8 +233,8 @@ extern "C" __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
     unsigned char *foundKey,
     unsigned int *foundDigest)
 {
-    for (int k = 0; k < 1; k++) {
-        int threadid = (blockIdx.x*blockDim.x + threadIdx.x) * 1 + k;
+    for (int k = 0; k < WORK_PER_THREAD_FACTOR; k++) {
+        int threadid = (blockIdx.x*blockDim.x + threadIdx.x) * WORK_PER_THREAD_FACTOR + k;
         int startindex = threadid * valsPerByte;
         unsigned char key[8] = {0,0,0,0, 0,0,0,0};
         IndexToKey(startindex, byteLength, valsPerByte, key);
@@ -214,10 +249,20 @@ extern "C" __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
                     
                 *foundIndex = startindex + j;
 
+                #if UNROLL_LOOP_2
+                #pragma unroll
+                #else
+                #pragma unroll(1)
+                #endif
                 for (int i = 0; i < 8; i++) {
                     foundKey[i] = key[i];
                 }
 
+                #if UNROLL_LOOP_3
+                #pragma unroll
+                #else
+                #pragma unroll(1)
+                #endif
                 for (int i = 0; i < 4; i++) {
                     foundDigest[i] = digest[i];
                 }

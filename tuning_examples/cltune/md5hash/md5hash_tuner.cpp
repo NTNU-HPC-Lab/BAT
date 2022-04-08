@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     }
 
     string kernelFile = "../../../src/kernels/md5hash/md5hash_kernel.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/md5hash/md5hash_reference_kernel.cu";
 
     // Tune "FindKeyWithDigest_Kernel" kernel
     string kernelName("FindKeyWithDigest_Kernel");

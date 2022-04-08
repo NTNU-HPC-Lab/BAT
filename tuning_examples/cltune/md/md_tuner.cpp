@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     }
 
     string kernelFile = "../../../src/kernels/md/md_kernel_helper.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/md/md_reference_kernel.cu";
 
     // Tune "MD" kernel
     string kernelName("md_helper");

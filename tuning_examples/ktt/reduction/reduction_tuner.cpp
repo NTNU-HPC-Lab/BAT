@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     string kernelFile = "../../../src/kernels/reduction/reduction_kernel_helper.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/reduction/reduction_reference_kernel.cu";
     string kernelName("reduce_helper");
     ktt::Tuner auto_tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
 

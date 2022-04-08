@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     }
 
     string kernelFile = "../../../src/kernels/triad/triad_kernel_helper.cu";
-    string referenceKernelFile = "./reference_kernel.cu";
+    string referenceKernelFile = "../../../src/kernels/triad/triad_reference_kernel.cu";
 
     // Tune "triad" kernel
     string kernelName("triad_helper");
