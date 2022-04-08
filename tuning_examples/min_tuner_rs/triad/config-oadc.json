@@ -1,0 +1,79 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1024,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "WORK_PER_THREAD",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10
+                        ]
+                    }
+                },
+                {
+                    "name": "LOOP_UNROOL_TRIAD",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "PRECISION",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            32,
+                            64
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 1280,
+            "dimensionality": 4
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 1280
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "triad",
+            "args": {
+                "size": 1,
+                "benchmark": "triad",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}

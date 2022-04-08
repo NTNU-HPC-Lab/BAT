@@ -1,0 +1,114 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1024,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "ROUND_STYLE",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "UNROLL_LOOP_1",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "UNROLL_LOOP_2",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "UNROLL_LOOP_3",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "INLINE_1",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "INLINE_2",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "WORK_PER_THREAD_FACTOR",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            5
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 10240,
+            "dimensionality": 8
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 10240
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "md5hash",
+            "args": {
+                "size": 1,
+                "benchmark": "md5hash",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}

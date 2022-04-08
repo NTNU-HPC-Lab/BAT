@@ -1,0 +1,84 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1024,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "PRECISION",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            32,
+                            64
+                        ]
+                    }
+                },
+                {
+                    "name": "FORMAT",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4
+                        ]
+                    }
+                },
+                {
+                    "name": "UNROLL_LOOP_2",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "TEXTURE_MEMORY",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 1280,
+            "dimensionality": 5
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 1280
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "spmv",
+            "args": {
+                "size": 1,
+                "benchmark": "spmv",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}

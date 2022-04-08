@@ -1,0 +1,38 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "GPUS",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            1
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 1,
+            "dimensionality": 1
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 1
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "stencil2d",
+            "args": {
+                "size": 1,
+                "benchmark": "stencil2d",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}

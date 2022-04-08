@@ -1,0 +1,125 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "LOOP_UNROOL_LSB",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "LOOP_UNROOL_LOCAL_MEMORY",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "SCAN_DATA_SIZE",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            2,
+                            4,
+                            8
+                        ]
+                    }
+                },
+                {
+                    "name": "SORT_DATA_SIZE",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            2,
+                            4,
+                            8
+                        ]
+                    }
+                },
+                {
+                    "name": "SCAN_BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1024,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "SORT_BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1024,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "INLINE_LSB",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "INLINE_SCAN",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "INLINE_LOCAL_MEMORY",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 294912,
+            "dimensionality": 9
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 294912
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "sort",
+            "args": {
+                "size": 1,
+                "benchmark": "sort",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}

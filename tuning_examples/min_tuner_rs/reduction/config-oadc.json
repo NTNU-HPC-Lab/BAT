@@ -1,0 +1,158 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1024,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "GRID_SIZE",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            1,
+                            2,
+                            4,
+                            8,
+                            16,
+                            32,
+                            64,
+                            128,
+                            256,
+                            512,
+                            1024
+                        ]
+                    }
+                },
+                {
+                    "name": "PRECISION",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            32,
+                            64
+                        ]
+                    }
+                },
+                {
+                    "name": "COMPILER_OPTIMIZATION_HOST",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                },
+                {
+                    "name": "COMPILER_OPTIMIZATION_DEVICE",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                },
+                {
+                    "name": "USE_FAST_MATH",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "MAX_REGISTERS",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            -1,
+                            20,
+                            40,
+                            60,
+                            80,
+                            100,
+                            120
+                        ]
+                    }
+                },
+                {
+                    "name": "GPUS",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "LOOP_UNROOL_REDUCE_1",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "LOOP_UNROOL_REDUCE_2",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                {
+                    "name": "TEXTURE_MEMORY",
+                    "type": "boolean",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 1261568,
+            "dimensionality": 11
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 1261568
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "reduction",
+            "args": {
+                "size": 1,
+                "benchmark": "reduction",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}

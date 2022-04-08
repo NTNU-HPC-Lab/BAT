@@ -1,0 +1,10 @@
+{
+    "build": [
+        "make clean",
+        "make dependencies"
+    ],
+    "run": "python3 tuner.py -b spmv",
+    "results": [
+        "results.json"
+    ]
+}

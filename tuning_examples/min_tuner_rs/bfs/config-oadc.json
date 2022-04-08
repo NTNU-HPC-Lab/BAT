@@ -1,0 +1,75 @@
+{
+    "metadata": {
+        "configuration_space": {
+            "parameters": [
+                {
+                    "name": "BLOCK_SIZE",
+                    "type": "integer",
+                    "values": {
+                        "value_range": {
+                            "start": 32,
+                            "end": 1000,
+                            "stride": 32,
+                            "inclusive": true
+                        }
+                    }
+                },
+                {
+                    "name": "CHUNK_FACTOR",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            1,
+                            2,
+                            4,
+                            8
+                        ]
+                    }
+                },
+                {
+                    "name": "TEXTURE_MEMORY_EA1",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1,
+                            2
+                        ]
+                    }
+                },
+                {
+                    "name": "TEXTURE_MEMORY_EAA",
+                    "type": "enum",
+                    "values": {
+                        "value_list": [
+                            0,
+                            1,
+                            2
+                        ]
+                    }
+                }
+            ],
+            "cardinality": 1116,
+            "dimensionality": 4
+        },
+        "search_settings": {
+            "budget": {
+                "steps": 1116
+            },
+            "search_technique": {
+                "name": "brute_force"
+            }
+        },
+        "benchmark_suite": {
+            "benchmark_name": "bfs",
+            "args": {
+                "size": 1,
+                "benchmark": "bfs",
+                "gpu_num": 1,
+                "parallel": false,
+                "technique": "brute_force",
+                "path": "./config-oadc.json"
+            }
+        }
+    }
+}
