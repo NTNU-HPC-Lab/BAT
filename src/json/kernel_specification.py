@@ -1,5 +1,6 @@
 import numpy as np
 import cupy as cp
+import json
 import random
 
 type_conv_dict = {
@@ -109,3 +110,21 @@ def get_launch_config(kernel_spec, tuning_config):
         "BLOCK_SIZE_Z": kernel_spec["blockSize"]["Z"]
     }
     return launch_config
+
+
+def get_search_space(json_path):
+    with open(json_path, 'r') as f:
+        r = json.load(f)
+    return r["configurationSpace"]
+
+
+def get_kernel_spec(json_path):
+    with open(json_path, 'r') as f:
+        r = json.load(f)
+    return r["configurationSpace"]
+
+
+def get_spec(json_path):
+    with open(json_path, 'r') as f:
+        r = json.load(f)
+    return r
