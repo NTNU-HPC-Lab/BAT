@@ -117,12 +117,10 @@ def populate_data(arg):
 
 
 def get_launch_config(kernel_spec, tuning_config):
-    global_vars = tuning_config
     for name, value in tuning_config.items():
-        globals()[name] = value
-    globals()["dataSize"] = kernel_spec["dataSize"]
-
-    print(global_vars)
+        locals()[name] = value
+    locals()["dataSize"] = kernel_spec["dataSize"]
+    
     launch_config = {
         "GRID_SIZE_X": eval(str(kernel_spec["gridSize"]["X"])),
         "GRID_SIZE_Y": eval(str(kernel_spec["gridSize"]["Y"])),
