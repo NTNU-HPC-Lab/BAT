@@ -144,7 +144,7 @@ def get_search_space(json_path):
 def get_kernel_spec(json_path):
     with open(json_path, 'r') as f:
         r = json.load(f)
-    return r["configurationSpace"]
+    return r["kernelSpecification"]
 
 
 def get_spec(json_path):
