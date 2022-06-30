@@ -90,7 +90,7 @@ def handle_vector_data(arg):
                 print(len(arg_data), len(arg_data) // get_type_length(arg["type"]), arg["type"])
             return type_conv(arg_data, arg)
         case "uninitialized":
-            arg_data = [0 for i in range(arg["length"] * get_type_length(arg["type"]))]
+            arg_data = [0 for _ in range(arg["length"] * get_type_length(arg["type"]))]
             if DEBUG:
                 print(len(arg_data), len(arg_data) // get_type_length(arg["type"]), arg["type"])
             return type_conv(arg_data, arg)
@@ -117,16 +117,21 @@ def populate_data(arg):
 
 
 def get_launch_config(kernel_spec, tuning_config):
-    data_size = kernel_spec["dataSize"]
-    block_size = tuning_config["BLOCK_SIZE"]
+    global_vars = tuning_config
+    for name, value in tuning_config.items():
+        globals()[name] = value
+    globals()["dataSize"] = kernel_spec["dataSize"]
+
+    print(global_vars)
     launch_config = {
-        "GRID_SIZE_X": (data_size + block_size - 1) // block_size,
-        "GRID_SIZE_Y": kernel_spec["gridSize"]["Y"],
-        "GRID_SIZE_Z": kernel_spec["gridSize"]["Z"],
-        "BLOCK_SIZE_X": block_size,
-        "BLOCK_SIZE_Y": kernel_spec["blockSize"]["Y"],
-        "BLOCK_SIZE_Z": kernel_spec["blockSize"]["Z"]
+        "GRID_SIZE_X": eval(str(kernel_spec["gridSize"]["X"])),
+        "GRID_SIZE_Y": eval(str(kernel_spec["gridSize"]["Y"])),
+        "GRID_SIZE_Z": eval(str(kernel_spec["gridSize"]["Z"])),
+        "BLOCK_SIZE_X": eval(str(kernel_spec["blockSize"]["X"])),
+        "BLOCK_SIZE_Y": eval(str(kernel_spec["blockSize"]["Y"])),
+        "BLOCK_SIZE_Z": eval(str(kernel_spec["blockSize"]["Z"])),
     }
+    print(launch_config)
     return launch_config
 
 

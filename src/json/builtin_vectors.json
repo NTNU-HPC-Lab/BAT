@@ -45,12 +45,12 @@
         "kernelName": "sum_kernel",
         "kernelFile": "builtin_vectors.cu",
         "blockSize": {
-            "X": 1024,
+            "X": "BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
         "gridSize": {
-            "X": 1,
+            "X": "(dataSize + BLOCK_SIZE - 1) // BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
