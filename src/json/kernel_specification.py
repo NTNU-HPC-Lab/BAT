@@ -3,6 +3,8 @@ import cupy as cp
 import json
 import random
 
+DEBUG = 0
+
 type_conv_dict = {
     "bool": np.bool_,
     "byte": np.byte,
@@ -37,12 +39,20 @@ def handle_custom_data_type(arg_data, arg):
     match arg["type"]:
         case "float3":
             names = ['x', 'y', 'z']
-            types = [cp.float32, cp.float32, cp.float32]
-            return custom_data_type(arg_data, names, types, cp.float32)
+            types = [np.float32] * 3
+            return custom_data_type(arg_data, names, types, np.float32)
         case "float4":
             names = ['x', 'y', 'z', 'w']
-            types = [cp.float32, cp.float32, cp.float32, cp.float32]
-            return custom_data_type(arg_data, names, types, cp.float32)
+            types = [np.float32] * 4
+            return custom_data_type(arg_data, names, types, np.float32)
+        case "double3":
+            names = ['x', 'y', 'z']
+            types = [np.float64] * 3
+            return custom_data_type(arg_data, names, types, np.float64)
+        case "double4":
+            names = ['x', 'y', 'z', 'w']
+            types = [np.float64] * 4
+            return custom_data_type(arg_data, names, types, np.float64)
 
 
 def type_conv(arg_data, arg):
@@ -54,10 +64,15 @@ def type_conv(arg_data, arg):
 
 def get_type_length(t):
     type_length = 1
-    if t == "float4":
-        type_length = 4
-    if t == "float3":
-        type_length = 3
+    match t:
+        case "float4":
+            type_length = 4
+        case "float3":
+            type_length = 3
+        case "double4":
+            type_length = 4
+        case "double3":
+            type_length = 3
     return type_length
 
 
@@ -66,15 +81,18 @@ def handle_vector_data(arg):
         case "file":
             with open(arg["path"], 'r') as f:
                 arg_data = f.read().splitlines()
-                print(len(arg_data), len(arg_data) // 128)
+                if DEBUG:
+                    print(len(arg_data), len(arg_data) // 128)
             return type_conv(arg_data, arg)
         case "random":
             arg_data = [random.random() for _ in range(arg["length"] * get_type_length(arg["type"]))]
-            print(len(arg_data), len(arg_data) // get_type_length(arg["type"]), arg["type"])
+            if DEBUG:
+                print(len(arg_data), len(arg_data) // get_type_length(arg["type"]), arg["type"])
             return type_conv(arg_data, arg)
         case "uninitialized":
             arg_data = [0 for i in range(arg["length"] * get_type_length(arg["type"]))]
-            print(len(arg_data), len(arg_data) // get_type_length(arg["type"]), arg["type"])
+            if DEBUG:
+                print(len(arg_data), len(arg_data) // get_type_length(arg["type"]), arg["type"])
             return type_conv(arg_data, arg)
         case _:
             print("Unsupported vector memory type", arg["memoryType"])

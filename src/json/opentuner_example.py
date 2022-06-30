@@ -30,7 +30,7 @@ class OpenTunerT(MeasurementInterface):
 
     def run(self, desired_result, input, limit):
         tuning_config = desired_result.configuration.data
-        print("Tuning config:", tuning_config)
+        # print("Tuning config:", tuning_config)
         val = reader.core(self.args.json, self.benchmark_config, tuning_config)
         return opentuner.resultsdb.models.Result(time=val)
 

@@ -61,7 +61,7 @@
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
         "kernelName": "compute_lj_force",
-        "kernelFile": "md_kernel.cu",
+        "kernelFile": "./MD/md_kernel.cu",
         "blockSize": {
             "X": "BLOCK_SIZE",
             "Y": 1,
@@ -113,7 +113,7 @@
             "memoryType": "Vector",
             "accessType": "ReadOnly",
             "fillType": "file",
-            "path": "MD-neighList-data.txt"
+            "path": "./MD/MD-neighList-data.txt"
         },
         {
             "name": "cutsq",
