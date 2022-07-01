@@ -1,7 +1,7 @@
 import json
 import time
 
-from kernel_specification import populate_args, get_launch_config
+from kernel_specification import get_launch_config, Handler
 
 import cupy as cp
 
@@ -18,22 +18,16 @@ def launch_kernel(args_tuple, launch_config, kernel):
     block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
     if DEBUG:
         print(grid_dim, block_dim)
-
         print("Before")
-        print(args_tuple[0], len(args_tuple[0]))
-        print(args_tuple[1], len(args_tuple[1]))
-        print(args_tuple[2], len(args_tuple[2]))
-        print(args_tuple[3])
-    args_tuple_before = args_tuple
+        for arg in args_tuple:
+            print(arg, arg.size)
     t0 = time.time()
     kernel(grid=grid_dim, block=block_dim, args=args_tuple)
     duration = time.time() - t0
-    args_tuple_after = args_tuple
     if DEBUG:
         print("After")
-        print(args_tuple[0], len(args_tuple[0]))
-        print(args_tuple[1], len(args_tuple[1]))
-        print(args_tuple[2], len(args_tuple[2]))
+        for arg in args_tuple:
+            print(arg, arg.size)
     return duration
 
 
@@ -63,10 +57,10 @@ def correctness(args_before, args_after):
     print("Passed correctness")
 
 
-def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
+def run_kernel(handler, kernel_spec, launch_config, tuning_config, benchmark_config):
     compiler_options = generate_compiler_options(kernel_spec,
                                                  tuning_config, benchmark_config)
-    args = populate_args(kernel_spec)
+    args = handler.populate_args(kernel_spec)
     lf_ker = get_kernel(kernel_spec, compiler_options)
     args_tuple = tuple(args)
     result = launch_kernel(args_tuple, launch_config, lf_ker)
@@ -77,8 +71,8 @@ def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
 def core(json_path, benchmark_config, tuning_config):
     with open(json_path, 'r') as f:
         r = json.load(f)
-
+    handler = Handler(r)
     kernel_spec = r["kernelSpecification"]
     launch_config = get_launch_config(kernel_spec, tuning_config)
 
-    return run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config)
+    return run_kernel(handler, kernel_spec, launch_config, tuning_config, benchmark_config)

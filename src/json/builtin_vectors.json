@@ -3,30 +3,46 @@
         "formatVersion": "0.0.1"
     },
     "metadata": {
-      "types": {
-        "float3": {
-          "x": "float",
-          "y": "float",
-          "z": "float"
+      "types": [
+        {
+          "name": "float3",
+          "repr_type": "float",
+          "fields": {
+            "x": "float",
+            "y": "float",
+            "z": "float"
+          }
         },
-        "float4": {
-          "x": "float",
-          "y": "float",
-          "z": "float",
-          "w": "float"
+        {
+          "name": "float4",
+          "repr_type": "float",
+          "fields": {
+            "x": "float",
+            "y": "float",
+            "z": "float",
+            "w": "float"
+          }
         },
-        "double3": {
-          "x": "double",
-          "y": "double",
-          "z": "double"
+        {
+          "name": "double3",
+          "repr_type": "double",
+          "fields": {
+            "x": "double",
+            "y": "double",
+            "z": "double"
+          }
         },
-        "double4": {
-          "x": "double",
-          "y": "double",
-          "z": "double",
-          "w": "double"
+        {
+          "name": "double4",
+          "repr_type": "double",
+          "fields": {
+            "x": "double",
+            "y": "double",
+            "z": "double",
+            "w": "double"
+          }
         }
-      }
+      ]
     },
     "configurationSpace": {
         "tuningParameters": [
