@@ -1,9 +1,11 @@
 import json
+import sys
 import time
 
 from kernel_specification import populate_args, get_launch_config
 
 import cupy as cp
+import numpy as np
 
 
 def print_json(j):
@@ -18,22 +20,16 @@ def launch_kernel(args_tuple, launch_config, kernel):
     block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
     if DEBUG:
         print(grid_dim, block_dim)
-
         print("Before")
-        print(args_tuple[0], len(args_tuple[0]))
-        print(args_tuple[1], len(args_tuple[1]))
-        print(args_tuple[2], len(args_tuple[2]))
-        print(args_tuple[3])
-    args_tuple_before = args_tuple
+        for arg in args_tuple:
+            print(arg, arg.size)
     t0 = time.time()
     kernel(grid=grid_dim, block=block_dim, args=args_tuple)
     duration = time.time() - t0
-    args_tuple_after = args_tuple
     if DEBUG:
         print("After")
-        print(args_tuple[0], len(args_tuple[0]))
-        print(args_tuple[1], len(args_tuple[1]))
-        print(args_tuple[2], len(args_tuple[2]))
+        for arg in args_tuple:
+            print(arg, arg.size)
     return duration
 
 
@@ -52,25 +48,42 @@ def generate_compiler_options(kernel_spec, tuning_config, benchmark_config):
         compiler_options.append("-D{}={}".format(key, val))
     for (key, val) in benchmark_config.items():
         compiler_options.append("-D{}={}".format(key, val))
+    # print(compiler_options)
     return compiler_options
 
 
-def correctness(args_before, args_after):
-    cp.testing.assert_array_equal(
-        args_after[0].view(cp.float32),
-        args_before[0].view(cp.float32)
-    )
-    print("Passed correctness")
+def builtin_vectors_correctness(args_before, args_after, config):
+    left = args_after[2][0].item()[0]
+    right = args_before[0][0].item()[0] + args_before[1][0].item()[0]
+    if left == 0:
+        print("Failed to initialize",  args_after[3])
+    elif left != right:
+        print("Did not pass", left, "!=", right, args_after[3], config)
+    else:
+        print("Passed", left, right, args_after[3], config)
+
+
+correctness_funcs = {
+    "sum_kernel": builtin_vectors_correctness
+}
 
 
 def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
-    compiler_options = generate_compiler_options(kernel_spec,
-                                                 tuning_config, benchmark_config)
+    # compiler_options = generate_compiler_options(kernel_spec,
+    #                                             tuning_config, benchmark_config)
+    compiler_options = ['-std=c++11', '-DBLOCK_SIZE=1024']
     args = populate_args(kernel_spec)
     lf_ker = get_kernel(kernel_spec, compiler_options)
     args_tuple = tuple(args)
+    launch_config = {'GRID_SIZE_X': 4, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 1024, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
+    # launch_config = {'GRID_SIZE_X': 5, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 928, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
+    # launch_config = {'GRID_SIZE_X': 16, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 256, 'BLOCK_SIZE_Y': 1,
+    #                 'BLOCK_SIZE_Z': 1}
     result = launch_kernel(args_tuple, launch_config, lf_ker)
-    correctness(tuple(args), args_tuple)
+    correctness = correctness_funcs[kernel_spec["kernelName"]]
+    correctness(tuple(args), args_tuple, launch_config)
+    del args
+    cp._default_memory_pool.free_all_free()
     return result
 
 

@@ -54,6 +54,7 @@
             "Y": 1,
             "Z": 1
         },
+        "benchmarkConfig": {},
         "dataSize": 4096,
         "modifiers": {
             "type": "block_size",
@@ -94,7 +95,7 @@
             "type": "int",
             "memoryType": "Scalar",
             "accessType": "ReadOnly",
-            "value": 4096
+            "value": "4096"
           }
       ]
     },

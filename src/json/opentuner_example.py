@@ -21,16 +21,13 @@ parser.add_argument('--json', type=str, default="MD-CAFF.json", help='location o
 class OpenTunerT(MeasurementInterface):
     def __init__(self, *pargs, **kwargs):
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
-        self.benchmark_config = {
-            "PRECISION": self.args.precision
-        }
         self.spec = kernel_specification.get_spec(self.args.json)
+        self.benchmark_config = self.spec["kernelSpecification"]["benchmarkConfig"]
         self.config_space = self.spec["configurationSpace"]
         self.kernel_spec = self.spec["kernelSpecification"]
 
     def run(self, desired_result, input, limit):
         tuning_config = desired_result.configuration.data
-        # print("Tuning config:", tuning_config)
         val = reader.core(self.args.json, self.benchmark_config, tuning_config)
         return opentuner.resultsdb.models.Result(time=val)
 
