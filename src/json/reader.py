@@ -59,6 +59,7 @@ def builtin_vectors_correctness(args_before, args_after, config):
         print("Failed to initialize",  args_after[3])
     elif left != right:
         print("Did not pass", left, "!=", right, args_after[3], config)
+        exit(1)
     else:
         print("Passed", left, right, args_after[3], config)
 
@@ -69,13 +70,13 @@ correctness_funcs = {
 
 
 def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
-    # compiler_options = generate_compiler_options(kernel_spec,
-    #                                             tuning_config, benchmark_config)
-    compiler_options = ['-std=c++11', '-DBLOCK_SIZE=1024']
+    compiler_options = generate_compiler_options(kernel_spec,
+                                                 tuning_config, benchmark_config)
+    # compiler_options = ['-std=c++11', '-DBLOCK_SIZE=1024']
     args = populate_args(kernel_spec)
     lf_ker = get_kernel(kernel_spec, compiler_options)
     args_tuple = tuple(args)
-    launch_config = {'GRID_SIZE_X': 4, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 1024, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
+    # launch_config = {'GRID_SIZE_X': 4, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 1024, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
     # launch_config = {'GRID_SIZE_X': 5, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 928, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
     # launch_config = {'GRID_SIZE_X': 16, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 256, 'BLOCK_SIZE_Y': 1,
     #                 'BLOCK_SIZE_Z': 1}
