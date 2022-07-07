@@ -79,22 +79,22 @@ def get_type_length(t):
 
 def handle_vector_data(arg):
     random.seed(10)
-    match arg["fillType"]:
-        case "file":
-            with open(arg["path"], 'r') as f:
-                arg_data = f.read().splitlines()
-            return type_conv(arg_data, arg)
-        case "random":
-            arg_data = [random.random() for _ in range(arg["length"] * get_type_length(arg["type"]))]
-            return type_conv(arg_data, arg)
-        case "uninitialized":
-            arg_data = [0 for _ in range(arg["length"] * get_type_length(arg["type"]))]
-            return type_conv(arg_data, arg)
-        case "constant":
-            arg_data = [eval(str(arg["value"])) for _ in range(arg["length"] * get_type_length(arg["type"]))]
-            return type_conv(arg_data, arg)
-        case _:
-            print("Unsupported vector fill type", arg["fillType"])
+    t = arg["fillType"]
+    if t == "file":
+        with open(arg["path"], 'r') as f:
+            arg_data = f.read().splitlines()
+        return type_conv(arg_data, arg)
+    if t == "random":
+        arg_data = [random.random() for _ in range(arg["length"] * get_type_length(arg["type"]))]
+        return type_conv(arg_data, arg)
+    if t == "uninitialized":
+        arg_data = [0 for _ in range(arg["length"] * get_type_length(arg["type"]))]
+        return type_conv(arg_data, arg)
+    if t == "constant":
+        arg_data = [eval(str(arg["value"])) for _ in range(arg["length"] * get_type_length(arg["type"]))]
+        return type_conv(arg_data, arg)
+    else:
+        print("Unsupported vector fill type", arg["fillType"])
 
 
 def handle_scalar_data(arg):
@@ -105,13 +105,13 @@ def handle_scalar_data(arg):
 
 
 def populate_data(arg):
-    match arg["memoryType"].lower():
-        case "vector":
-            return handle_vector_data(arg)
-        case "scalar":
-            return handle_scalar_data(arg)
-        case _:
-            print("Unsupported memory type", arg["memoryType"])
+    m = arg["memoryType"].lower()
+    if m == "vector":
+        return handle_vector_data(arg)
+    if m == "scalar":
+        return handle_scalar_data(arg)
+    else:
+        print("Unsupported memory type", arg["memoryType"])
 
 
 def get_launch_config(kernel_spec, tuning_config):
