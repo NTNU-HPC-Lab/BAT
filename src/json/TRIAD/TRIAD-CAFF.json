@@ -30,7 +30,7 @@
             "language": "CUDA",
             "compilerOptions": ["-std=c++11"],
             "kernelName": "triad",
-            "kernelFile": "triad_kernel.cu",
+            "kernelFile": "./TRIAD/triad_kernel.cu",
             "blockSize": {
                 "X": "BLOCK_SIZE",
                 "Y": 1,
