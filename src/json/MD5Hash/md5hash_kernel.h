@@ -1,5 +1,3 @@
-#include<cuda.h>
-
 // leftrotate function definition
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
@@ -249,16 +247,18 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
         int startindex = threadid * valsPerByte;
         unsigned char key[8] = {0,0,0,0, 0,0,0,0};
         IndexToKey(startindex, byteLength, valsPerByte, key);
+	// int keyspace = 1000000;
+	int valsPerByte = 10;
 
         for (int j=0; j < valsPerByte && startindex+j < keyspace; ++j) {
             unsigned int digest[4];
-            md5_2words((unsigned int*)key, byteLength, digest);
+	    md5_2words((unsigned int*)key, byteLength, digest);
             if (digest[0] == searchDigest0 &&
                 digest[1] == searchDigest1 &&
                 digest[2] == searchDigest2 &&
                 digest[3] == searchDigest3) {
                     
-                *foundIndex = startindex + j;
+                foundIndex[0] = startindex + j;
 
                 #if UNROLL_LOOP_2
                 #pragma unroll

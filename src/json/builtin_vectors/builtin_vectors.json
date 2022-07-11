@@ -43,7 +43,7 @@
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
         "kernelName": "sum_kernel",
-        "kernelFile": "builtin_vectors.cu",
+        "kernelFile": "builtin_vectors/builtin_vectors.cu",
         "blockSize": {
             "X": "BLOCK_SIZE",
             "Y": 1,

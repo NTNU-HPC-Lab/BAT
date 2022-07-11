@@ -73,6 +73,8 @@
         "dataSize": 1000000,
         "shared_memory": null,
         "stream": null,
+	"benchmarkConfig": {
+	},
         "arguments": [
         {
             "name": "searchDigest0",

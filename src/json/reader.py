@@ -67,10 +67,17 @@ def builtin_vectors_correctness(args_before, args_after, config):
     else:
         print("Passed", left, right, args_after[3], config)
 
+def md5hash_correctness(args_before, args_after, config):
+    print("MD5Hash Correctness")
+    print(config)
+    print(args_before)
+    print(args_after)
+
 
 correctness_funcs = {
     "sum_kernel": builtin_vectors_correctness,
-    "compute_lj_force": md_correctness
+    "compute_lj_force": md_correctness,
+    "FindKeyWithDigest_Kernel": md5hash_correctness, 
 }
 
 
