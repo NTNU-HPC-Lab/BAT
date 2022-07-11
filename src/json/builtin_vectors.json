@@ -33,7 +33,7 @@
             {
                 "name": "BLOCK_SIZE",
                 "type": "int32",
-                "values": "[2**i for i in range(5, 11)]",
+                "values": "list(range(32, 1024+1, 32))",
                 "default": 256
             }
         ],

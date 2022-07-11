@@ -28,8 +28,8 @@ extern "C" {
 
 __global__ void compute_lj_force(float3* force3,
                                  float4* position,
-                                 const int neighCount,
-                                 const int* neighList,
+                                 int neighCount,
+                                 int* neighList,
                                  const float cutsq,
                                  const float lj1,
                                  const float lj2,
@@ -48,13 +48,13 @@ __global__ void compute_lj_force(float3* force3,
             // Force accumulator
 
             float3 f = {0.0f, 0.0f, 0.0f};
-
             int j = 0;
 
             while (j < neighCount)
             {
-
-                int jidx = neighList[j*inum + threadId];
+		int jidx = 0;
+                if (j*inum + threadId < inum) jidx = neighList[j*inum + threadId];
+		else continue;
                 float4 jpos = position[jidx];
 
                 // Calculate distance
@@ -70,16 +70,17 @@ __global__ void compute_lj_force(float3* force3,
                     r2inv = 1.0f/r2inv;
                     float r6inv = r2inv * r2inv * r2inv;
                     float force = r2inv*r6inv*(lj1*r6inv - lj2);
-
+		    /*
                     f.x += delx * force;
                     f.y += dely * force;
                     f.z += delz * force;
+		    */
                 }
                 j++;
             }
+            force3[threadId] = f;
 
             // store the results
-            force3[threadId] = f;
         }
     }
 }

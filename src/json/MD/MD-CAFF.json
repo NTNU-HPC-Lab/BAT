@@ -32,26 +32,20 @@
         "tuningParameters": [
             {
                 "name": "BLOCK_SIZE",
-                "type": "int32",
-                "values": "list(range(32, 1024+1, 32))",
+                "type": "int",
+                "values": "[2**i for i in range(5, 11)]",
                 "default": 256
             },
             {
-                "name": "PRECISION",
-                "type": "int32",
-                "values": [32, 64],
-                "default": 32
-            },
-            {
                 "name": "TEXTURE_MEMORY",
-                "type": "int32",
-                "values": [0, 1],
+                "type": "int",
+                "values": [0],
                 "default": 1
             },
             {
                 "name": "WORK_PER_THREAD",
-                "type": "int32",
-                "values": [1, 2, 3, 4, 5, 6],
+                "type": "int",
+                "values": [1],
                 "default": 1
             }
         ],
@@ -68,20 +62,16 @@
             "Z": 1
         },
         "gridSize": {
-            "X": 73728,
+            "X": "73728//BLOCK_SIZE//WORK_PER_THREAD",
             "Y": 1,
             "Z": 1
         },
         "dataSize": 73728,
-        "modifiers": {
-            "type": "block_size",
-            "dimension": "X",
-            "parameter": "WORK_PER_THREAD",
-            "action": "divide"
-        },
         "shared_memory": null,
         "stream": null,
-
+	"benchmarkConfig": {
+		"PRECISION": 32
+	},
         "arguments": [
         {
             "name": "force3",
