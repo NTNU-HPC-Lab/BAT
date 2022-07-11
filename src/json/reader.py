@@ -85,7 +85,7 @@ def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
     # launch_config = {'GRID_SIZE_X': 5, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 928, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
     # launch_config = {'GRID_SIZE_X': 16, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 256, 'BLOCK_SIZE_Y': 1,
     #                 'BLOCK_SIZE_Z': 1}
-    print(launch_config, args_tuple, args_tuple[3], len(args_tuple[3]))
+    print(launch_config, args_tuple)
     result = launch_kernel(args_tuple, launch_config, lf_ker)
     correctness = correctness_funcs[kernel_spec["kernelName"]]
     correctness(tuple(args), args_tuple, launch_config)

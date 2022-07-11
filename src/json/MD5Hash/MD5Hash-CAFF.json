@@ -66,11 +66,11 @@
             "Z": 1
         },
         "gridSize": {
-            "X": "(1000000000//10//WORK_PER_THREAD_FACTOR + BLOCK_SIZE -1) // BLOCK_SIZE",
+            "X": "(dataSize//BLOCK_SIZE//WORK_PER_THREAD_FACTOR) + 1",
             "Y": 1,
             "Z": 1
         },
-        "dataSize": 10000000,
+        "dataSize": 1000000,
         "shared_memory": null,
         "stream": null,
         "arguments": [
