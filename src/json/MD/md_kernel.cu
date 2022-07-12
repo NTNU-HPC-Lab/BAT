@@ -52,9 +52,7 @@ __global__ void compute_lj_force(float3* force3,
 
             while (j < neighCount)
             {
-		int jidx = 0;
-                if (j*inum + threadId < inum) jidx = neighList[j*inum + threadId];
-		else continue;
+                int jidx = neighList[j*inum + threadId];
                 float4 jpos = position[jidx];
 
                 // Calculate distance
@@ -70,11 +68,10 @@ __global__ void compute_lj_force(float3* force3,
                     r2inv = 1.0f/r2inv;
                     float r6inv = r2inv * r2inv * r2inv;
                     float force = r2inv*r6inv*(lj1*r6inv - lj2);
-		    /*
+
                     f.x += delx * force;
                     f.y += dely * force;
                     f.z += delz * force;
-		    */
                 }
                 j++;
             }

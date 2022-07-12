@@ -81,28 +81,28 @@
             "type": "uint",
             "accessType": "ReadOnly",
             "memoryType": "scalar",
-            "value": 3900692415
+            "value": 2745829788
         },
         {
             "name": "searchDigest1",
             "type": "uint",
             "accessType": "ReadOnly",
             "memoryType": "scalar",
-            "value": 1398272948
+            "value": 1540754381
         },
         {
             "name": "searchDigest2",
             "type": "uint",
             "accessType": "ReadOnly",
             "memoryType": "scalar",
-            "value": 716596548
+            "value": 615701928
         },
         {
             "name": "searchDigest3",
             "type": "uint",
             "accessType": "ReadOnly",
             "memoryType": "scalar",
-            "value": 3332637050
+            "value": 1640371132
         },
         {
             "name": "keyspace",

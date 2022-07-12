@@ -62,16 +62,21 @@ def populate_args(kernel_spec):
 
 def handle_custom_data_type(arg_data, arg):
     t = custom_type_dict[arg["type"]]
-    custom = np.dtype({'names': t["names"], 'formats': t["types"]})
-    return cp.asarray(arg_data, dtype=t["repr_type"]).view(custom)
+    return np.dtype({'names': t["names"], 'formats': t["types"]})
 
 
-def type_conv(arg_data, arg):
+def type_conv_vec(arg_data, arg):
     if arg["type"] in type_conv_dict.keys():
         return cp.asarray(arg_data, dtype=type_conv_dict[arg["type"]])
     else:  # custom data type
-        return handle_custom_data_type(arg_data, arg)
+        return cp.asarray(arg_data, dtype=custom_type_dict[arg["type"]]["repr_type"]).view(handle_custom_data_type(arg_data, arg))
 
+def type_conv_scalar(arg_data, arg):
+    if arg["type"] in type_conv_dict.keys():
+        return type_conv_dict[arg["type"]](arg_data)
+    else:  # custom data type
+        return (custom_type_dict[arg["type"]]["repr_type"]).view(handle_custom_data_type(arg_data, arg))(arg_data)
+    
 
 def get_type_length(t):
     return custom_type_dict.get(t, {"length": 1})["length"]
@@ -83,16 +88,16 @@ def handle_vector_data(arg):
     if t == "file":
         with open(arg["path"], 'r') as f:
             arg_data = f.read().splitlines()
-        return type_conv(arg_data, arg)
+        return type_conv_vec(arg_data, arg)
     if t == "random":
         arg_data = [random.random() for _ in range(arg["length"] * get_type_length(arg["type"]))]
-        return type_conv(arg_data, arg)
+        return type_conv_vec(arg_data, arg)
     if t == "uninitialized":
         arg_data = [0 for _ in range(arg["length"] * get_type_length(arg["type"]))]
-        return type_conv(arg_data, arg)
+        return type_conv_vec(arg_data, arg)
     if t == "constant":
         arg_data = [eval(str(arg["value"])) for _ in range(arg["length"] * get_type_length(arg["type"]))]
-        return type_conv(arg_data, arg)
+        return type_conv_vec(arg_data, arg)
     else:
         print("Unsupported vector fill type", arg["fillType"])
 
@@ -101,7 +106,7 @@ def handle_scalar_data(arg):
     if arg["type"] == "cudaTextureObject_t":
         raise NotImplementedError
     else:
-        return type_conv(arg["value"], arg)
+        return type_conv_scalar(arg["value"], arg)
 
 
 def populate_data(arg):

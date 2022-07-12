@@ -1,4 +1,5 @@
 // leftrotate function definition
+extern "C"{
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
 #define F(x,y,z) ((x & y) | ((~x) & z))
@@ -247,8 +248,6 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
         int startindex = threadid * valsPerByte;
         unsigned char key[8] = {0,0,0,0, 0,0,0,0};
         IndexToKey(startindex, byteLength, valsPerByte, key);
-	// int keyspace = 1000000;
-	int valsPerByte = 10;
 
         for (int j=0; j < valsPerByte && startindex+j < keyspace; ++j) {
             unsigned int digest[4];
@@ -282,3 +281,5 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
         }
     }
 }
+
+} // Extern C

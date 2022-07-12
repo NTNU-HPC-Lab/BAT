@@ -52,9 +52,10 @@ def generate_compiler_options(kernel_spec, tuning_config, benchmark_config):
     return compiler_options
 
 def md_correctness(args_before, args_after, config):
+    print("Correctness")
     print(config)
-    print(args_before)
-    print(args_after)
+    print(args_before[0])
+    print(args_after[0])
 
 def builtin_vectors_correctness(args_before, args_after, config):
     left = args_after[2][0].item()[0]
@@ -65,13 +66,15 @@ def builtin_vectors_correctness(args_before, args_after, config):
         print("Did not pass", left, "!=", right, args_after[3], config)
         exit(1)
     else:
-        print("Passed", left, right, args_after[3], config)
+        print("Passed", args_after[3], config)
 
 def md5hash_correctness(args_before, args_after, config):
-    print("MD5Hash Correctness")
-    print(config)
-    print(args_before)
-    print(args_after)
+    key = args_after[8]
+    reference = cp.asarray([9, 5, 7, 9, 8, 9, 9, 0], dtype=np.byte)
+    if (key==reference).all():
+        print("Passed", config)
+    else:
+        print("Failed correctness:", key, reference)
 
 
 correctness_funcs = {
@@ -92,7 +95,7 @@ def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
     # launch_config = {'GRID_SIZE_X': 5, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 928, 'BLOCK_SIZE_Y': 1, 'BLOCK_SIZE_Z': 1}
     # launch_config = {'GRID_SIZE_X': 16, 'GRID_SIZE_Y': 1, 'GRID_SIZE_Z': 1, 'BLOCK_SIZE_X': 256, 'BLOCK_SIZE_Y': 1,
     #                 'BLOCK_SIZE_Z': 1}
-    print(launch_config, args_tuple)
+    # print(launch_config, args_tuple)
     result = launch_kernel(args_tuple, launch_config, lf_ker)
     correctness = correctness_funcs[kernel_spec["kernelName"]]
     correctness(tuple(args), args_tuple, launch_config)
