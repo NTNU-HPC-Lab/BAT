@@ -7,7 +7,7 @@
             {
                 "name": "BLOCK_SIZE",
                 "type": "int",
-                "values": "list(range(32, 1024+1, 32))",
+                "values": "[2**i for i in range(5, 11)]",
                 "default": 256
             },
             {
@@ -36,7 +36,7 @@
 	    "Z": 1
 	},
         "gridSize": {
-            "X": "min(dataSize//BLOCK_SIZE, 1024)",
+            "X": "dataSize//BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },

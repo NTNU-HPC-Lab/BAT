@@ -1,11 +1,21 @@
 import cupy as cp
+import time
 
 def reduce_correctness(args_before, args_after, config):
-    print("Correctness")
-    print(config)
-    print(args_before)
-    print(args_after)
-    print("Sum", sum(args_after[:config["GRID_SIZE_X"]]))
+    correctness_start = time.time()
+    # print(config)
+    # print(args_before)
+    # print(args_after)
+    accuracy = 3
+    left = round(sum(args_before[0]).item(), accuracy)
+    right = round(sum(args_after[1][:config["GRID_SIZE_X"]]).item(), accuracy)
+    if left != right:
+        print("Sum: {} != {}".format(left, right))
+    else:
+        print ("Passed")
+
+    correctness_duration = time.time() - correctness_start
+    # print("Sum", sum(args_after[1][:]))
 
 def generic_correctness(args_before, args_after, config):
     print("Correctness")

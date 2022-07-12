@@ -36,12 +36,12 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned in
     // memory and incorrect results are obtained.  This explicit macro
     // works around this issue. Further, it is acceptable to specify
     // float, since CC's < 1.3 do not support double precision.
-#if __CUDA_ARCH__ <= 130
+// #if __CUDA_ARCH__ <= 130
     extern volatile __shared__ float sdata[];
-#else
-    SharedMem shared;
-    volatile T* sdata = shared.getPointer();
-#endif
+// #else
+    // SharedMem shared;
+    // volatile T* sdata = shared.getPointer();
+// #endif
 
     sdata[tid] = 0.0f;
 
