@@ -71,6 +71,7 @@ def type_conv_vec(arg_data, arg):
     else:  # custom data type
         return cp.asarray(arg_data, dtype=custom_type_dict[arg["type"]]["repr_type"]).view(handle_custom_data_type(arg_data, arg))
 
+
 def type_conv_scalar(arg_data, arg):
     if arg["type"] in type_conv_dict.keys():
         return type_conv_dict[arg["type"]](arg_data)
@@ -132,6 +133,12 @@ def get_launch_config(kernel_spec, tuning_config):
         "BLOCK_SIZE_Y": eval(str(kernel_spec["blockSize"]["Y"])),
         "BLOCK_SIZE_Z": eval(str(kernel_spec["blockSize"]["Z"])),
     }
+    for name, value in launch_config.items():
+        locals()[name] = value
+
+    if kernel_spec.get("sharedMemory"):
+        launch_config["SHARED_MEMORY_SIZE"] = eval(str(kernel_spec["sharedMemory"]))
+
     return launch_config
 
 

@@ -1,0 +1,80 @@
+{
+    "general": {
+        "language": "CUDA",
+        "CompilerOptions": "",
+        "KernelName": "reduce",
+        "KernelFile": "Reduction-BAT.cu",
+        "FormatVersion": "0.0.1"
+    },
+    "configuration_space": {
+        "tuning_parameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int",
+                "values": "list(range(32, 1024+1, 32))",
+                "default": 256
+            },
+            {
+                "name": "GRID_SIZE",
+                "type": "int",
+                "values": "[2**x for x in range(0, 11)]",
+                "default": 64
+            },
+            {
+                "name": "LOOP_UNROLL_REDUCE_1",
+                "type": "int",
+                "values": [1, 2, 4],
+                "default": 4
+            },
+            {
+                "name": "LOOP_UNROLL_REDUCE_2",
+                "type": "int",
+                "values": [1, 2, 3, 6],
+                "default": 6
+            }
+        ],
+		"constraints": []
+    },
+    "kernelSpecification": {
+        "blockSize": "BLOCK_SIZE",
+        "gridSize": {
+            "X": "GRID_SIZE",
+            "Y": 1,
+            "Z": 1
+        },
+        "sharedMemory": "8*BLOCK_SIZE_X",
+        "stream": null,
+
+     
+        "arguments": [
+        {
+            "name": "d_idata",
+            "type": "double",
+            "length": 65536,
+            "accessType": "ReadOnly",
+            "memoryType": "vector",
+            "fillType": "random"
+        },
+        {
+            "name": "d_odata",
+            "type": "double",
+            "length": 65536,
+            "accessType": "ReadWrite",
+            "memoryType": "vector",
+            "fillType": "uninitialized"
+        },
+        {
+            "name": "size",
+            "type": "int",
+            "memoryType": "scalar",
+            "accessType": "ReadOnly",
+            "value": 65536
+        }
+      ]
+    },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  

@@ -1,16 +1,9 @@
 import json
-import sys
 import time
+import cupy as cp
 
 from kernel_specification import populate_args, get_launch_config
-
-import cupy as cp
-import numpy as np
-
-
-def print_json(j):
-    print(json.dumps(j, indent=4, sort_keys=True))
-
+from src.json.correctness import correctness_funcs
 
 DEBUG = 0
 
@@ -18,13 +11,14 @@ DEBUG = 0
 def launch_kernel(args_tuple, launch_config, kernel):
     grid_dim = (launch_config["GRID_SIZE_X"], launch_config["GRID_SIZE_Y"], launch_config["GRID_SIZE_Z"])
     block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
+    shared_mem_size = launch_config.get("SHARED_MEMORY_SIZE", 0)
     if DEBUG:
         print(grid_dim, block_dim)
         print("Before")
         for arg in args_tuple:
             print(arg, arg.size)
     t0 = time.time()
-    kernel(grid=grid_dim, block=block_dim, args=args_tuple)
+    kernel(grid=grid_dim, block=block_dim, args=args_tuple, shared_mem=shared_mem_size)
     duration = time.time() - t0
     if DEBUG:
         print("After")
@@ -50,38 +44,6 @@ def generate_compiler_options(kernel_spec, tuning_config, benchmark_config):
         compiler_options.append("-D{}={}".format(key, val))
     # print(compiler_options)
     return compiler_options
-
-def md_correctness(args_before, args_after, config):
-    print("Correctness")
-    print(config)
-    print(args_before[0])
-    print(args_after[0])
-
-def builtin_vectors_correctness(args_before, args_after, config):
-    left = args_after[2][0].item()[0]
-    right = args_before[0][0].item()[0] + args_before[1][0].item()[0]
-    if left == 0:
-        print("Failed to initialize",  args_after[3])
-    elif left != right:
-        print("Did not pass", left, "!=", right, args_after[3], config)
-        exit(1)
-    else:
-        print("Passed", args_after[3], config)
-
-def md5hash_correctness(args_before, args_after, config):
-    key = args_after[8]
-    reference = cp.asarray([9, 5, 7, 9, 8, 9, 9, 0], dtype=np.byte)
-    if (key==reference).all():
-        print("Passed", config)
-    else:
-        print("Failed correctness:", key, reference)
-
-
-correctness_funcs = {
-    "sum_kernel": builtin_vectors_correctness,
-    "compute_lj_force": md_correctness,
-    "FindKeyWithDigest_Kernel": md5hash_correctness, 
-}
 
 
 def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
