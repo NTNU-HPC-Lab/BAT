@@ -1,24 +1,14 @@
 {
     "general": {
-        "language": "CUDA",
-        "CompilerOptions": "",
-        "KernelName": "reduce",
-        "KernelFile": "Reduction-BAT.cu",
-        "FormatVersion": "0.0.1"
+        "formatVersion": "0.0.1"
     },
-    "configuration_space": {
-        "tuning_parameters": [
+    "configurationSpace": {
+        "tuningParameters": [
             {
                 "name": "BLOCK_SIZE",
                 "type": "int",
                 "values": "list(range(32, 1024+1, 32))",
                 "default": 256
-            },
-            {
-                "name": "GRID_SIZE",
-                "type": "int",
-                "values": "[2**x for x in range(0, 11)]",
-                "default": 64
             },
             {
                 "name": "LOOP_UNROLL_REDUCE_1",
@@ -36,16 +26,26 @@
 		"constraints": []
     },
     "kernelSpecification": {
-        "blockSize": "BLOCK_SIZE",
+        "language": "CUDA",
+        "compilerOptions": ["-std=c++11"],
+        "kernelName": "reduce",
+        "kernelFile": "./Reduction/reduction_kernel.cu",
+        "blockSize": {
+	    "X": "BLOCK_SIZE",
+	    "Y": 1,
+	    "Z": 1
+	},
         "gridSize": {
-            "X": "GRID_SIZE",
+            "X": "min(dataSize//BLOCK_SIZE, 1024)",
             "Y": 1,
             "Z": 1
         },
         "sharedMemory": "8*BLOCK_SIZE_X",
         "stream": null,
-
-     
+	"benchmarkConfig": {
+		"PRECISION": 64
+	}, 
+	"dataSize": 65536,
         "arguments": [
         {
             "name": "d_idata",

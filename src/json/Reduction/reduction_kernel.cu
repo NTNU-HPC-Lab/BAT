@@ -1,13 +1,16 @@
-#ifndef REDUCTION_KERNEL_H_
-#define REDUCTION_KERNEL_H_
 
-#include <cuda.h>
+extern "C"{
+
+#if PRECISION == 32
+#define T float
+#else
+#define T double
+#endif
 
 // The following class is a workaround for using dynamically sized
 // shared memory in templated code. Without this workaround, the
 // compiler would generate two shared memory arrays (one for SP
 // and one for DP) of the same name and would generate an error.
-template <class T>
 class SharedMem
 {
     public:
@@ -18,36 +21,7 @@ class SharedMem
       };
 };
 
-// Specialization for double
-template <>
-class SharedMem <double>
-{
-    public:
-      __device__ inline double* getPointer()
-      {
-          extern __shared__ double s_double[];
-          return s_double;
-      }
-};
-
-// specialization for float
-template <>
-class SharedMem <float>
-{
-    public:
-      __device__ inline float* getPointer()
-      {
-          extern __shared__ float s_float[];
-          return s_float;
-      }
-};
-
 // Reduction Kernel
-#if PRECISION == 32
-#define T float
-#else
-#define T double
-#endif
 __global__ void
 reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned int n)
 {
@@ -65,7 +39,7 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned in
 #if __CUDA_ARCH__ <= 130
     extern volatile __shared__ float sdata[];
 #else
-    SharedMem<T> shared;
+    SharedMem shared;
     volatile T* sdata = shared.getPointer();
 #endif
 
@@ -99,7 +73,7 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned in
         #pragma unroll(1)
         #endif
         for (int i = 64; i > 1; i /= 2) {
-            if (blockSize >= i) {
+            if (BLOCK_SIZE >= i) {
                 sdata[tid] += sdata[tid + (i / 2)];
                 // NB2: This section would also need __sync calls if warp
                 // synchronous execution were not assumed
@@ -115,4 +89,4 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned in
 }
 
 
-#endif // REDUCTION_KERNEL_H_
+} // Extern C

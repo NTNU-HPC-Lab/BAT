@@ -1,11 +1,17 @@
 import cupy as cp
 
-
-def md_correctness(args_before, args_after, config):
+def reduce_correctness(args_before, args_after, config):
     print("Correctness")
     print(config)
-    print(args_before[0])
-    print(args_after[0])
+    print(args_before)
+    print(args_after)
+    print("Sum", sum(args_after[:config["GRID_SIZE_X"]]))
+
+def generic_correctness(args_before, args_after, config):
+    print("Correctness")
+    print(config)
+    print(args_before)
+    print(args_after)
 
 
 def builtin_vectors_correctness(args_before, args_after, config):
@@ -20,9 +26,10 @@ def builtin_vectors_correctness(args_before, args_after, config):
         print("Passed", args_after[3], config)
 
 
+
 def md5hash_correctness(args_before, args_after, config):
     key = args_after[8]
-    reference = cp.asarray([9, 5, 7, 9, 8, 9, 9, 0], dtype=np.byte)
+    reference = cp.asarray([9, 5, 7, 9, 8, 9, 9, 0], dtype=cp.byte)
     if (key == reference).all():
         print("Passed", config)
     else:
@@ -31,6 +38,7 @@ def md5hash_correctness(args_before, args_after, config):
 
 correctness_funcs = {
     "sum_kernel": builtin_vectors_correctness,
-    "compute_lj_force": md_correctness,
+    "compute_lj_force": generic_correctness,
+    "reduce": reduce_correctness,
     "FindKeyWithDigest_Kernel": md5hash_correctness,
 }
