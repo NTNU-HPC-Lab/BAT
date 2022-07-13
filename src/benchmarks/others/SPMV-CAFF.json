@@ -1,0 +1,271 @@
+{
+    "general": {
+        "language": "CUDA",
+        "CompilerOptions": "",
+        "KernelName": "SpMV",
+        "KernelFile": "SPMV-BAT.cu",
+        "FormatVersion": "0.0.1"
+    },
+    "configuration_space": {
+        "tuning_parameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int32",
+                "values": "list(range(32, 1024+1, 32))",
+                "default": 128
+            },
+            {
+                "name": "FORMAT",
+                "type": "int32",
+                "values": [0, 1, 2, 3, 4],
+                "default": "Runs all of the kernels"
+            },
+            {
+                "name": "TEXTURE_MEMORY",
+                "type": "boolean",
+                "default": false
+            },
+            {
+                "name": "UNROLL_LOOP_2",
+                "type": "int32",
+                "values": [1, 2, 5],
+                "default": 5
+            }
+        ],
+		"constraints": []
+    },
+    "function_specification": [
+        {
+            "name": "spmv_csr_scalar_kernel",
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "X": "(int)ceil((floatType)numRows / BLOCK_SIZE)",
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": null,
+                    "stream": null
+                },
+                "benchmark_configuration": {
+                    "floatType": "double"
+                }
+            },
+        
+            "arguments": [
+            {
+                "name": "texReader",
+                "type": "cudaTextureObject_t",
+                "length": 0,
+                "accessType": "ReadOnly",
+                "value": "d_idata"
+            },
+            {
+                "name": "d_val",
+                "type": "double",
+                "length": "numNonZeroes",
+                "accessType": "ReadOnly",
+                "fillType": "file",
+                "path": "/path"
+            },
+            {
+                "name": "d_cols",
+                "type": "int",
+                "length": "numNonZeroes",
+                "accessType": "ReadOnly",
+                "fillType": "file",
+                "path": "/path"
+            },
+            {
+                "name": "rowDelimiters",
+                "type": "int",
+                "length": "numRows+1",
+                "accessType": "ReadOnly",
+                "fillType": "file",
+                "path": "/path"
+            },
+            {
+                "name": "d_vec",
+                "type": "double",
+                "length": "numRows",
+                "accessType": "ReadOnly",
+                "fillType": "file",
+                "path": "/path"
+            },
+            {
+                "name": "numRows",
+                "type": "int",
+                "values": 1,
+                "accessType": "ReadOnly"
+            },
+            {
+                "name": "d_out",
+                "type": "double",
+                "length": "numRows",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        },
+        {
+            "name": "spmv_csr_vector_kernel",
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "X": "numRows / BLOCK_SIZE",
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": null,
+                    "stream": null
+                }
+            },
+        
+            "arguments": [
+                {
+                    "name": "texReader",
+                    "type": "cudaTextureObject_t",
+                    "length": 0,
+                    "accessType": "ReadOnly",
+                    "value": "d_idata"
+                },
+                {
+                    "name": "d_val",
+                    "type": "double",
+                    "length": "numNonZeroes",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "d_cols",
+                    "type": "int",
+                    "length": "numNonZeroes",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "rowDelimiters",
+                    "type": "int",
+                    "length": "numRows+1",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "d_vec",
+                    "type": "double",
+                    "length": "numRows",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "numRows",
+                    "type": "int",
+                    "values": 1,
+                    "accessType": "ReadOnly"
+                },
+                {
+                    "name": "d_out",
+                    "type": "double",
+                    "length": "numRows",
+                    "accessType": "ReadWrite",
+                    "fillType": "uninitialized"
+                }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        },
+        {
+            "name": "spmv_ellpackr_kernel",
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "X": "numRows / BLOCK_SIZE",
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": null,
+                    "stream": null
+                }
+            },
+        
+            "arguments": [
+                {
+                    "name": "texReader",
+                    "type": "cudaTextureObject_t",
+                    "length": 0,
+                    "accessType": "ReadOnly",
+                    "value": "d_idata"
+                },
+                {
+                    "name": "d_val",
+                    "type": "double",
+                    "length": "maxrl*cmSize",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "d_cols",
+                    "type": "int",
+                    "length": "maxrl*cmSize",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "d_rowLengths",
+                    "type": "int",
+                    "length": "cmSize",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "d_vec",
+                    "type": "double",
+                    "length": "numRows",
+                    "accessType": "ReadOnly",
+                    "fillType": "file",
+                    "path": "/path"
+                },
+                {
+                    "name": "cmSize",
+                    "type": "int",
+                    "values": 1,
+                    "accessType": "ReadOnly"
+                },
+                {
+                    "name": "d_out",
+                    "type": "double",
+                    "length": "paddedSize",
+                    "accessType": "ReadWrite",
+                    "fillType": "uninitialized"
+                }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        }
+    ]
+}
+  

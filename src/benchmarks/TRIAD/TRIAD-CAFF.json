@@ -1,0 +1,98 @@
+{
+    "general": {
+        "formatVersion": "0.0.1"
+    },
+    "configurationSpace": {
+        "tuningParameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int32",
+                "values": "list(range(32, 1024+1, 32))",
+                "default": 128
+            },
+            {
+                "name": "LOOP_UNROLL_TRIAD",
+                "type": "int32",
+                "values": [0],
+                "default": 1
+            },
+            {
+                "name": "WORK_PER_THREAD",
+                "type": "int32",
+                "values": [1],
+                "default": 1
+            }
+        ],
+		"constraints": []
+    },
+    "kernelSpecification":
+        {
+            "language": "CUDA",
+            "compilerOptions": ["-std=c++11"],
+            "kernelName": "triad",
+            "kernelFile": "triad_kernel.cu",
+            "benchmarkName": "TRIAD",
+            "blockSize": {
+                "X": "BLOCK_SIZE",
+                "Y": 1,
+                "Z": 1
+            },
+            "gridSize": {
+                "X": "(4096//BLOCK_SIZE//WORK_PER_THREAD) + 1",
+                "Y": 1,
+                "Z": 1
+            },
+            "benchmarkConfig": {
+                "PRECISION": 32
+            },
+            "dataSize": 4096,
+            "iterations": 1000,
+            "arguments": [
+            {
+                "name": "A",
+                "type": "double",
+                "length": 4096,
+                "accessType": "ReadOnly",
+                "memoryType": "vector",
+                "fillType": "random"
+            },
+            {
+                "name": "B",
+                "type": "double",
+                "length": 4096,
+                "accessType": "ReadOnly",
+                "fillType": "random",
+                "memoryType": "vector"
+            },
+            {
+                "name": "C",
+                "type": "double",
+                "length": 4096,
+                "memoryType": "vector",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "s",
+                "type": "double",
+                "value": 1.75,
+                "length": 1,
+                "memoryType": "vector",
+                "fillType": "constant",
+                "accessType": "ReadOnly"
+            },
+            {
+                "name": "numberOfElements",
+                "type": "int",
+                "value": 4096,
+                "memoryType": "scalar",
+                "accessType": "ReadOnly"
+            }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        }
+}
+  

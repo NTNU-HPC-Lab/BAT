@@ -1,0 +1,87 @@
+{
+    "general": {
+        "formatVersion": "0.0.1"
+    },
+    "metadata": {
+      "types": {
+        "float2": {
+          "x": "float",
+          "y": "float"
+        },
+        "double2": {
+          "x": "double",
+          "y": "double"
+        }
+      }
+    },
+    "configurationSpace": {
+        "tuningParameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int",
+                "values": "[2**i for i in range(5, 11)]",
+                "default": 256
+            },
+            {
+                "name": "TEXTURE_MEMORY",
+                "type": "int",
+                "values": [0],
+                "default": 1
+            },
+            {
+                "name": "WORK_PER_THREAD",
+                "type": "int",
+                "values": [1],
+                "default": 1
+            }
+        ],
+		"constraints": []
+    },
+    "kernelSpecification": {
+        "language": "CUDA",
+        "compilerOptions": [
+            "-std=c++11"
+        ],
+        "kernelName": "FFT512_device",
+        "kernelFile": "fft.cu",
+        "benchmarkName": "FFT",
+        "blockSize": {
+            "X": 64,
+            "Y": 1,
+            "Z": 1
+        },
+        "gridSize": {
+            "X": 65536,
+            "Y": 2,
+            "Z": 1
+        },
+        "dataSize": 73728,
+        "jitify": true,
+        "iterations": 3000,
+        "shared_memory": 4609,
+        "stream": null,
+        "benchmarkConfig": {
+            "PRECISION": 32,
+            "nffts": 256,
+            "halfnffts": 128,
+            "half_n_cmplx": 65536,
+            "N": 131072,
+            "used_bytes": 1048576
+        },
+        "arguments": [
+        {
+            "name": "work",
+            "type": "float2",
+            "length": 131072,
+            "memoryType": "Vector",
+            "accessType": "ReadWrite",
+            "fillType": "random"
+        }
+      ]
+    },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  
