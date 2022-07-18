@@ -98,7 +98,7 @@ class CupyReader:
         kernel(grid=grid_dim, block=block_dim, args=args_tuple, shared_mem=shared_mem_size)
 
     def get_kernel_instance(self, kernel_name, compiler_options):
-        jitify = self.kernel_spec.get("jitify", False)
+        jitify = self.spec["benchmarkConfig"].get("jitify", False)
         with open(get_kernel_path(self.spec), 'r') as f:
             module = cp.RawModule(code=f.read(), name_expressions=[],
                                   options=tuple(compiler_options), jitify=jitify)
@@ -146,6 +146,8 @@ class CupyReader:
 
         if self.spec["benchmarkConfig"].get("iterations"):
             launch_config["ITERATIONS"] = eval(str(self.spec["benchmarkConfig"]["iterations"]))
+        if self.spec["benchmarkConfig"].get("PRECISION"):
+            launch_config["PRECISION"] = self.spec["benchmarkConfig"]["PRECISION"]
         if kernel_spec.get("sharedMemory"):
             launch_config["SHARED_MEMORY_SIZE"] = eval(str(kernel_spec["sharedMemory"]))
 
