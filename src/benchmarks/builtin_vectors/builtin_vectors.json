@@ -1,32 +1,8 @@
 {
     "general": {
-        "formatVersion": "0.0.1"
-    },
-    "metadata": {
-      "types": {
-        "float3": {
-          "x": "float",
-          "y": "float",
-          "z": "float"
-        },
-        "float4": {
-          "x": "float",
-          "y": "float",
-          "z": "float",
-          "w": "float"
-        },
-        "double3": {
-          "x": "double",
-          "y": "double",
-          "z": "double"
-        },
-        "double4": {
-          "x": "double",
-          "y": "double",
-          "z": "double",
-          "w": "double"
-        }
-      }
+        "formatVersion": "0.0.1",
+        "benchmarkName": "builtin_vectors",
+        "benchmarksPath": "src/benchmarks"
     },
     "configurationSpace": {
         "tuningParameters": [
@@ -39,34 +15,29 @@
         ],
 		"constraints": []
     },
+    "benchmarkConfig": {
+      "dataSize": 4096,
+      "iterations": 1000
+    },
     "kernelSpecification": {
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
+        "benchmarkPath": "src/benchmarks",
+        "benchmarkName": "builtin_vectors",
         "kernelName": "sum_kernel",
         "kernelFile": "builtin_vectors.cu",
-        "benchmarkName": "builtin_vectors",
         "blockSize": {
             "X": "BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
         "gridSize": {
-            "X": "(dataSize + BLOCK_SIZE - 1) // BLOCK_SIZE",
+            "X": "(4096 + BLOCK_SIZE - 1) // BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
-        "benchmarkConfig": {},
-        "dataSize": 4096,
-        "iterations": 1000,
-        "modifiers": {
-            "type": "block_size",
-            "dimension": "X",
-            "parameter": "WORK_PER_THREAD",
-            "action": "divide"
-        },
         "shared_memory": null,
         "stream": null,
-
         "arguments": [
         {
             "name": "lhs",
@@ -84,23 +55,49 @@
             "accessType": "ReadOnly",
             "fillType": "random"
         },
-          {
-            "name": "out",
-            "type": "double3",
-            "length": 4096,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "uninitialized"
-          },
-          {
-            "name": "N",
-            "type": "int",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": "4096"
-          }
+        {
+          "name": "out",
+          "type": "double3",
+          "length": 4096,
+          "memoryType": "Vector",
+          "accessType": "ReadWrite",
+          "fillType": "uninitialized"
+        },
+        {
+          "name": "N",
+          "type": "int",
+          "memoryType": "Scalar",
+          "accessType": "ReadOnly",
+          "value": "4096"
+        }
       ]
     },
+  "metadata": {
+    "types": {
+      "float3": {
+        "x": "float",
+        "y": "float",
+        "z": "float"
+      },
+      "float4": {
+        "x": "float",
+        "y": "float",
+        "z": "float",
+        "w": "float"
+      },
+      "double3": {
+        "x": "double",
+        "y": "double",
+        "z": "double"
+      },
+      "double4": {
+        "x": "double",
+        "y": "double",
+        "z": "double",
+        "w": "double"
+      }
+    }
+  },
     "verification": {
         "type": "reference_CPU",
         "path": "/path/reference.cpp"

@@ -140,7 +140,7 @@ def populate_data(arg, kernel_spec):
 def get_launch_config(kernel_spec, tuning_config):
     for name, value in tuning_config.items():
         locals()[name] = value
-    locals()["dataSize"] = kernel_spec["dataSize"]
+    # locals()["dataSize"] = kernel_spec["dataSize"]
 
     launch_config = {
         "GRID_SIZE_X": eval(str(kernel_spec["gridSize"]["X"])),

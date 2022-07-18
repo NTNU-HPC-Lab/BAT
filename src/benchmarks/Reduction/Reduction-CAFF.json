@@ -25,29 +25,30 @@
         ],
 		"constraints": []
     },
+    "benchmarkConfig": {
+        "PRECISION": 64,
+        "dataSize": 65536,
+        "iterations": 1000
+    },
     "kernelSpecification": {
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
-        "benchmarkName": "Reduction",
         "kernelName": "reduce",
         "kernelFile": "reduction_kernel.cu",
+        "benchmarkPath": "src/benchmarks",
+        "benchmarkName": "Reduction",
         "blockSize": {
-	    "X": "BLOCK_SIZE",
-	    "Y": 1,
-	    "Z": 1
-	},
+	        "X": "BLOCK_SIZE",
+	        "Y": 1,
+	        "Z": 1
+	    },
         "gridSize": {
-            "X": "dataSize//BLOCK_SIZE",
+            "X": "65536//BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
         "sharedMemory": "8*BLOCK_SIZE_X",
-        "iterations": 1000,
         "stream": null,
-	"benchmarkConfig": {
-		"PRECISION": 64
-	}, 
-	"dataSize": 65536,
         "arguments": [
         {
             "name": "d_idata",

@@ -9,31 +9,37 @@ from src.tuners.optuna.optuna_runner import Optuna
 log = logging.getLogger(__name__)
 
 
-def main(tuner):
-    if tuner == "opentuner":
-        openparser = argparse.ArgumentParser(parents=opentuner.argparsers())
-        openparser.add_argument('--size', type=int, default=1, help='data set size for benchmark')
-        openparser.add_argument('--precision', type=int, default=32, help='precision for benchmark')
-        openparser.add_argument('--json', type=str, default="./benchmarks/MD5Hash-CAFF.json", help='location of T1 json file')
-        openparser.add_argument('--testing', type=str, default=False, help='If the execution is a test or not')
+def run_opentuner(args):
+    time = 1  # Run the tuner for 5 seconds
+    args2 = args
+    args2.stop_after = time
+    OpenTunerT.main(args2)
 
-        args = openparser.parse_args()
 
-        print("Running", args.json)
-        OpenTunerT.main(args)
-    if tuner == "optuna":
-        optunaparser = argparse.ArgumentParser()
-        optunaparser.add_argument('--size', type=int, default=1, help='data set size for benchmark')
-        optunaparser.add_argument('--json', type=str, default="./benchmarks/MD5Hash-CAFF.json",
-                                  help='location of T1 json file')
-        optunaparser.add_argument('--testing', type=str, default=False, help='If the execution is a test or not')
+def run_optuna(args):
+    optuna_runner = Optuna()
+    print(optuna_runner.main(args))
 
-        args = optunaparser.parse_args()
 
-        optuna_runner = Optuna()
-        print(optuna_runner.main(args))
+runner_dict = {
+    "opentuner": run_opentuner,
+    "optuna": run_optuna
+}
+
+
+def main():
+    parser = argparse.ArgumentParser(parents=opentuner.argparsers())
+    parser.add_argument('--testing', type=str, default=False, help='If the execution is a test or not')
+    parser.add_argument('--tuner', type=str, default=False, nargs='+', help='Which tuner to use')
+    parser.add_argument('--json', type=str, default=False, help='Path to T1-compliant JSON')
+    parser.add_argument('--benchmark', type=str, default=False, nargs='+', help='Which benchmarks to run')
+    args = parser.parse_args()
+
+    for tuner in args.tuner:
+        if tuner is not None:
+            print("Running {} with {}".format(tuner, args))
+            runner_dict[tuner](args)
 
 
 if __name__ == '__main__':
-    # main("opentuner")
-    main("optuna")
+    main()

@@ -37,13 +37,23 @@
         ],
 		"constraints": []
     },
+    "benchmarkConfig": {
+        "dataSize": 73728,
+        "jitify": true,
+        "iterations": 3000,
+        "PRECISION": 32,
+        "nffts": 256,
+        "halfnffts": 128,
+        "half_n_cmplx": 65536,
+        "N": 131072,
+        "used_bytes": 1048576
+    },
     "kernelSpecification": {
         "language": "CUDA",
-        "compilerOptions": [
-            "-std=c++11"
-        ],
+        "compilerOptions": ["-std=c++11"],
         "kernelName": "FFT512_device",
         "kernelFile": "fft.cu",
+        "benchmarkPath": "src/benchmarks",
         "benchmarkName": "FFT",
         "blockSize": {
             "X": 64,
@@ -55,19 +65,8 @@
             "Y": 2,
             "Z": 1
         },
-        "dataSize": 73728,
-        "jitify": true,
-        "iterations": 3000,
         "shared_memory": 4609,
         "stream": null,
-        "benchmarkConfig": {
-            "PRECISION": 32,
-            "nffts": 256,
-            "halfnffts": 128,
-            "half_n_cmplx": 65536,
-            "N": 131072,
-            "used_bytes": 1048576
-        },
         "arguments": [
         {
             "name": "work",

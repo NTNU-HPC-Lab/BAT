@@ -25,12 +25,18 @@
         ],
 		"constraints": []
     },
+    "benchmarkConfig": {
+        "PRECISION": 32,
+        "dataSize": 4096,
+        "iterations": 1000
+    },
     "kernelSpecification":
         {
             "language": "CUDA",
             "compilerOptions": ["-std=c++11"],
             "kernelName": "triad",
             "kernelFile": "triad_kernel.cu",
+            "benchmarkPath": "src/benchmarks",
             "benchmarkName": "TRIAD",
             "blockSize": {
                 "X": "BLOCK_SIZE",
@@ -42,11 +48,6 @@
                 "Y": 1,
                 "Z": 1
             },
-            "benchmarkConfig": {
-                "PRECISION": 32
-            },
-            "dataSize": 4096,
-            "iterations": 1000,
             "arguments": [
             {
                 "name": "A",

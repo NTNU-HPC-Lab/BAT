@@ -5,10 +5,12 @@ import cupy as cp
 from src.reader.T1_specification import populate_args, get_launch_config
 from src.benchmarks.correctness import correctness_funcs
 from src.reader.util import get_kernel_path
+from src.readers.python.cuda import cupy_reader
+from src.readers.python.cuda.cupy_reader import CupyReader
 
 DEBUG = False
 
-
+"""
 def launch_kernel(args_tuple, launch_config, kernel):
     grid_dim = (launch_config["GRID_SIZE_X"], launch_config["GRID_SIZE_Y"], launch_config["GRID_SIZE_Z"])
     block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
@@ -19,7 +21,7 @@ def launch_kernel(args_tuple, launch_config, kernel):
         for arg in args_tuple:
             print(arg, arg.size)
     t0 = time.time()
-    for i in range(launch_config.get("ITERATIONS", 10)):
+    for i in range(launch_config.get("ITERATIONS", 1000)):
         kernel(grid=grid_dim, block=block_dim, args=args_tuple, shared_mem=shared_mem_size)
     duration = time.time() - t0
     if DEBUG:
@@ -57,13 +59,13 @@ def run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config):
     correctness = correctness_funcs[kernel_spec["kernelName"]]
     correctness(tuple(args), args_tuple, tuning_config, launch_config)
     return result
+"""
 
 
-def core(json_path, benchmark_config, tuning_config, testing):
+def core(json_path, tuning_config, testing):
     with open(json_path, 'r') as f:
         r = json.load(f)
 
-    kernel_spec = r["kernelSpecification"]
-    launch_config = get_launch_config(kernel_spec, tuning_config)
-
-    return run_kernel(kernel_spec, launch_config, tuning_config, benchmark_config)
+    reader = CupyReader(json_path)
+    launch_config = reader.get_launch_config(tuning_config)
+    return reader.run_kernel(launch_config, tuning_config)
