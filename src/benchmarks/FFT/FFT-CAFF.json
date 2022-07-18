@@ -1,6 +1,8 @@
 {
     "general": {
-        "formatVersion": "0.0.1"
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "FFT"
     },
     "metadata": {
       "types": {
@@ -19,8 +21,8 @@
             {
                 "name": "BLOCK_SIZE",
                 "type": "int",
-                "values": "[2**i for i in range(5, 11)]",
-                "default": 256
+                "values": [64],
+                "default": 64
             },
             {
                 "name": "TEXTURE_MEMORY",
@@ -31,7 +33,7 @@
             {
                 "name": "WORK_PER_THREAD",
                 "type": "int",
-                "values": [1],
+                "values": [1, 2],
                 "default": 1
             }
         ],
@@ -61,17 +63,17 @@
             "Z": 1
         },
         "gridSize": {
-            "X": 65536,
-            "Y": 2,
+            "X": 512,
+            "Y": 1,
             "Z": 1
         },
-        "shared_memory": 4609,
+        "shared_memory": 4608,
         "stream": null,
         "arguments": [
         {
             "name": "work",
             "type": "float2",
-            "length": 131072,
+            "length": 262144,
             "memoryType": "Vector",
             "accessType": "ReadWrite",
             "fillType": "random"
