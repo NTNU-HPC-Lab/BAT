@@ -74,7 +74,7 @@ T2 make_T2(T x, T y)
 /*float2 make_T2<float2,float>(float x, float y)
 {
     return make_float2(x, y);
-}
+}*/
 
 //template <> inline __device__
 /*double2 make_T2<double2,double>(double x, double y)
@@ -276,10 +276,9 @@ void load_8( T2 *a, T2 *x, int sx )
 inline __device__
 void loadx_8( T2 *a, T *x, int sx )
 {
-    for( int i = 0; i < 8; i++ )
-        a[i].x = 0;
-        // a[i].x = x[i*sx];
-        // a[i].x = x[0];
+    for( int i = 0; i < 8; i++ ) {
+        a[i].x = x[i*sx];
+    }
 }
 inline __device__
 void loadx_16( T2 *a, T *x, int sx )
@@ -396,10 +395,8 @@ void transpose_8( T2 *a, T *s, int ds, T *l, int dl, int sync = 0xf )
     storex_8( a, s, ds );  if( sync&8 ) __syncthreads();
     loadx_8 ( a, l, dl );  if( sync&4 ) __syncthreads();
 
-    /*
     storey_8( a, s, ds );  if( sync&2 ) __syncthreads();
     loady_8 ( a, l, dl );  if( sync&1 ) __syncthreads();
-    */
 }
 /*
 inline __device__
@@ -441,7 +438,6 @@ void FFT512_device( T2 *work )
     twiddle_8( a, tid, 512 );
     transpose_8( a, &smem[hi*8+lo], 66, &smem[lo*66+hi], 8 );
 
-/*
     FFT8( a );
 
     twiddle_8( a, hi, 64);
@@ -450,7 +446,6 @@ void FFT512_device( T2 *work )
     FFT8( a );
 
     store_8( a, work, 64 );
-    */
 }
 
 // template<class T2, class T>
