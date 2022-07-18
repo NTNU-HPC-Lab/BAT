@@ -1,6 +1,8 @@
 {
     "general": {
-        "formatVersion": "0.0.1"
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "MD5Hash"
     },
     "configurationSpace": {
         "tuningParameters": [
