@@ -1,6 +1,8 @@
 {
     "general": {
-        "formatVersion": "0.0.1"
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "MD5Hash"
     },
     "configurationSpace": {
         "tuningParameters": [
@@ -55,9 +57,14 @@
         ],
 		"constraints": []
     },
+    "benchmarkConfig": {
+        "dataSize": 1000000,
+        "iterations": 1000
+    },
     "kernelSpecification": {
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
+        "benchmarkPath": "src/benchmarks",
         "benchmarkName": "MD5Hash",
         "kernelName": "FindKeyWithDigest_Kernel",
         "kernelFile": "md5hash_kernel.h",
@@ -67,16 +74,12 @@
             "Z": 1
         },
         "gridSize": {
-            "X": "(dataSize//BLOCK_SIZE//WORK_PER_THREAD_FACTOR) + 1",
+            "X": "(1000000//BLOCK_SIZE//WORK_PER_THREAD_FACTOR) + 1",
             "Y": 1,
             "Z": 1
         },
-        "dataSize": 1000000,
-        "iterations": 1000,
         "shared_memory": null,
         "stream": null,
-	"benchmarkConfig": {
-	},
         "arguments": [
         {
             "name": "searchDigest0",

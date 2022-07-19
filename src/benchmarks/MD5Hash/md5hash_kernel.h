@@ -201,10 +201,10 @@ void IndexToKey(unsigned int index,
                                     int byteLength, int valsPerByte,
                                     unsigned char vals[8])
 {
-    #if UNROLL_LOOP_1
-    #pragma unroll
+    #if UNROLL_LOOP_1 == 1
+    #pragma unroll 1
     #else
-    #pragma unroll(1)
+    #pragma unroll(UNROLL_LOOP_1)
     #endif
     for (int i = 0; i < 8; i++) {
         vals[i] = index % valsPerByte;
@@ -259,19 +259,19 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
                     
                 foundIndex[0] = startindex + j;
 
-                #if UNROLL_LOOP_2
-                #pragma unroll
+                #if UNROLL_LOOP_2 == 1
+                #pragma unroll 1
                 #else
-                #pragma unroll(1)
+                #pragma unroll(UNROLL_LOOP_2)
                 #endif
                 for (int i = 0; i < 8; i++) {
                     foundKey[i] = key[i];
                 }
 
-                #if UNROLL_LOOP_3
-                #pragma unroll
+                #if UNROLL_LOOP_3 == 1
+                #pragma unroll 1
                 #else
-                #pragma unroll(1)
+                #pragma unroll(UNROLL_LOOP_3)
                 #endif
                 for (int i = 0; i < 4; i++) {
                     foundDigest[i] = digest[i];

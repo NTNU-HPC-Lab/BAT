@@ -51,11 +51,17 @@
         ],
 		"constraints": []
     },
+    "benchmarkConfig": {
+        "PRECISION": 32,
+        "dataSize": 73728,
+        "iterations": 1000
+    },
     "kernelSpecification": {
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
         "kernelName": "compute_lj_force",
         "kernelFile": "md_kernel.cu",
+        "benchmarkPath": "src/benchmarks",
         "benchmarkName": "MD",
         "blockSize": {
             "X": "BLOCK_SIZE",
@@ -67,13 +73,8 @@
             "Y": 1,
             "Z": 1
         },
-        "dataSize": 73728,
-        "iterations": 1000,
         "shared_memory": null,
         "stream": null,
-	"benchmarkConfig": {
-		"PRECISION": 32
-	},
         "arguments": [
         {
             "name": "force3",
