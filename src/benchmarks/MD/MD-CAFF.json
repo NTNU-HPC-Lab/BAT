@@ -75,7 +75,7 @@
             "Y": 1,
             "Z": 1
         },
-        "shared_memory": null,
+        "sharedMemory": null,
         "stream": null,
         "arguments": [
         {

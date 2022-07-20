@@ -33,7 +33,7 @@ extern "C" __global__ void triad(DATA_TYPE* A, DATA_TYPE* B, DATA_TYPE* C, DATA_
     #if LOOP_UNROLL_TRIAD == 1
     #pragma unroll 1
     #else
-    #pragma unroll(WORK_PER_THREAD)
+    #pragma unroll(LOOP_UNROLL_TRIAD)
     #endif
     for (int i = 0; i < WORK_PER_THREAD; i++) {
         int threadId = gid + i;
