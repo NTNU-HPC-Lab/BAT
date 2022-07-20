@@ -54,10 +54,11 @@ __global__ void FindKeyWithDigest_Kernel(unsigned int searchDigest0,
 /// It also assumes words[] has all zero bits except the chars of interest.
 
 __host__ __device__ 
-#if INLINE_1
+#if INLINE_1 == 2
 __forceinline__
-#else
+#elif INLINE_2 == 0
 __noinline__ 
+#else
 #endif
 void md5_2words(unsigned int *words,
                                            unsigned int len,
@@ -192,10 +193,11 @@ void md5_2words(unsigned int *words,
 // ****************************************************************************
 
 __host__ __device__ 
-#if INLINE_2
+#if INLINE_2 == 2
 __forceinline__
+#elif INLINE_2 == 0
+__noinline__ 
 #else
-__noinline__  
 #endif
 void IndexToKey(unsigned int index,
                                     int byteLength, int valsPerByte,

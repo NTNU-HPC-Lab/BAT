@@ -216,3 +216,4 @@ temp_*
 
 # Ignore VSCode directory
 .vscode
+.idea

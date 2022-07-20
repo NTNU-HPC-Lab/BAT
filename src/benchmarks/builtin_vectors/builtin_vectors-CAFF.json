@@ -8,7 +8,7 @@
         "tuningParameters": [
             {
                 "name": "BLOCK_SIZE",
-                "type": "int32",
+                "type": "int",
                 "values": "list(range(32, 1024+1, 32))",
                 "default": 256
             }

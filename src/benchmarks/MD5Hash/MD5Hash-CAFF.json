@@ -21,13 +21,13 @@
             {
                 "name": "INLINE_1",
                 "type": "int",
-                "values": [0, 1],
+                "values": [0, 1, 2],
                 "default": 0
             },
             {
                 "name": "INLINE_2",
                 "type": "int",
-                "values": [0, 1],
+                "values": [0, 1, 2],
                 "default": 0
             },
             {
