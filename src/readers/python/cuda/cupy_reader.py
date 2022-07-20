@@ -35,7 +35,7 @@ class CupyReader:
         # random.seed(10)
         t = arg["fillType"]
         if t == "file":
-            with open(get_data_path(self.kernel_spec, arg["path"]), 'r') as f:
+            with open(get_data_path(self.spec, arg["path"]), 'r') as f:
                 arg_data = f.read().splitlines()
             return self.type_conv_vec(arg_data, arg)
         if t == "random":
