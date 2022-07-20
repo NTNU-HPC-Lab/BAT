@@ -7,17 +7,16 @@ import opentuner
 from opentuner.measurement import MeasurementInterface
 from opentuner.search.manipulator import (ConfigurationManipulator, EnumParameter)
 
-from src.readers.python import T1_specification, reader
 from src.readers.python.cuda.cupy_reader import CupyReader
 
 
 class OpenTunerT(MeasurementInterface):
     def __init__(self, *pargs, **kwargs):
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
-        self.spec = T1_specification.get_spec(self.args.json)
+        self.reader = CupyReader(self.args.json)
+        self.spec = self.reader.get_spec(self.args.json)
         self.config_space = self.spec["configurationSpace"]
         self.kernel_spec = self.spec["kernelSpecification"]
-        self.runner = CupyReader(self.args.json)
 
     def run(self, desired_result, input, limit):
         tuning_config = desired_result.configuration.data
