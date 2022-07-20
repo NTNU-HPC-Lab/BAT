@@ -4,7 +4,6 @@ from builtins import str
 import ast
 
 import kernel_tuner
-from pathlib import Path
 from collections import OrderedDict
 
 from src.readers.python.cuda.cupy_reader import CupyReader
@@ -50,10 +49,7 @@ class KernelTuner:
         kernel_name = kernel_spec["kernelName"]
 
         # read in kernel
-        kernel_string = ""
-        path = Path(__file__).parent / "../../benchmarks" / kernel_spec["benchmarkName"] / kernel_spec["kernelFile"]
-        with open(path, "r") as fp:
-            kernel_string += fp.read()
+        kernel_string = self.reader.get_kernel_string()
 
         # get arguments
         args = self.reader.populate_args()
@@ -63,14 +59,6 @@ class KernelTuner:
         block_size_names = list(n for n in kernel_spec["blockSize"].values() if isinstance(n, str))
         grid_div_x = []
         grid_div_y = []
-        # mods = kernel_spec["modifiers"]
-        # if mods and mods["type"] == "block_size" and mods["action"] == 'divide':
-        #     if mods["dimension"] == "X":
-        #         grid_div_x = list([mods["parameter"]])
-        #     elif mods["dimension"] == "Y":
-        #         grid_div_y = list([mods["parameter"]])
-        #     else:
-        #         print(f"Unkown modifier dimension {mods['dimension']}")
 
         # add tune params
         tune_params = OrderedDict()
@@ -78,9 +66,10 @@ class KernelTuner:
             tune_params[param["name"]] = eval(str(param["values"]))
 
         # add restrictions
+        restrict = list()
         if "constraints" in self.spec:
             for constraint in self.spec["constraints"]:
-                restrict += constraint
+                restrict.append(constraint)
 
         results, env = kernel_tuner.tune_kernel(kernel_name, kernel_string, problem_size, args, tune_params, lang='cupy', block_size_names=block_size_names,
                                                 restrictions=restrict, verbose=verbose, quiet=quiet, grid_div_x=grid_div_x, grid_div_y=grid_div_y, device=0,

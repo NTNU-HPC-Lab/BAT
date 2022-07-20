@@ -11,12 +11,13 @@ from src.readers.python.util import type_conv_dict, custom_type_dict, get_kernel
 
 
 class CupyReader:
+
     def __init__(self, json_path):
         self.spec = self.get_spec(json_path)
         self.kernel_spec = self.spec["kernelSpecification"]
 
     def get_type_length(self, t):
-        return custom_type_dict.get(t, {"length": 1})["length"]
+        return custom_type_dict.get(t, { "length": 1 })["length"]
 
     def get_spec(self, json_path):
         with open(json_path, 'r') as f:
@@ -25,7 +26,10 @@ class CupyReader:
 
     def handle_custom_data_type(self, arg_data, arg):
         t = custom_type_dict[arg["type"]]
-        return np.dtype({'names': t["names"], 'formats': t["types"]})
+        return np.dtype({
+            'names': t["names"],
+            'formats': t["types"]
+        })
 
     def handle_vector_data(self, arg):
         # random.seed(10)
@@ -49,9 +53,8 @@ class CupyReader:
     def type_conv_scalar(self, arg_data, arg):
         if arg["type"] in type_conv_dict.keys():
             return type_conv_dict[arg["type"]](arg_data)
-        else:  # custom data type
-            return (custom_type_dict[arg["type"]]["repr_type"]).view(
-                self.handle_custom_data_type(arg_data, arg))(arg_data)
+        else:    # custom data type
+            return (custom_type_dict[arg["type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
 
     def populate_args(self):
         return [self.populate_data(arg) for arg in self.kernel_spec["arguments"]]
@@ -81,9 +84,8 @@ class CupyReader:
     def type_conv_vec(self, arg_data, arg):
         if arg["type"] in type_conv_dict.keys():
             return cp.asarray(arg_data, dtype=type_conv_dict[arg["type"]])
-        else:  # custom data type
-            return cp.asarray(arg_data, dtype=custom_type_dict[arg["type"]]["repr_type"]).view(
-                self.handle_custom_data_type(arg_data, arg))
+        else:    # custom data type
+            return cp.asarray(arg_data, dtype=custom_type_dict[arg["type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
 
     def handle_scalar_data(self, arg):
         if arg["type"] == "cudaTextureObject_t":
@@ -100,8 +102,7 @@ class CupyReader:
     def get_kernel_instance(self, kernel_name, compiler_options):
         jitify = self.spec["benchmarkConfig"].get("jitify", False)
         with open(get_kernel_path(self.spec), 'r') as f:
-            module = cp.RawModule(code=f.read(), name_expressions=[],
-                                  options=tuple(compiler_options), jitify=jitify)
+            module = cp.RawModule(code=f.read(), name_expressions=[], options=tuple(compiler_options), jitify=jitify)
         func = module.get_function(kernel_name)
         return func
 
@@ -115,6 +116,13 @@ class CupyReader:
     def get_kernel(self, compiler_options):
         kernel_name = self.kernel_spec["kernelName"]
         return self.get_kernel_instance(kernel_name, compiler_options)
+
+    def get_kernel_string(self) -> str:
+        """ Reads in the kernel as a string """
+        kernel_string = ""
+        with open(get_kernel_path(self.spec), 'r') as f:
+            kernel_string += f.read()
+        return kernel_string
 
     def run_kernel(self, launch_config, tuning_config):
         compiler_options = self.generate_compiler_options(tuning_config)
