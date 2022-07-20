@@ -1,10 +1,8 @@
-from __future__ import print_function
-
 from builtins import str
 import ast
+from collections import OrderedDict
 
 import kernel_tuner
-from collections import OrderedDict
 
 from src.readers.python.cuda.cupy_reader import CupyReader
 
@@ -47,12 +45,18 @@ class KernelTuner:
         config_space = self.spec["configurationSpace"]
         kernel_spec = self.reader.kernel_spec
         kernel_name = kernel_spec["kernelName"]
+        language = kernel_spec["language"]
+        if language != "CUDA":
+            raise NotImplementedError("Currently only CUDA kernels have been implemented")
 
         # read in kernel
         kernel_string = self.reader.get_kernel_string()
 
         # get arguments
         args = self.reader.populate_args()
+        iterations = eval(str(self.spec["benchmarkConfig"]["iterations"]))    # number of times each kernel configuration is ran
+        compiler_options = kernel_spec["compilerOptions"]
+        # precision = self.spec["benchmarkConfig"]["PRECISION"]    # whether to use single or double precision (encoded as 32 or 64)
 
         # get problem-, block-, thread-, and grid sizes
         problem_size = self.problemsize_from_gridsizes(kernel_spec["gridSize"])
@@ -73,5 +77,6 @@ class KernelTuner:
 
         results, env = kernel_tuner.tune_kernel(kernel_name, kernel_string, problem_size, args, tune_params, lang='cupy', block_size_names=block_size_names,
                                                 restrictions=restrict, verbose=verbose, quiet=quiet, grid_div_x=grid_div_x, grid_div_y=grid_div_y, device=0,
-                                                platform=0, iterations=32, cache="BAT_" + kernel_name + "_" + gpu_name, strategy=strategy,
-                                                strategy_options=strategy_options, simulation_mode=simulation_mode)
+                                                platform=0, iterations=iterations, cache="BAT_" + kernel_name + "_" + gpu_name,
+                                                compiler_options=compiler_options, strategy=strategy, strategy_options=strategy_options,
+                                                simulation_mode=simulation_mode)
