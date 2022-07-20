@@ -54,10 +54,10 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned in
     __syncthreads();
 
     // Reduce the contents of shared memory
-    #if LOOP_UNROLL_REDUCE_1
-    #pragma unroll
+    #if LOOP_UNROLL_REDUCE_1 == 1
+    #pragma unroll 1
     #else
-    #pragma unroll(1)
+    #pragma unroll (LOOP_UNROLL_REDUCE_1)
     #endif
     for (int i = BLOCK_SIZE; i > 64; i /= 2) {
         if (tid < (i / 2)) {
@@ -67,10 +67,10 @@ reduce(const T* __restrict__ g_idata, T* __restrict__ g_odata, const unsigned in
     }
 
     if (tid < warpSize) {
-        #if LOOP_UNROLL_REDUCE_2
-        #pragma unroll
+        #if LOOP_UNROLL_REDUCE_2 == 1
+        #pragma unroll 1
         #else
-        #pragma unroll(1)
+        #pragma unroll (LOOP_UNROLL_REDUCE_2)
         #endif
         for (int i = 64; i > 1; i /= 2) {
             if (BLOCK_SIZE >= i) {

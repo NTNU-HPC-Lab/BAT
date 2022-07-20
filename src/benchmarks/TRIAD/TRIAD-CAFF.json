@@ -1,6 +1,8 @@
 {
     "general": {
-        "formatVersion": "0.0.1"
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "TRIAD"
     },
     "configurationSpace": {
         "tuningParameters": [
@@ -13,17 +15,17 @@
             {
                 "name": "LOOP_UNROLL_TRIAD",
                 "type": "int32",
-                "values": [0],
+                "values": "list(range(1,16))",
                 "default": 1
             },
             {
                 "name": "WORK_PER_THREAD",
                 "type": "int32",
-                "values": [1],
+                "values": "list(range(1, 17))",
                 "default": 1
             }
         ],
-		"constraints": []
+		"constraints": ["LOOP_UNROLL_TRIAD <= WORK_PER_THREAD"]
     },
     "benchmarkConfig": {
         "PRECISION": 32,

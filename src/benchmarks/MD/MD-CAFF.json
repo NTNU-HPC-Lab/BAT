@@ -1,6 +1,8 @@
 {
     "general": {
-        "formatVersion": "0.0.1"
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "MD"
     },
     "metadata": {
       "types": {
@@ -45,7 +47,7 @@
             {
                 "name": "WORK_PER_THREAD",
                 "type": "int",
-                "values": [1],
+                "values": "list(range(1,11))",
                 "default": 1
             }
         ],

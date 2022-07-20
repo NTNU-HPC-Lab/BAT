@@ -62,7 +62,13 @@ template<class T2, class T> __device__ T2 make_T2(T x, T y);
 
 template <> inline __device__
 */
-inline __device__
+#if MAKE_T2_INLINE == 2
+__forceinline__
+#elif MAKE_T2_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 T2 make_T2(T x, T y)
 {
 #if PRECISION == 32
@@ -92,24 +98,50 @@ T2 make_T2(T x, T y)
 //template <class T2, class T> inline __device__
 //T2 operator*( T2 a, T2 b ) { return make_T2<T2,T>( a.x*b.x-a.y*b.y, a.x*b.y+a.y*b.x ); }
 //template <class T2, class T>
-inline __device__
+#if CMUL_INLINE == 2
+__forceinline__
+#elif CMUL_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 T2 cmul( T2 a, T2 b ) { return make_T2( a.x*b.x-a.y*b.y, a.x*b.y+a.y*b.x ); }
 //template <class T2, class T> inline __device__
 //T2 operator*( T2 a, T  b ) { return make_T2<T2,T>( b*a.x, b*a.y ); }
 //template <class T2, class T>
-inline __device__
+
+
+#if CMUL_S_INLINE == 2
+__forceinline__
+#elif CMUL_S_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 T2 cmul_s( T2 a, T  b ) { return make_T2( b*a.x, b*a.y ); }
 //template <class T2, class T>
 //inline __device__
 //T2 operator+( T2 a, T2 b ) { return make_T2<T2,T>( a.x + b.x, a.y + b.y ); }
 //template <class T2, class T>
-inline __device__
+#if CADD_INLINE == 2
+__forceinline__
+#elif CADD_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 T2 cadd( T2 a, T2 b ) { return make_T2( a.x + b.x, a.y + b.y ); }
 //template <class T2, class T>
 //inline __device__
 //T2 operator-( T2 a, T2 b ) { return make_T2<T2,T>( a.x - b.x, a.y - b.y ); }
 //template <class T2, class T>
-inline __device__
+#if CSUB_INLINE == 2
+__forceinline__
+#elif CSUB_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 T2 csub( T2 a, T2 b ) { return make_T2( a.x - b.x, a.y - b.y ); }
 
 #define COS_PI_8  0.923879533f
@@ -133,7 +165,13 @@ T2 csub( T2 a, T2 b ) { return make_T2( a.x - b.x, a.y - b.y ); }
 #define iexp_3_8   make_T2( -1, 1 )//requires post-multiply by 1/sqrt(2)
 
 // template <class T2, class T>
-inline __device__
+#if EXP_I_INLINE == 2
+__forceinline__
+#elif EXP_I_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 T2 exp_i( T phi )
 {
     return make_T2( __cosf(phi), __sinf(phi) );
@@ -142,30 +180,59 @@ T2 exp_i( T phi )
 //
 //  bit reversal
 //
-inline __device__ int rev_2( int bits )
+#if REV_2_INLINE == 2
+__forceinline__
+#elif REV_2_INLINE == 0
+__noinline__
+#else
+#endif
+__device__ int rev_2( int bits )
 {
     return bits;
 }
 
-inline __device__ int rev_4( int bits )
+#if REV_4_INLINE == 2
+__forceinline__
+#elif REV_4_INLINE == 0
+__noinline__
+#else
+#endif
+__device__ int rev_4( int bits )
 {
     int reversed[] = {0,2,1,3};
     return reversed[bits];
 }
 
-inline __device__ int rev_8( int bits )
+#if REV_8_INLINE == 2
+__forceinline__
+#elif REV_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__ int rev_8( int bits )
 {
     int reversed[] = {0,4,2,6,1,5,3,7};
     return reversed[bits];
 }
 
-inline __device__ int rev_16( int bits )
+#if REV_16_INLINE == 2
+__forceinline__
+#elif REV_16_INLINE == 0
+__noinline__
+#else
+#endif
+__device__ int rev_16( int bits )
 {
     int reversed[] = {0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15};
     return reversed[bits];
 }
 
-inline
+#if REV_4X4_INLINE == 2
+__forceinline__
+#elif REV_4X4_INLINE == 0
+__noinline__
+#else
+#endif
 __device__ int rev4x4( int bits )
 {
     int reversed[] = {0,2,1,3, 4,6,5,7, 8,10,9,11, 12,14,13,15};
@@ -177,7 +244,13 @@ __device__ int rev4x4( int bits )
 //
 #define IFFT2 FFT2
 // template<class T2, class T>
-inline __device__
+#if FFT2_INLINE == 2
+__forceinline__
+#elif FFT2_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void FFT2( T2 &a0, T2 &a1 )
 {
     T2 c0 = a0;
@@ -188,7 +261,13 @@ void FFT2( T2 &a0, T2 &a1 )
 }
 
 // template<class T2, class T>
-inline __device__
+#if FFT4_INLINE == 2
+__forceinline__
+#elif FFT4_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void FFT4( T2 &a0, T2 &a1, T2 &a2, T2 &a3 )
 {
     FFT2( a0, a2 );
@@ -200,7 +279,13 @@ void FFT4( T2 &a0, T2 &a1, T2 &a2, T2 &a3 )
 }
 
 // template<class T2, class T>
-inline __device__
+#if IFFT4_INLINE == 2
+__forceinline__
+#elif IFFT4_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void IFFT4( T2 &a0, T2 &a1, T2 &a2, T2 &a3 )
 {
     IFFT2( a0, a2 );
@@ -222,7 +307,13 @@ void IFFT4( T2 &a0, T2 &a1, T2 &a2, T2 &a3 )
 //void IFFT4_p( T2 *a ) { IFFT4( a[0], a[1], a[2], a[3] ); }
 
 // template<class T2, class T>
-inline __device__
+#if FFT8_INLINE == 2
+__forceinline__
+#elif FFT8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void FFT8( T2 *a )
 {
     FFT2( a[0], a[4] );
@@ -242,7 +333,13 @@ void FFT8( T2 *a )
 }
 
 //template<class T2, class T>
-inline __device__
+#if IFFT8_INLINE == 2
+__forceinline__
+#elif IFFT8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void IFFT8( T2 *a )
 {
     IFFT2( a[0], a[4] );
@@ -266,39 +363,96 @@ void IFFT8( T2 *a )
 //  loads
 //
 // template<int n, class T2>
-inline __device__
+#if LOAD_8_INLINE == 2
+__forceinline__
+#elif LOAD_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void load_8( T2 *a, T2 *x, int sx )
 {
+#if LOOP_UNROLL_LOAD_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_LOAD_8)
+#endif
     for( int i = 0; i < 8; i++ )
         a[i] = x[i*sx];
 }
 // template<int n, class T2, class T>
-inline __device__
+#if LOADX_8_INLINE == 2
+__forceinline__
+#elif LOADX_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void loadx_8( T2 *a, T *x, int sx )
 {
+#if LOOP_UNROLL_LOADX_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_LOADX_8)
+#endif
     for( int i = 0; i < 8; i++ ) {
         a[i].x = x[i*sx];
     }
 }
-inline __device__
+#if LOADX_16_INLINE == 2
+__forceinline__
+#elif LOADX_16_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void loadx_16( T2 *a, T *x, int sx )
 {
+#if LOOP_UNROLL_LOADX_16 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_LOADX_16)
+#endif
     for( int i = 0; i < 16; i++ )
         a[i].x = x[i*sx];
 }
 
-inline __device__
+#if LOADY_8_INLINE == 2
+__forceinline__
+#elif LOADY_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void loady_8( T2 *a, T *x, int sx )
 {
+#if LOOP_UNROLL_LOADY_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_LOADY_8)
+#endif
     for( int i = 0; i < 8; i++ )
         a[i].y = x[i*sx];
 }
-inline __device__
+#if LOADY_16_INLINE == 2
+__forceinline__
+#elif LOADY_16_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void loady_16( T2 *a, T *x, int sx )
 {
+#if LOOP_UNROLL_LOADY_16 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_LOADY_16)
+#endif
     for( int i = 0; i < 16; i++ )
         a[i].y = x[i*sx];
 }
+
+/*
 inline __device__
 void loadx_p_8( T2 *a, T *x, int *ind )
 {
@@ -323,44 +477,95 @@ void loady_p_16( T2 *a, T *x, int *ind )
     for( int i = 0; i < 16; i++ )
         a[i].y = x[ind[i]];
 }
+*/
 
 //
 //  stores, input is in bit reversed order
 //
-inline __device__
+#if STORE_8_INLINE == 2
+__forceinline__
+#elif STORE_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void store_8( T2 *a, T2 *x, int sx )
 {
-#pragma unroll
+#if LOOP_UNROLL_STORE_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_STORE_8)
+#endif
     for( int i = 0; i < 8; i++ )
         x[i*sx] = a[rev_8(i)];
 }
-inline __device__
+#if STOREX_8_INLINE == 2
+__forceinline__
+#elif STOREX_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void storex_8( T2 *a, T *x, int sx )
 {
-#pragma unroll
+#if LOOP_UNROLL_STOREX_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_STOREX_8)
+#endif
     for( int i = 0; i < 8; i++ )
         x[i*sx] = a[rev_8(i)].x;
 }
-inline __device__
+#if STOREY_8_INLINE == 2
+__forceinline__
+#elif STOREY_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void storey_8( T2 *a, T *x, int sx )
 {
-#pragma unroll
+#if LOOP_UNROLL_STOREY_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_STOREY_8)
+#endif
     for( int i = 0; i < 8; i++ )
         x[i*sx] = a[rev_8(i)].y;
 }
+#if STOREX_4X4_INLINE == 2
+__forceinline__
+#elif STOREX_4X4_INLINE == 0
+__noinline__
+#else
+#endif
 //template<class T2, class T>
-inline __device__
+__device__
 void storex4x4( T2 *a, T *x, int sx )
 {
-#pragma unroll
+#if LOOP_UNROLL_STOREX_4X4 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_STOREX_4X4)
+#endif
     for( int i = 0; i < 16; i++ )
         x[i*sx] = a[rev4x4(i)].x;
 }
+#if STOREY_4X4_INLINE == 2
+__forceinline__
+#elif STOREY_4X4_INLINE == 0
+__noinline__
+#else
+#endif
 // template<class T2, class T>
-inline __device__
+__device__
 void storey4x4( T2 *a, T *x, int sx )
 {
-#pragma unroll
+#if LOOP_UNROLL_STOREY_4X4 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_STOREY_4X4)
+#endif
     for( int i = 0; i < 16; i++ )
         x[i*sx] = a[rev4x4(i)].y;
 }
@@ -368,19 +573,39 @@ void storey4x4( T2 *a, T *x, int sx )
 //
 //  multiply by twiddle factors in bit-reversed order
 //
-inline __device__
+#if TWIDDLE_8_INLINE == 2
+__forceinline__
+#elif TWIDDLE_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void twiddle_8( T2 *a, int i, int n )
 {
-#pragma unroll
+#if LOOP_UNROLL_TWIDDLE_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_TWIDDLE_8)
+#endif
     for( int j = 1; j < 8; j++ )
 //        a[j] = a[j] * exp_i<T2,T>((-2*M_PI*rev<radix>(j)/n)*i);
         a[j] = cmul(a[j], exp_i((-2*M_PI*rev_8(j)/n)*i));
 }
 
-inline __device__
+#if ITWIDDLE_8_INLINE == 2
+__forceinline__
+#elif ITWIDDLE_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void itwiddle_8( T2 *a, int i, int n )
 {
-#pragma unroll
+#if LOOP_UNROLL_ITWIDDLE_8 == 1
+    #pragma unroll 1
+#else
+    #pragma unroll (LOOP_UNROLL_ITWIDDLE_8)
+#endif
     for( int j = 1; j < 8; j++ )
 //        a[j] = a[j] * exp_i<T2,T>((2*M_PI*rev<radix>(j)/n)*i);
         a[j] = cmul(a[j], exp_i((2*M_PI*rev_8(j)/n)*i));
@@ -389,7 +614,13 @@ void itwiddle_8( T2 *a, int i, int n )
 //
 //  transpose via shared memory, input is in bit-reversed layout
 //
-inline __device__
+#if TRANSPOSE_8_INLINE == 2
+__forceinline__
+#elif TRANSPOSE_8_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void transpose_8( T2 *a, T *s, int ds, T *l, int dl, int sync = 0xf )
 {
     storex_8( a, s, ds );  if( sync&8 ) __syncthreads();
@@ -398,19 +629,15 @@ void transpose_8( T2 *a, T *s, int ds, T *l, int dl, int sync = 0xf )
     storey_8( a, s, ds );  if( sync&2 ) __syncthreads();
     loady_8 ( a, l, dl );  if( sync&1 ) __syncthreads();
 }
-/*
-inline __device__
-void transpose_p_8( T2 *a, T *s, int ds, T *l, int *il, int sync = 0xf )
-{
-    storex_8( a, s, ds );  if( sync&8 ) __syncthreads();
-    loadx_p_8 ( a, l, il );  if( sync&4 ) __syncthreads();
-    storey_8( a, s, ds );  if( sync&2 ) __syncthreads();
-    loady_p_8 ( a, l, il );  if( sync&1 ) __syncthreads();
-}
-*/
 
 // template<class T2, class T>
-inline __device__
+#if TRANSPOSE_4X4_INLINE == 2
+__forceinline__
+#elif TRANSPOSE_4X4_INLINE == 0
+__noinline__
+#else
+#endif
+__device__
 void transpose4x4( T2 *a, T *s, int ds, T *l, int dl, int sync = 0xf )
 {
     storex4x4( a, s, ds ); if( sync&8 ) __syncthreads();
