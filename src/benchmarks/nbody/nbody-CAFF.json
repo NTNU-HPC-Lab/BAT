@@ -48,25 +48,25 @@
           {
             "name": "INNER_UNROLL_FACTOR2",
             "type": "int",
-            "values": [1],
+            "values": [0],
             "default": 1
           },
           {
             "name": "USE_SOA",
             "type": "int",
-            "values": [1],
+            "values": [0, 1],
             "default": 1
           },
           {
             "name": "LOCAL_MEM",
             "type": "int",
-            "values": [0],
+            "values": [0, 1],
             "default": 1
           },
           {
             "name": "USE_CONSTANT_MEMORY",
             "type": "int",
-            "values": [0],
+            "values": [0, 1],
             "default": 1
           },
           {
@@ -82,8 +82,8 @@
         ]
     },
     "benchmarkConfig": {
-      "dataSize":  131072,
-      "iterations": 10
+      "DATA_SIZE":  131072,
+      "ITERATIONS": 100
     },
     "kernelSpecification": {
         "language": "CUDA",
@@ -98,7 +98,7 @@
             "Z": 1
         },
         "gridSize": {
-            "X": "(131072//OUTER_UNROLL_FACTOR + BLOCK_SIZE - 1) // BLOCK_SIZE",
+            "X": "((131072 + OUTER_UNROLL_FACTOR - 1)//OUTER_UNROLL_FACTOR + BLOCK_SIZE - 1) // BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },

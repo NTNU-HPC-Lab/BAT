@@ -26,8 +26,9 @@ class Optuna:
         # self.reader = CupyReader(self.args.json)
         self.reader = cupy_reader
         self.spec = cupy_reader.get_spec(args.json)
+        n_trials = args.trials
         study = optuna.create_study()
-        study.optimize(self.objective, n_trials=100)
+        study.optimize(self.objective, n_trials=n_trials)
 
         return study.best_params
 

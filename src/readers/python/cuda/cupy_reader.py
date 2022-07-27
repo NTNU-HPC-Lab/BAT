@@ -6,7 +6,7 @@ import cupy as cp
 import numpy as np
 
 from src.benchmarks.correctness import correctness_funcs
-from src.readers.python.reader import Reader, DEBUG
+from src.readers.python.reader import DEBUG
 from src.readers.python.util import type_conv_dict, custom_type_dict, get_kernel_path, get_data_path
 
 
@@ -15,6 +15,7 @@ class CupyReader:
     def __init__(self, json_path):
         self.spec = self.get_spec(json_path)
         self.kernel_spec = self.spec["kernelSpecification"]
+        self.results = []
 
     def get_type_length(self, t):
         return custom_type_dict.get(t, { "length": 1 })["length"]
@@ -101,9 +102,13 @@ class CupyReader:
 
     def get_kernel_instance(self, kernel_name, compiler_options):
         jitify = self.spec["benchmarkConfig"].get("jitify", False)
+        backend = self.spec["benchmarkConfig"].get("backend", "nvrtc")
         with open(get_kernel_path(self.spec), 'r') as f:
-            module = cp.RawModule(code=f.read(), name_expressions=[], options=tuple(compiler_options), jitify=jitify)
+            module = cp.RawModule(code=f.read(), backend=backend, options=tuple(compiler_options), jitify=jitify)
+        t0 = time.time()
         func = module.get_function(kernel_name)
+        t1 = time.time()
+        # print("Module.get_function():", t1 - t0)
         return func
 
     def launch_kernel(self, args_tuple, launch_config, kernel):
@@ -127,19 +132,25 @@ class CupyReader:
     def run_kernel(self, launch_config, tuning_config):
         compiler_options = self.generate_compiler_options(tuning_config)
         args = self.populate_args()
+        t0 = time.time()
         lf_ker = self.get_kernel(compiler_options)
+        compile_time = time.time()-t0
+        print("Compile time", compile_time)
         args_tuple = tuple(args)
         result = self.launch_kernel(args_tuple, launch_config, lf_ker)
+        print("Kernel time", result)
         if DEBUG:
             correctness = correctness_funcs[self.kernel_spec["kernelName"]]
             correctness(tuple(args), args_tuple, tuning_config, launch_config)
+            #self.results.append((tuning_config.get("BLOCK_SIZE", 0), compile_time, result))
+            #print(self.results)
         return result
 
     def get_launch_config(self, tuning_config):
         kernel_spec = self.spec["kernelSpecification"]
         for name, value in tuning_config.items():
             locals()[name] = value
-        locals()["dataSize"] = self.spec["benchmarkConfig"]["dataSize"]
+        locals()["DATA_SIZE"] = self.spec["benchmarkConfig"].get("DATA_SIZE",0)
 
         launch_config = {
             "GRID_SIZE_X": eval(str(kernel_spec["gridSize"]["X"])),
@@ -152,8 +163,8 @@ class CupyReader:
         for name, value in launch_config.items():
             locals()[name] = value
 
-        if self.spec["benchmarkConfig"].get("iterations"):
-            launch_config["ITERATIONS"] = eval(str(self.spec["benchmarkConfig"]["iterations"]))
+        if self.spec["benchmarkConfig"].get("ITERATIONS"):
+            launch_config["iterations"] = eval(str(self.spec["benchmarkConfig"]["iterations"]))
         if self.spec["benchmarkConfig"].get("PRECISION"):
             launch_config["PRECISION"] = self.spec["benchmarkConfig"]["PRECISION"]
         if kernel_spec.get("sharedMemory"):

@@ -1,4 +1,3 @@
-
 #if VECTOR_TYPE == 1
     typedef float vector;
 #elif VECTOR_TYPE == 2
@@ -6,6 +5,7 @@
 #elif VECTOR_TYPE == 4
     typedef float4 vector;
 #endif // VECTOR_TYPE
+
 
 inline __device__ float2 make_float2(float s)
 {
@@ -177,6 +177,7 @@ __device__ void updateAccGM(vector bodyAcc[3],
 	}
 	#endif // USE_SOA == 0
 }
+
 
 // method to load thread specific data from memory
 __device__ void loadThreadData(
@@ -383,7 +384,6 @@ __global__ void nbody_kernel(float timeDelta,
 
 } // Extern C
 
-
 /*
 #include <stdio.h>
 
@@ -396,6 +396,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       if (abort) exit(code);
    }
 }
+
 
 int main(void)
 {
@@ -480,4 +481,7 @@ int main(void)
     return 0;
 
 }
+
 */
+
+
