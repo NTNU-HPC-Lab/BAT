@@ -1,6 +1,0 @@
-{
-    "run": "python3 sort_tuner.py",
-    "results": [
-        "best-sort-results.json"
-    ]
-}
