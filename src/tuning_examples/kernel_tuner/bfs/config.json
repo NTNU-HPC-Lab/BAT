@@ -1,6 +1,0 @@
-{
-    "run": "python3 bfs_tuner.py",
-    "results": [
-        "best-bfs-results.json"
-    ]
-}
