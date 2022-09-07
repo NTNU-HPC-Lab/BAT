@@ -42,13 +42,6 @@ def add_standard_arguments_to_parser(parser):
     parser.add_argument('--trials', type=int, default=10, help='Path to T1-compliant JSON')
     return parser
 
-import cProfile
-
-g_args = None
-
-def optuna_profile():
-    run_optuna(g_args)
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -70,9 +63,7 @@ def main():
         for tuner in args.tuner:
             if tuner is not None:
                 print("Running {} with {}".format(tuner, args))
-                #g_args = args
                 runner_dict[tuner](args)
-                #cProfile.run('optuna_profile()')
 
 
 if __name__ == '__main__':

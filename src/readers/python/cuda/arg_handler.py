@@ -82,21 +82,20 @@ class ArgHandler:
     def handle_vector_data(self, arg):
         # random.seed(10)
         t = arg["fillType"]
+        arg_data = []
+        if t not in ("file", "random", "uninitialized", "constant"):
+            print("Unsupported vector fill type", arg["fillType"])
+            return
         if t == "file":
             with open(get_data_path(self.spec, arg["path"]), 'r') as f:
                 arg_data = f.read().splitlines()
-            return self.type_conv_vec(arg_data, arg)
         if t == "random":
             arg_data = [random.random() for _ in range(arg["length"] * self.get_type_length(arg["type"]))]
-            return self.type_conv_vec(arg_data, arg)
         if t == "uninitialized":
             arg_data = [0 for _ in range(arg["length"] * self.get_type_length(arg["type"]))]
-            return self.type_conv_vec(arg_data, arg)
         if t == "constant":
             arg_data = [eval(str(arg["value"])) for _ in range(arg["length"] * self.get_type_length(arg["type"]))]
-            return self.type_conv_vec(arg_data, arg)
-        else:
-            print("Unsupported vector fill type", arg["fillType"])
+        return self.type_conv_vec(arg_data, arg)
 
     def type_conv_scalar(self, arg_data, arg):
         if arg["type"] in type_conv_dict.keys():
