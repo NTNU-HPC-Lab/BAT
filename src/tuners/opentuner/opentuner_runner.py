@@ -7,26 +7,36 @@ import opentuner
 from opentuner.measurement import MeasurementInterface
 from opentuner.search.manipulator import (ConfigurationManipulator, EnumParameter)
 
-from src.readers.python.cuda.cupy_reader import CupyReader
+from src.readers.python.result import Result
+from src.readers.python.config_space import ConfigSpace
+from src.readers.python.cuda.cupy_reader import get_spec
+from src.readers.python.cuda.cuda_kernel_runner import CudaKernelRunner
 
 
 class OpenTunerT(MeasurementInterface):
+
+    result_list = []
+
     def __init__(self, *pargs, **kwargs):
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
-        self.reader = CupyReader(self.args.json)
-        self.spec = self.reader.get_spec(self.args.json)
-        self.config_space = self.spec["configurationSpace"]
+        self.spec = get_spec(self.args.json)
+        self.config_space = ConfigSpace(self.spec["configurationSpace"])
+        self.result = Result(self.spec)
+        self.runner = CudaKernelRunner(self.spec, self.config_space)
         self.kernel_spec = self.spec["kernelSpecification"]
 
     def run(self, desired_result, input, limit):
         tuning_config = desired_result.configuration.data
-        val = self.reader.run(tuning_config, self.args.testing)
-        return opentuner.resultsdb.models.Result(time=val)
+        self.result = Result(self.spec)
+        self.result.config = tuning_config
+        self.result = self.runner.run(tuning_config, self.result, self.args.testing)
+
+        return opentuner.resultsdb.models.Result(time=self.result.objective)
 
     def manipulator(self):
         manipulator = ConfigurationManipulator()
-        for param in self.config_space["tuningParameters"]:
-            manipulator.add_parameter(EnumParameter(param["name"], eval(str(param["values"]))))
+        for (name, values) in self.config_space.get_parameters_pair():
+            manipulator.add_parameter(EnumParameter(name, values))
         return manipulator
 
     def program_name(self):

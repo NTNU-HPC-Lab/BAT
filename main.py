@@ -11,8 +11,14 @@ def run_opentuner(args):
 
 def run_optuna(args):
     from src.tuners.optuna.optuna_runner import Optuna
+    #import cProfile, pstats
+    #profiler = cProfile.Profile()
+    #profiler.enable()
     optuna_runner = Optuna()
     print(optuna_runner.main(args))
+    #profiler.disable()
+    #stats = pstats.Stats(profiler).sort_stats('cumtime')
+    #stats.print_stats()
 
 
 def run_kerneltuner(args):
@@ -31,16 +37,23 @@ runner_dict = {
 def add_standard_arguments_to_parser(parser):
     parser.add_argument('--testing', type=str, default=False, help='If the execution is a test or not')
     parser.add_argument('--tuner', type=str, default=['kerneltuner'], nargs='+', help='Which tuners to use')
+    parser.add_argument('--benchmarks', type=str, default=["MD5Hash"], nargs='+', help='Name of T1-compliant JSON')
     parser.add_argument('--json', type=str, default="src/benchmarks/MD5Hash/MD5Hash-CAFF.json", help='Path to T1-compliant JSON')
     parser.add_argument('--trials', type=int, default=10, help='Path to T1-compliant JSON')
     return parser
+
+import cProfile
+
+g_args = None
+
+def optuna_profile():
+    run_optuna(g_args)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser = add_standard_arguments_to_parser(parser)
 
-    # parser.add_argument('--benchmark', type=str, default=False, nargs='+', help='Which benchmarks to run')
     args_, _ = parser.parse_known_args()
     if "opentuner" in args_.tuner:
         import opentuner
@@ -50,10 +63,16 @@ def main():
         parser.add_argument('--gpu_name', type=str, default='A4000', help='The CUDA GPU to run on')
 
     args = parser.parse_args()
-    for tuner in args.tuner:
-        if tuner is not None:
-            print("Running {} with {}".format(tuner, args))
-            runner_dict[tuner](args)
+    if args.benchmarks[0].lower() == "all":
+        args.benchmarks = ["MD5Hash", "MD", "TRIAD", "builtin_vectors", "nbody", "Reduction"]
+    for benchmark in args.benchmarks:
+        args.json = "./src/benchmarks/{}/{}-CAFF.json".format(benchmark, benchmark)
+        for tuner in args.tuner:
+            if tuner is not None:
+                print("Running {} with {}".format(tuner, args))
+                #g_args = args
+                runner_dict[tuner](args)
+                #cProfile.run('optuna_profile()')
 
 
 if __name__ == '__main__':

@@ -1,39 +1,53 @@
 import argparse
 import optuna
+import time
 
-from src.readers.python.T1_specification import core
-from src.readers.python.cuda.cupy_reader import CupyReader
+from src.readers.python.result import Result
+from src.readers.python.config_space import ConfigSpace
 
+from src.readers.python.cuda.cupy_reader import get_spec
+from src.readers.python.cuda.cuda_kernel_runner import CudaKernelRunner
+
+import json
 
 class Optuna:
-    spec = None
-    testing = False
-    reader = None
+
+    total_results = []
 
     def objective(self, trial):
-        tuning_config = self.parse_tuning_parameters(self.spec["configurationSpace"]["tuningParameters"], trial)
-        return core(self.args.json, tuning_config, self.args.testing)
+        self.result = Result(self.spec)
+        tuning_config = self.get_next_tuning_config(trial)
+        self.result.config = tuning_config
+        self.result = self.runner.run(tuning_config, self.result, self.args.testing)
+        # print(self.result)
+        self.total_results.append(self.result)
+        return self.result.objective
 
-    def parse_tuning_parameters(self, tuning_parameters, trial):
+    def get_next_tuning_config(self, trial):
         tuning_config = {}
-        for param in tuning_parameters:
-            tuning_config[param["name"]] = trial.suggest_categorical(param["name"], eval(str(param["values"])))
+        t0 = time.time()
+        for (name, values) in self.config_space.get_parameters_pair():
+            tuning_config[name] = trial.suggest_categorical(name, values)
+
+        self.result.algorithm_time = time.time() - t0
         return tuning_config
 
     def main(self, args):
         self.args = args
-        cupy_reader = CupyReader(args.json)
-        # self.reader = CupyReader(self.args.json)
-        self.reader = cupy_reader
-        self.spec = cupy_reader.get_spec(args.json)
+        self.spec = get_spec(args.json)
+        self.config_space = ConfigSpace(self.spec["configurationSpace"])
+        self.runner = CudaKernelRunner(self.spec, self.config_space)
         n_trials = args.trials
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study()
         study.optimize(self.objective, n_trials=n_trials)
-
+        self.result.write("optuna-results.json", self.total_results)
         return study.best_params
 
 
 def main():
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+
     optunaparser = argparse.ArgumentParser()
     optunaparser.add_argument('--json', type=str, default="./benchmarks/MD5Hash-CAFF.json",
                               help='location of T1 json file')
