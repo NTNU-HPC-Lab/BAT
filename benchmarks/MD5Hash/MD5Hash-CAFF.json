@@ -1,0 +1,164 @@
+{
+    "general": {
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "MD5Hash"
+    },
+    "configurationSpace": {
+        "tuningParameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int",
+                "values": "list(range(32, 1024+1, 32))",
+                "default": 256
+            },
+            {
+                "name": "ROUND_STYLE",
+                "type": "int",
+                "values": [0, 1],
+                "default": 0
+            },
+            {
+                "name": "INLINE_1",
+                "type": "int",
+                "values": [0, 1, 2],
+                "default": 0
+            },
+            {
+                "name": "INLINE_2",
+                "type": "int",
+                "values": [0, 1, 2],
+                "default": 0
+            },
+            {
+                "name": "UNROLL_LOOP_1",
+                "type": "int",
+                "values": [1, 2, 4, 8],
+                "default": 8
+            },
+            {
+                "name": "UNROLL_LOOP_2",
+                "type": "int",
+                "values": [1, 2, 4, 8],
+                "default": 8
+            },
+            {
+                "name": "UNROLL_LOOP_3",
+                "type": "int",
+                "values": [1, 2, 4],
+                "default": 4
+            },
+            {
+                "name": "WORK_PER_THREAD_FACTOR",
+                "type": "int",
+                "values": [1, 2, 3, 4, 5, 6],
+                "default": 1
+            }
+        ],
+		"constraints": []
+    },
+    "benchmarkConfig": {
+        "dataSize": 1000000,
+        "iterations": 1000
+    },
+    "kernelSpecification": {
+        "language": "CUDA",
+        "compilerOptions": ["-std=c++11"],
+        "benchmarkPath": "src/benchmarks",
+        "benchmarkName": "MD5Hash",
+        "kernelName": "FindKeyWithDigest_Kernel",
+        "kernelFile": "md5hash_kernel.h",
+        "blockSize": {
+            "X": "BLOCK_SIZE",
+            "Y": 1,
+            "Z": 1
+        },
+        "gridSize": {
+            "X": "(1000000//BLOCK_SIZE//WORK_PER_THREAD_FACTOR) + 1",
+            "Y": 1,
+            "Z": 1
+        },
+        "sharedMemory": "4*BLOCK_SIZE",
+        "stream": null,
+        "arguments": [
+        {
+            "name": "searchDigest0",
+            "type": "uint",
+            "accessType": "ReadOnly",
+            "memoryType": "scalar",
+            "value": 2745829788
+        },
+        {
+            "name": "searchDigest1",
+            "type": "uint",
+            "accessType": "ReadOnly",
+            "memoryType": "scalar",
+            "value": 1540754381
+        },
+        {
+            "name": "searchDigest2",
+            "type": "uint",
+            "accessType": "ReadOnly",
+            "memoryType": "scalar",
+            "value": 615701928
+        },
+        {
+            "name": "searchDigest3",
+            "type": "uint",
+            "accessType": "ReadOnly",
+            "memoryType": "scalar",
+            "value": 1640371132
+        },
+        {
+            "name": "keyspace",
+            "type": "int",
+            "memoryType": "scalar",
+            "accessType": "ReadOnly",
+            "value": 10000000
+        },
+        {
+            "name": "byteLength",
+            "type": "int",
+            "memoryType": "scalar",
+            "accessType": "ReadOnly",
+            "value": 7
+        },
+        {
+            "name": "valsPerByte",
+            "type": "int",
+            "memoryType": "scalar",
+            "accessType": "ReadOnly",
+            "value": 10
+        },
+        {
+            "name": "foundIndex",
+            "type": "int",
+            "memoryType": "vector",
+            "length": 1,
+            "accessType": "ReadWrite",
+            "fillType": "uninitialized"
+        },
+        {
+            "name": "foundKey",
+            "type": "byte",
+            "length": 8,
+            "memoryType": "vector",
+            "accessType": "ReadWrite",
+            "fillType": "uninitialized"
+        },
+        {
+            "name": "foundDigest",
+            "type": "uint",
+            "length": 4,
+            "memoryType": "vector",
+            "accessType": "ReadWrite",
+            "fillType": "uninitialized"
+        }
+      ]
+    },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  

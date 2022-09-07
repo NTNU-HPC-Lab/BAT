@@ -1,0 +1,148 @@
+{
+    "general": {
+        "formatVersion": "0.0.1",
+        "benchmarksPath": "src/benchmarks",
+        "benchmarkName": "MD"
+    },
+    "metadata": {
+      "types": {
+        "float3": {
+          "x": "float",
+          "y": "float",
+          "z": "float"
+        },
+        "float4": {
+          "x": "float",
+          "y": "float",
+          "z": "float",
+          "w": "float"
+        },
+        "double3": {
+          "x": "double",
+          "y": "double",
+          "z": "double"
+        },
+        "double4": {
+          "x": "double",
+          "y": "double",
+          "z": "double",
+          "w": "double"
+        }
+      }
+    },
+    "configurationSpace": {
+        "tuningParameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int",
+                "values": "[2**i for i in range(5, 11)]",
+                "default": 256
+            },
+            {
+                "name": "TEXTURE_MEMORY",
+                "type": "int",
+                "values": [0],
+                "default": 1
+            },
+            {
+                "name": "WORK_PER_THREAD",
+                "type": "int",
+                "values": "list(range(1,11))",
+                "default": 1
+            }
+        ],
+		"constraints": []
+    },
+    "benchmarkConfig": {
+        "PRECISION": 32,
+        "dataSize": 73728,
+        "iterations": 1000
+    },
+    "kernelSpecification": {
+        "language": "CUDA",
+        "compilerOptions": ["-std=c++11"],
+        "kernelName": "compute_lj_force",
+        "kernelFile": "md_kernel.cu",
+        "benchmarkPath": "src/benchmarks",
+        "benchmarkName": "MD",
+        "blockSize": {
+            "X": "BLOCK_SIZE",
+            "Y": 1,
+            "Z": 1
+        },
+        "gridSize": {
+            "X": "73728//BLOCK_SIZE//WORK_PER_THREAD",
+            "Y": 1,
+            "Z": 1
+        },
+        "sharedMemory": null,
+        "stream": null,
+        "arguments": [
+        {
+            "name": "force3",
+            "type": "float3",
+            "length": 73728,
+            "memoryType": "Vector",
+            "accessType": "ReadWrite",
+            "fillType": "uninitialized"
+        },
+        {
+            "name": "position",
+            "type": "float4",
+            "length": 73728,
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "fillType": "random"
+        },
+        {
+            "name": "neighCount",
+            "type": "int",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 128
+        },
+        {
+            "name": "neighList",
+            "type": "int",
+            "length": 9437184,
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "fillType": "file",
+            "path": "MD-neighList-data.txt"
+        },
+        {
+            "name": "cutsq",
+            "type": "float",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 16.0
+        },
+        {
+            "name": "lj1",
+            "type": "float",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 1.5
+        },
+        {
+            "name": "lj2",
+            "type": "float",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 2.0
+        },
+        {
+            "name": "nAtom",
+            "type": "int",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 73728
+        }
+      ]
+    },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  

@@ -1,0 +1,106 @@
+{
+    "general": {
+        "formatVersion": "0.0.1",
+        "benchmarkName": "builtin_vectors",
+        "benchmarksPath": "src/benchmarks"
+    },
+    "configurationSpace": {
+        "tuningParameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int",
+                "values": "list(range(32, 1024+1, 32))",
+                "default": 256
+            }
+        ],
+		"constraints": []
+    },
+    "benchmarkConfig": {
+      "dataSize": 4096,
+      "iterations": 1000
+    },
+    "kernelSpecification": {
+        "language": "CUDA",
+        "compilerOptions": ["-std=c++11"],
+        "benchmarkPath": "src/benchmarks",
+        "benchmarkName": "builtin_vectors",
+        "kernelName": "sum_kernel",
+        "kernelFile": "builtin_vectors.cu",
+        "blockSize": {
+            "X": "BLOCK_SIZE",
+            "Y": 1,
+            "Z": 1
+        },
+        "gridSize": {
+            "X": "(4096 + BLOCK_SIZE - 1) // BLOCK_SIZE",
+            "Y": 1,
+            "Z": 1
+        },
+        "sharedMemory": null,
+        "stream": null,
+        "arguments": [
+        {
+            "name": "lhs",
+            "type": "double3",
+            "length": 4096,
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "fillType": "random"
+        },
+        {
+            "name": "rhs",
+            "type": "double3",
+            "length": 1,
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "fillType": "random"
+        },
+        {
+          "name": "out",
+          "type": "double3",
+          "length": 4096,
+          "memoryType": "Vector",
+          "accessType": "ReadWrite",
+          "fillType": "uninitialized"
+        },
+        {
+          "name": "N",
+          "type": "int",
+          "memoryType": "Scalar",
+          "accessType": "ReadOnly",
+          "value": "4096"
+        }
+      ]
+    },
+  "metadata": {
+    "types": {
+      "float3": {
+        "x": "float",
+        "y": "float",
+        "z": "float"
+      },
+      "float4": {
+        "x": "float",
+        "y": "float",
+        "z": "float",
+        "w": "float"
+      },
+      "double3": {
+        "x": "double",
+        "y": "double",
+        "z": "double"
+      },
+      "double4": {
+        "x": "double",
+        "y": "double",
+        "z": "double",
+        "w": "double"
+      }
+    }
+  },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  

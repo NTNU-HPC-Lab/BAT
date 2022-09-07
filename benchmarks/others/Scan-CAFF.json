@@ -1,0 +1,148 @@
+{
+    "general": {
+        "language": "CUDA",
+        "CompilerOptions": "",
+        "KernelName": "reduce",
+        "KernelFile": "Reduction-BAT.cu",
+        "FormatVersion": "0.0.1"
+    },
+    "configuration_space": {
+        "tuning_parameters": [
+            {
+                "name": "BLOCK_SIZE",
+                "type": "int32",
+                "values": "list(range(32, 1024+1, 32))",
+                "default": 256
+            },
+            {
+                "name": "UNROLL_LOOP_1",
+                "type": "int32",
+                "values": [1, 2, 3, 4, 5],
+                "default": 5
+            },
+            {
+                "name": "UNROLL_LOOP_2",
+                "type": "int32",
+                "values": [1, 2, 3, 4, 5],
+                "default": 5
+            }
+        ],
+		"constraints": []
+    },
+    "function_specification": [
+        {
+            "name": "reduce",        
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "value": {
+                            "X": "GRID_SIZE",
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": "smem_size",
+                    "stream": null
+                }
+            },
+        
+            "arguments": [
+            {
+                "name": "d_idata",
+                "type": "double (depends on benchmark)",
+                "length": "depends on problem size",
+                "accessType": "ReadOnly",
+                "fillType": "pattern",
+                "pattern": "[i % 2 for i in range(1, problem_size)]"
+            },
+            {
+                "name": "d_block_sums",
+                "type": "double (depends on benchmark)",
+                "length": "GRID_SIZE * sizeof(double)",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "size",
+                "type": "uint32",
+                "value": "depends on problem size"
+            }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        },
+        {
+            "name": "scan_single_block",        
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "X": 1,
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": "2*smem_size",
+                    "stream": null
+                }
+            },
+        
+            "arguments": [
+            {
+                "name": "d_block_sums"
+            },
+            {
+                "name": "num_blocks",
+                "type": "int",
+                "value": "GRID_SIZE"
+            }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        },
+        {
+            "name": "bottom_scan",
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "X": "GRID_SIZE",
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": "2*smem_size",
+                    "stream": null
+                }
+            },
+            "arguments": [
+                {
+                    "name": "d_idata"
+                },
+                {
+                    "name": "d_odata",
+                    "type": "double (depends on benchmark)",
+                    "length": "depends on problem size",
+                    "accessType": "ReadWrite",
+                    "fillType": "constant",
+                    "value": -1
+                },
+                {
+                    "name": "d_block_sums"
+                },
+                {
+                    "name": "size"
+                }
+            ]
+        }
+    ]
+}
+  

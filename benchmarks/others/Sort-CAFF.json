@@ -1,0 +1,157 @@
+{
+    "general": {
+        "language": "CUDA",
+        "CompilerOptions": "",
+        "KernelName": "reduce",
+        "KernelFile": "Reduction-BAT.cu",
+        "FormatVersion": "0.0.1"
+    },
+    "configuration_space": {
+        "tuning_parameters": [
+            {
+                "name": "SORT_BLOCK_SIZE",
+                "type": "int32",
+                "values": "[2^x for x in range(4, 11)]",
+                "default": 128
+            },
+            {
+                "name": "SCAN_BLOCK_SIZE",
+                "type": "int32",
+                "values": "[2^x for x in range(4, 11)]",
+                "default": 256
+            },
+            {
+                "name": "INLINE_SCAN",
+                "type": "boolean",
+                "default": "not sure"
+            },
+            {
+                "name": "INLINE_LSB",
+                "type": "boolean",
+                "default": "not sure"
+            },
+            {
+                "name": "INLINE_LOCAL_MEMORY",
+                "type": "boolean",
+                "default": "not sure"
+            },
+            {
+                "name": "LOOP_UNROLL_LOCAL_MEMORY",
+                "type": "int32",
+                "values": [1, 2, 5, 10],
+                "default": 10
+            },
+            {
+                "name": "LOOP_UNROLL_LSB",
+                "type": "int32",
+                "values": [1, 2, 5, 10],
+                "default": 10
+            },
+            {
+                "name": "LOOP_UNROLL_VECTOR",
+                "type": "int32",
+                "values": [1, 2, 3, 6],
+                "default": 1
+            }
+        ],
+		"constraints": []
+    },
+    "function_specification": [
+        {        
+            "name": "radixSortBlocks",
+            "metadata": {
+                "launch_configuration": {
+                    "block_size": "SORT_BLOCK_SIZE",
+                    "grid_size": {
+                        "value": {
+                            "X": "numElements / SORT_DATA_SIZE / SORT_BLOCK_SIZE",
+                            "Y": 1,
+                            "Z": 1
+                        }
+                    },
+                    "shared_memory": "8*sizeof(uint)*SORT_BLOCK_SIZE",
+                    "stream": null
+                },
+                "benchmark_configuration": {
+                    "SCAN_DATA_SIZE": 8,
+                    "numElements": "96*1024*1024*X"
+                }
+            },
+        
+            "arguments": [
+            {
+                "name": "nbits",
+                "type": "uint",
+                "value": 4,
+                "accessType": "ReadOnly"
+            },
+            {
+                "name": "startbit",
+                "type": "uint",
+                "value": 
+            }
+            {
+                "name": "dVals",
+                "type": "uint8 (depends on benchmark)",
+                "length": "depends on problem size",
+                "accessType": "ReadOnly",
+                "fillType": "copy",
+                "value": "dKeys"
+            },
+            {
+                "name": "dTempKeys",
+                "type": "uint8 (depends on benchmark)",
+                "length": "depends on problem size",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "dTempVals",
+                "type": "uint8 (depends on benchmark)",
+                "length": "depends on problem size",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "dCounters",
+                "type": "uint",
+                "length": "WARP_SIZE*size/(SORT_DATA_SIZE*SORT_BLOCK_SIZE)",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "dCounterSums",
+                "type": "uint",
+                "length": "WARP_SIZE*size/(SORT_DATA_SIZE*SORT_BLOCK_SIZE)",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "dBlockOffsets",
+                "type": "uint",
+                "length": "WARP_SIZE*size/(SORT_DATA_SIZE*SORT_BLOCK_SIZE)",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "dScanBlockSums",
+                "type": "uint",
+                "length": "WARP_SIZE*size/(SORT_DATA_SIZE*SORT_BLOCK_SIZE)",
+                "accessType": "ReadWrite",
+                "fillType": "uninitialized"
+            },
+            {
+                "name": "size",
+                "type": "int",
+                "accessType": "ReadOnly",
+                "value": "depends on problem size"
+            }
+            ],
+            "verification": {
+                "type": "reference_CPU",
+                "path": "/path/reference.cpp"
+            }
+        }
+    ]
+}
+  

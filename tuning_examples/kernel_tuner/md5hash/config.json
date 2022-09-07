@@ -1,6 +1,0 @@
-{
-    "run": "python3 md5hash_tuner.py",
-    "results": [
-        "best-md5hash-results.json"
-    ]
-}
