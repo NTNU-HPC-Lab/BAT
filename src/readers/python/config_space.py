@@ -17,7 +17,7 @@ class ConfigSpace:
         self.constraints.append(expr)
 
     def get_product(self):
-        return set(itertools.product(*(self.parameters.values())))
+        return itertools.product(*(self.parameters.values()))
 
     def get_constraints(self):
         return self.constraints

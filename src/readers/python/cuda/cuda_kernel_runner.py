@@ -1,7 +1,7 @@
 from src.readers.python.config_space import ConfigSpace
 from src.readers.python.result import Result
 
-from src.readers.python.cuda.cupy_reader import get_kernel_path
+from src.readers.python.util import get_kernel_path
 from src.readers.python.cuda.arg_handler import ArgHandler
 
 import cupy as cp
@@ -18,9 +18,10 @@ class CudaKernelRunner:
         self.config_space = config_space if config_space else ConfigSpace(self.spec["configurationSpace"])
         self.kernel_spec = self.spec["kernelSpecification"]
         self.results = []
-        self.result = None
+        self.result = Result(self.spec)
 
-    def run(self, tuning_config, result, testing):
+    def run(self, tuning_config, result):
+        result.config = tuning_config
         return self.run_kernel(self.get_launch_config(tuning_config), tuning_config, result)
 
     def generate_compiler_options(self, tuning_config):

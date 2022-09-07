@@ -2,46 +2,33 @@ import argparse
 import optuna
 import time
 
+from src.readers.python.manager import Manager
 from src.readers.python.result import Result
-from src.readers.python.config_space import ConfigSpace
-
-from src.readers.python.cuda.cupy_reader import get_spec
-from src.readers.python.cuda.cuda_kernel_runner import CudaKernelRunner
-
-import json
 
 class Optuna:
 
-    total_results = []
-
     def objective(self, trial):
-        self.result = Result(self.spec)
+        self.result = Result(self.manager.spec)
         tuning_config = self.get_next_tuning_config(trial)
-        self.result.config = tuning_config
-        self.result = self.runner.run(tuning_config, self.result, self.args.testing)
-        # print(self.result)
-        self.total_results.append(self.result)
+        self.result = self.manager.run(tuning_config, self.result)
         return self.result.objective
 
     def get_next_tuning_config(self, trial):
         tuning_config = {}
         t0 = time.time()
-        for (name, values) in self.config_space.get_parameters_pair():
+        for (name, values) in self.manager.config_space.get_parameters_pair():
             tuning_config[name] = trial.suggest_categorical(name, values)
 
         self.result.algorithm_time = time.time() - t0
         return tuning_config
 
     def main(self, args):
-        self.args = args
-        self.spec = get_spec(args.json)
-        self.config_space = ConfigSpace(self.spec["configurationSpace"])
-        self.runner = CudaKernelRunner(self.spec, self.config_space)
+        self.manager = Manager(args)
         n_trials = args.trials
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study()
         study.optimize(self.objective, n_trials=n_trials)
-        self.result.write("optuna-results.json", self.total_results)
+        self.manager.write()
         return study.best_params
 
 

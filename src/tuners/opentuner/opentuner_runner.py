@@ -8,9 +8,7 @@ from opentuner.measurement import MeasurementInterface
 from opentuner.search.manipulator import (ConfigurationManipulator, EnumParameter)
 
 from src.readers.python.result import Result
-from src.readers.python.config_space import ConfigSpace
-from src.readers.python.cuda.cupy_reader import get_spec
-from src.readers.python.cuda.cuda_kernel_runner import CudaKernelRunner
+from src.readers.python.manager import Manager
 
 
 class OpenTunerT(MeasurementInterface):
@@ -19,31 +17,28 @@ class OpenTunerT(MeasurementInterface):
 
     def __init__(self, *pargs, **kwargs):
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
-        self.spec = get_spec(self.args.json)
-        self.config_space = ConfigSpace(self.spec["configurationSpace"])
-        self.result = Result(self.spec)
-        self.runner = CudaKernelRunner(self.spec, self.config_space)
-        self.kernel_spec = self.spec["kernelSpecification"]
+        self.manager = Manager(self.args)
+        self.result = Result(self.manager.spec)
 
     def run(self, desired_result, input, limit):
         tuning_config = desired_result.configuration.data
-        self.result = Result(self.spec)
+        self.result = Result(self.manager.spec)
         self.result.config = tuning_config
-        self.result = self.runner.run(tuning_config, self.result, self.args.testing)
+        self.result = self.manager.run(tuning_config, self.result)
 
         return opentuner.resultsdb.models.Result(time=self.result.objective)
 
     def manipulator(self):
         manipulator = ConfigurationManipulator()
-        for (name, values) in self.config_space.get_parameters_pair():
+        for (name, values) in self.manager.config_space.get_parameters_pair():
             manipulator.add_parameter(EnumParameter(name, values))
         return manipulator
 
     def program_name(self):
-        return self.kernel_spec["kernelName"]
+        return self.manager.spec["kernelSpecification"]["kernelName"]
 
     def program_version(self):
-        return self.spec["general"]["formatVersion"]
+        return self.manager.spec["general"]["formatVersion"]
 
     def save_final_config(self, configuration):
         """
