@@ -2,29 +2,8 @@
     "general": {
         "formatVersion": "0.0.1",
         "benchmarkName": "nbody",
-        "benchmarksPath": "src/benchmarks"
+        "benchmarksPath": "benchmarks"
     },
-  "temp": [
-    {
-      "name": "OUTER_UNROLL_FACTOR",
-      "type": "int",
-      "values": [1, 2, 4, 8, 16, 32],
-      "default": 1
-    },
-    {
-      "name": "INNER_UNROLL_FACTOR1",
-      "type": "int",
-      "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32],
-      "default": 1
-    },
-    {
-      "name": "INNER_UNROLL_FACTOR2",
-      "type": "int",
-      "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32],
-      "default": 1
-    }
-  ],
-
     "configurationSpace": {
         "tuningParameters": [
           {
@@ -83,12 +62,12 @@
     },
     "benchmarkConfig": {
       "DATA_SIZE":  65536,
-      "ITERATIONS": 1000
+      "iterations": 1000
     },
     "kernelSpecification": {
         "language": "CUDA",
         "compilerOptions": ["-std=c++11"],
-        "benchmarkPath": "src/benchmarks",
+        "benchmarkPath": "benchmarks",
         "benchmarkName": "nbody",
         "kernelName": "nbody_kernel",
         "kernelFile": "nbody.cu",
