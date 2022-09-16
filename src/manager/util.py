@@ -4,7 +4,7 @@ import numpy as np
 
 
 def get_benchmark_path(spec):
-    return "{}/{}".format(spec["general"]["benchmarksPath"], spec["general"]["benchmarkName"])
+    return "benchmarks/{}".format(spec["general"]["benchmarkName"])
 
 
 def get_kernel_path(spec):
