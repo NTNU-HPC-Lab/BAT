@@ -25,7 +25,8 @@ class Optuna:
     def main(self, args):
         self.manager = Manager(args)
         n_trials = args.trials
-        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        if not args.verbose:
+            optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study()
         study.optimize(self.objective, n_trials=n_trials)
         self.manager.write()
@@ -33,7 +34,8 @@ class Optuna:
 
 
 def main():
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    if not args.verbose:
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     optunaparser = argparse.ArgumentParser()
     optunaparser.add_argument('--json', type=str, default="./benchmarks/MD5Hash-CAFF.json",

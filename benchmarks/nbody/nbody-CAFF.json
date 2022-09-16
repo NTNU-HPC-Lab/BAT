@@ -62,7 +62,7 @@
     },
     "benchmarkConfig": {
       "DATA_SIZE":  65536,
-      "iterations": 1000
+      "iterations": 100
     },
     "kernelSpecification": {
         "language": "CUDA",
