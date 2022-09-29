@@ -1,27 +1,34 @@
 import json
 
 from src.config_space import ConfigSpace
-
+from src.result.dataset import Dataset
 
 class Manager:
     def __init__(self, args):
         self.spec = self.get_spec(args.json)
-        self.config_space = ConfigSpace(self.spec["configurationSpace"])
-        lang = self.spec["kernelSpecification"]["language"]
+        self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
+        self.dataset = Dataset(self.spec)
+        self.search_settings = self.spec["SearchSettings"]
+        lang = self.spec["KernelSpecification"]["Language"]
         if lang == "CUDA":
             from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler
             self.runner = CudaKernelRunner(self.spec, self.config_space)
             self.arg_handler = ArgHandler(self.spec)
-        self.filename = "optuna-results.json"
+
+
+        #self.filename = "optuna-results.hdf5"
         self.testing = 0
-        self.results = []
 
     def write(self):
+        self.dataset.write_data()
+        self.dataset.write_metadata()
+        """
         dump_results = {"results": []}
         with open(self.filename, 'a') as f:
             for result in self.results:
                 dump_results["results"].append(result.serialize())
             json.dump(dump_results, f, indent=4)
+        """
 
     def get_spec(self, json_path):
         with open(json_path, 'r') as f:
@@ -30,11 +37,9 @@ class Manager:
 
     def run(self, tuning_config, result):
         result = self.runner.run(tuning_config, result)
-        self.add_result(result)
+        result.calculate_time()
+        self.dataset.add_result(result)
         return result
-
-    def add_result(self, result):
-        self.results.append(result)
 
     def get_last(self):
         return self.results[-1]

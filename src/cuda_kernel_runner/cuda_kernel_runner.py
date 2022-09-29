@@ -15,8 +15,8 @@ class CudaKernelRunner:
     def __init__(self, spec, config_space=None):
         self.spec = spec
         self.arg_handler = ArgHandler(self.spec)
-        self.config_space = config_space if config_space else ConfigSpace(self.spec["configurationSpace"])
-        self.kernel_spec = self.spec["kernelSpecification"]
+        self.config_space = config_space if config_space else ConfigSpace(self.spec["ConfigurationSpace"])
+        self.kernel_spec = self.spec["KernelSpecification"]
         self.results = []
         self.result = Result(self.spec)
 
@@ -25,8 +25,8 @@ class CudaKernelRunner:
         return self.run_kernel(self.get_launch_config(tuning_config), tuning_config, result)
 
     def generate_compiler_options(self, tuning_config):
-        benchmark_config = self.spec["benchmarkConfig"]
-        compiler_options = self.kernel_spec["compilerOptions"]
+        benchmark_config = self.spec.get("BenchmarkConfig", {})
+        compiler_options = self.kernel_spec.get("CompilerOptions", [])
         for (key, val) in tuning_config.items():
             compiler_options.append("-D{}={}".format(key, val))
         for (key, val) in benchmark_config.items():
@@ -34,26 +34,26 @@ class CudaKernelRunner:
         return compiler_options
 
     def get_launch_config(self, tuning_config):
-        kernel_spec = self.spec["kernelSpecification"]
-        benchmark_config = self.spec["benchmarkConfig"]
+        kernel_spec = self.spec["KernelSpecification"]
+        benchmark_config = self.spec["BenchmarkConfig"]
         for name, value in benchmark_config.items():
             locals()[name] = eval(str(value))
         for name, value in tuning_config.items():
             locals()[name] = value
 
         launch_config = {
-            "GRID_SIZE_X": eval(str(kernel_spec["gridSize"]["X"])),
-            "GRID_SIZE_Y": eval(str(kernel_spec["gridSize"]["Y"])),
-            "GRID_SIZE_Z": eval(str(kernel_spec["gridSize"]["Z"])),
-            "BLOCK_SIZE_X": eval(str(kernel_spec["blockSize"]["X"])),
-            "BLOCK_SIZE_Y": eval(str(kernel_spec["blockSize"]["Y"])),
-            "BLOCK_SIZE_Z": eval(str(kernel_spec["blockSize"]["Z"])),
+            "GRID_SIZE_X": eval(str(kernel_spec["GlobalSize"].get("X", 1))),
+            "GRID_SIZE_Y": eval(str(kernel_spec["GlobalSize"].get("Y", 1))),
+            "GRID_SIZE_Z": eval(str(kernel_spec["GlobalSize"].get("Z", 1))),
+            "BLOCK_SIZE_X": eval(str(kernel_spec["LocalSize"].get("X", 1))),
+            "BLOCK_SIZE_Y": eval(str(kernel_spec["LocalSize"].get("Y", 1))),
+            "BLOCK_SIZE_Z": eval(str(kernel_spec["LocalSize"].get("Z", 1))),
         }
         for name, value in launch_config.items():
             locals()[name] = value
 
-        if kernel_spec.get("sharedMemory"):
-            launch_config["SHARED_MEMORY_SIZE"] = eval(str(kernel_spec["sharedMemory"]))
+        if kernel_spec.get("SharedMemory"):
+            launch_config["SHARED_MEMORY_SIZE"] = eval(str(kernel_spec["SharedMemory"]))
 
         self.grid_dim = (launch_config["GRID_SIZE_X"], launch_config["GRID_SIZE_Y"], launch_config["GRID_SIZE_Z"])
         self.block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
@@ -63,18 +63,18 @@ class CudaKernelRunner:
     def compile_kernel(self, tuning_config):
         with open(get_kernel_path(self.spec), 'r') as f:
             module = cp.RawModule(code=f.read(),
-                    backend=self.spec["benchmarkConfig"].get("backend", "nvrtc"),
+                    backend=self.spec["BenchmarkConfig"].get("backend", "nvrtc"),
                     options=tuple(self.generate_compiler_options(tuning_config)),
-                    jitify=self.spec["benchmarkConfig"].get("jitify", False))
+                    jitify=self.spec["BenchmarkConfig"].get("jitify", False))
         t0 = time.time()
-        self.kernel = module.get_function(self.kernel_spec["kernelName"])
+        self.kernel = module.get_function(self.kernel_spec["KernelName"])
 
         self.result.compile_time = time.time() - t0
 
     def launch_kernel(self, args_tuple, launch_config):
         t0 = time.time()
         self.result.runtimes = []
-        for i in range(launch_config.get("ITERATIONS", 10)):
+        for i in range(launch_config.get("iterations", 10)):
             t00 = time.time()
             self.kernel(grid=self.grid_dim, block=self.block_dim, args=args_tuple, shared_mem=self.shared_mem_size)
             inner_duration = time.time() - t00
@@ -105,9 +105,10 @@ class CudaKernelRunner:
         try:
             self.compile_kernel(tuning_config)
         except Exception as e:
-            return self.invalid_result("Compile exception")
+            print(e)
+            return self.invalid_result("Compile exception: {}".format(e))
 
-        args_tuple = tuple(self.arg_handler.populate_args(self.kernel_spec["arguments"]))
+        args_tuple = tuple(self.arg_handler.populate_args(self.kernel_spec["Arguments"]))
 
         try:
             self.launch_kernel(args_tuple, launch_config)
@@ -115,6 +116,6 @@ class CudaKernelRunner:
             return self.invalid_result("Launch exception")
 
         if DEBUG:
-            correctness = correctness_funcs[self.kernel_spec["kernelName"]]
+            correctness = correctness_funcs[self.kernel_spec["KernelName"]]
             correctness(tuple(args), args_tuple, tuning_config, launch_config)
         return self.result

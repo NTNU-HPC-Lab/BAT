@@ -56,9 +56,9 @@ class KernelTuner:
              verbose=True,
              quiet=False,
              simulation_mode=False):
-        kernel_spec = self.manager.spec["kernelSpecification"]
-        kernel_name = kernel_spec["kernelName"]
-        language = kernel_spec["language"]
+        kernel_spec = self.manager.spec["KernelSpecification"]
+        kernel_name = kernel_spec["KernelName"]
+        language = kernel_spec["Language"]
         if language != "CUDA":
             raise NotImplementedError(
                 "Currently only CUDA kernels have been implemented")
@@ -67,16 +67,16 @@ class KernelTuner:
         kernel_string = self.manager.runner.get_kernel_string()
 
         # get arguments
-        args = self.manager.arg_handler.populate_args(kernel_spec["arguments"])
+        args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
         iterations = eval(
-            str(self.manager.spec["benchmarkConfig"]["iterations"])
+            str(self.manager.spec["BenchmarkConfig"]["iterations"])
         )  # number of times each kernel configuration is ran
-        compiler_options = kernel_spec["compilerOptions"]
+        compiler_options = kernel_spec["CompilerOptions"]
         # precision = self.spec["benchmarkConfig"]["PRECISION"]    # whether to use single or double precision (encoded as 32 or 64)
 
         # get problem-, block-, thread-, and grid sizes
-        problem_size = self.problemsize_from_gridsizes(kernel_spec["gridSize"])
-        block_size_names = list(n for n in kernel_spec["blockSize"].values()
+        problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
+        block_size_names = list(n for n in kernel_spec["LocalSize"].values()
                                 if isinstance(n, str))
         grid_div_x = []
         grid_div_y = []

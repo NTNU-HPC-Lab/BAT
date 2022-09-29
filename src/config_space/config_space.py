@@ -5,10 +5,11 @@ class ConfigSpace:
     constraints = []
 
     def __init__(self, spec_config):
-        for param in spec_config["tuningParameters"]:
-            self.add_enum(param["name"], eval(str(param["values"])))
-        for expr in spec_config["constraints"]:
-            self.add_constraint(expr)
+        for param in spec_config["TuningParameters"]:
+            self.add_enum(param["Name"], eval(str(param["Values"])))
+        if spec_config.get("Constraints"):
+            for expr in spec_config["Constraints"]:
+                self.add_constraint(expr)
 
     def add_enum(self, key, enum):
         self.parameters[key] = enum
