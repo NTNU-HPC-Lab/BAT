@@ -1,101 +1,105 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarksPath": "src/benchmarks",
-        "benchmarkName": "TRIAD"
+    "SearchSettings": {
+        "TunerName": "Optuna",
+        "Trials": 10
     },
-    "configurationSpace": {
-        "tuningParameters": [
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "BLOCK_SIZE",
-                "type": "int32",
-                "values": "list(range(32, 1024+1, 32))",
-                "default": 128
+                "Name": "BLOCK_SIZE",
+                "Type": "int32",
+                "Values": "list(range(32, 1024+1, 32))",
+                "Default": 128
             },
             {
-                "name": "LOOP_UNROLL_TRIAD",
-                "type": "int32",
-                "values": "list(range(1,16))",
-                "default": 1
+                "Name": "LOOP_UNROLL_TRIAD",
+                "Type": "int32",
+                "Values": "list(range(1,16))",
+                "Default": 1
             },
             {
-                "name": "WORK_PER_THREAD",
-                "type": "int32",
-                "values": "list(range(1, 17))",
-                "default": 1
+                "Name": "WORK_PER_THREAD",
+                "Type": "int32",
+                "Values": "list(range(1, 17))",
+                "Default": 1
             }
         ],
-		"constraints": ["LOOP_UNROLL_TRIAD <= WORK_PER_THREAD"]
+		"Constraints": ["LOOP_UNROLL_TRIAD <= WORK_PER_THREAD"]
     },
-    "benchmarkConfig": {
+    "General": {
+        "LoggingLevel": "Debug",
+        "TimeUnit": "Microseconds",
+        "OutputFile": "TuningOutput",
+        "OutputFormat": "HDF5",
+        "FormatVersion": "0.0.1",
+        "BenchmarksPath": "benchmarks",
+        "BenchmarkName": "TRIAD"
+    },
+    "BenchmarkConfig": {
         "PRECISION": 32,
         "dataSize": 4096,
         "iterations": 1000
     },
-    "kernelSpecification":
-        {
-            "language": "CUDA",
-            "compilerOptions": ["-std=c++11"],
-            "kernelName": "triad",
-            "kernelFile": "triad_kernel.cu",
-            "benchmarkPath": "src/benchmarks",
-            "benchmarkName": "TRIAD",
-            "blockSize": {
-                "X": "BLOCK_SIZE",
-                "Y": 1,
-                "Z": 1
-            },
-            "gridSize": {
-                "X": "(4096//BLOCK_SIZE//WORK_PER_THREAD) + 1",
-                "Y": 1,
-                "Z": 1
-            },
-            "arguments": [
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "KernelName": "triad",
+        "KernelFile": "triad_kernel.cu",
+        "BenchmarkPath": "benchmarks",
+        "BenchmarkName": "TRIAD",
+        "SharedMemory": 0,
+        "GlobalSize": {
+            "X": "(4096//BLOCK_SIZE//WORK_PER_THREAD) + 1"
+        },
+        "LocalSize": {
+            "X": "BLOCK_SIZE"
+        },
+        "Arguments": [
             {
-                "name": "A",
-                "type": "double",
-                "length": 4096,
-                "accessType": "ReadOnly",
-                "memoryType": "vector",
-                "fillType": "random"
+                "Name": "A",
+                "Type": "double",
+                "Size": 4096,
+                "TypeSize": 1,
+                "FillType": "Generator",
+                "DataSource": "i",
+                "AccessType": "ReadOnly",
+                "MemoryType": "Vector"
             },
             {
-                "name": "B",
-                "type": "double",
-                "length": 4096,
-                "accessType": "ReadOnly",
-                "fillType": "random",
-                "memoryType": "vector"
+                "Name": "B",
+                "Type": "double",
+                "Size": 4096,
+                "TypeSize": 1,
+                "FillType": "Generator",
+                "DataSource": "i",
+                "AccessType": "ReadOnly",
+                "MemoryType": "Vector"
             },
             {
-                "name": "C",
-                "type": "double",
-                "length": 4096,
-                "memoryType": "vector",
-                "accessType": "ReadWrite",
-                "fillType": "uninitialized"
+                "Name": "C",
+                "Type": "double",
+                "Size": 4096,
+                "AccessType": "ReadWrite",
+                "MemoryType": "Vector",
+                "FillType": "Constant",
+                "FillValue": 0.0
             },
             {
-                "name": "s",
-                "type": "double",
-                "value": 1.75,
-                "length": 1,
-                "memoryType": "vector",
-                "fillType": "constant",
-                "accessType": "ReadOnly"
+                "Name": "s",
+                "Type": "double",
+                "AccessType": "ReadOnly",
+                "MemoryType": "Scalar",
+                "FillType": "Constant",
+                "FillValue": 1.75
             },
             {
-                "name": "numberOfElements",
-                "type": "int",
-                "value": 4096,
-                "memoryType": "scalar",
-                "accessType": "ReadOnly"
+                "Name": "numberOfElements",
+                "Type": "int32",
+                "FillValue": 4096,
+                "MemoryType": "Scalar",
+                "AccessType": "ReadOnly"
             }
-            ],
-            "verification": {
-                "type": "reference_CPU",
-                "path": "/path/reference.cpp"
-            }
-        }
+        ]
+    }
 }
-  
+
