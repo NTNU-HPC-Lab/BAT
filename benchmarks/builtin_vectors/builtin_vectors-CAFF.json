@@ -1,106 +1,86 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarkName": "builtin_vectors",
-        "benchmarksPath": "src/benchmarks"
+    "General": {
+        "LoggingLevel": "Debug",
+        "TimeUnit": "Microseconds",
+        "OutputFile": "TuningOutput",
+        "OutputFormat": "JSON",
+        "FormatVersion": "0.0.1",
+        "BenchmarkName": "builtin_vectors",
+        "BenchmarksPath": "src/benchmarks"
     },
-    "configurationSpace": {
-        "tuningParameters": [
+    "SearchSettings": {
+        "TunerName": "optuna",
+        "Trials": 10
+    },
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "BLOCK_SIZE",
-                "type": "int",
-                "values": "list(range(32, 1024+1, 32))",
-                "default": 256
+                "Name": "BLOCK_SIZE",
+                "Type": "int",
+                "Values": "list(range(32, 1024+1, 32))",
+                "Default": 256
             }
         ],
-		"constraints": []
+		"Constraints": []
     },
-    "benchmarkConfig": {
-      "dataSize": 4096,
+    "BenchmarkConfig": {
       "iterations": 1000
     },
-    "kernelSpecification": {
-        "language": "CUDA",
-        "compilerOptions": ["-std=c++11"],
-        "benchmarkPath": "src/benchmarks",
-        "benchmarkName": "builtin_vectors",
-        "kernelName": "sum_kernel",
-        "kernelFile": "builtin_vectors.cu",
-        "blockSize": {
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "BenchmarkPath": "src/benchmarks",
+        "BenchmarkName": "builtin_vectors",
+        "KernelName": "sum_kernel",
+        "KernelFile": "builtin_vectors.cu",
+        "LocalSize": {
             "X": "BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
-        "gridSize": {
+        "GlobalSize": {
             "X": "(4096 + BLOCK_SIZE - 1) // BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
-        "sharedMemory": null,
-        "stream": null,
-        "arguments": [
-        {
-            "name": "lhs",
-            "type": "double3",
-            "length": 4096,
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "fillType": "random"
-        },
-        {
-            "name": "rhs",
-            "type": "double3",
-            "length": 1,
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "fillType": "random"
-        },
-        {
-          "name": "out",
-          "type": "double3",
-          "length": 4096,
-          "memoryType": "Vector",
-          "accessType": "ReadWrite",
-          "fillType": "uninitialized"
-        },
-        {
-          "name": "N",
-          "type": "int",
-          "memoryType": "Scalar",
-          "accessType": "ReadOnly",
-          "value": "4096"
-        }
-      ]
-    },
-  "metadata": {
-    "types": {
-      "float3": {
-        "x": "float",
-        "y": "float",
-        "z": "float"
-      },
-      "float4": {
-        "x": "float",
-        "y": "float",
-        "z": "float",
-        "w": "float"
-      },
-      "double3": {
-        "x": "double",
-        "y": "double",
-        "z": "double"
-      },
-      "double4": {
-        "x": "double",
-        "y": "double",
-        "z": "double",
-        "w": "double"
-      }
-    }
-  },
-    "verification": {
-        "type": "reference_CPU",
-        "path": "/path/reference.cpp"
+        "SharedMemory": null,
+        "Stream": null,
+        "Arguments": [
+            {
+                "Name": "lhs",
+                "Type": "double3",
+                "Size": 4096,
+                "MemoryType": "Vector",
+                "AccessType": "ReadOnly",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "rhs",
+                "Type": "double3",
+                "Size": 1,
+                "MemoryType": "Vector",
+                "AccessType": "ReadOnly",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "out",
+                "Type": "double3",
+                "Size": 4096,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Constant",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "N",
+                "Type": "int32",
+                "MemoryType": "Scalar",
+                "AccessType": "ReadOnly",
+                "FillValue": "4096"
+            }
+        ]
     }
 }
   

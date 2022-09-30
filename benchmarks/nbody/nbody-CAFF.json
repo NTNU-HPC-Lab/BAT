@@ -1,236 +1,224 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarkName": "nbody",
-        "benchmarksPath": "benchmarks"
+    "General": {
+        "LoggingLevel": "Debug",
+        "TimeUnit": "Microseconds",
+        "OutputFile": "TuningOutput",
+        "OutputFormat": "HDF5",
+        "FormatVersion": "0.0.1",
+        "BenchmarkName": "nbody",
+        "BenchmarksPath": "benchmarks"
     },
-    "configurationSpace": {
-        "tuningParameters": [
+    "SearchSettings": {
+        "TunerName": "Optuna",
+        "Trials": 10
+    },
+    "ConfigurationSpace": {
+        "TuningParameters": [
           {
-            "name": "BLOCK_SIZE",
-            "type": "int",
-            "values": "list(range(32, 1024+1, 32))",
-            "default": 256
+            "Name": "BLOCK_SIZE",
+            "Type": "int",
+            "Values": "list(range(32, 1024+1, 32))",
+            "Default": 256
           },
           {
-            "name": "OUTER_UNROLL_FACTOR",
-		    "type": "int",
-            "values": [1, 2, 4, 8, 16, 32],
-		    "default": 1
+            "Name": "OUTER_UNROLL_FACTOR",
+		    "Type": "int",
+            "Values": "[1, 2, 4, 8, 16, 32]",
+		    "Default": 1
 	      },
           {
-            "name": "INNER_UNROLL_FACTOR1",
-            "type": "int",
-            "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32],
-            "default": 1
+            "Name": "INNER_UNROLL_FACTOR1",
+            "Type": "int",
+            "Values": "[0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32]",
+            "Default": 1
           },
           {
-            "name": "INNER_UNROLL_FACTOR2",
-            "type": "int",
-            "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32],
-            "default": 1
+            "Name": "INNER_UNROLL_FACTOR2",
+            "Type": "int",
+            "Values": "[0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32]",
+            "Default": 1
           },
           {
-            "name": "USE_SOA",
-            "type": "int",
-            "values": [0, 1],
-            "default": 1
+            "Name": "USE_SOA",
+            "Type": "int",
+            "Values": "[0, 1]",
+            "Default": 1
           },
           {
-            "name": "LOCAL_MEM",
-            "type": "int",
-            "values": [0, 1],
-            "default": 1
+            "Name": "LOCAL_MEM",
+            "Type": "int",
+            "Values": "[0, 1]",
+            "Default": 1
           },
           {
-            "name": "USE_CONSTANT_MEMORY",
-            "type": "int",
-            "values": [0, 1],
-            "default": 1
+            "Name": "USE_CONSTANT_MEMORY",
+            "Type": "int",
+            "Values": "[0, 1]",
+            "Default": 1
           },
           {
-            "name": "VECTOR_TYPE",
-            "type": "int",
-            "values": [1],
-            "default": 1
+            "Name": "VECTOR_TYPE",
+            "Type": "int",
+            "Values": "[1]",
+            "Default": 1
           }
         ],
-		"constraints": [
+		"Conditions": [
           "INNER_UNROLL_FACTOR1 * INNER_UNROLL_FACTOR2 <= 256",
           "INNER_UNROLL_FACTOR2 <= OUTER_UNROLL_FACTOR"
         ]
     },
-    "benchmarkConfig": {
-      "DATA_SIZE":  65536,
+    "BenchmarkConfig": {
       "iterations": 100
     },
-    "kernelSpecification": {
-        "language": "CUDA",
-        "compilerOptions": ["-std=c++11"],
-        "benchmarkPath": "benchmarks",
-        "benchmarkName": "nbody",
-        "kernelName": "nbody_kernel",
-        "kernelFile": "nbody.cu",
-        "blockSize": {
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "BenchmarkPath": "benchmarks",
+        "BenchmarkName": "nbody",
+        "KernelName": "nbody_kernel",
+        "KernelFile": "nbody.cu",
+        "LocalSize": {
             "X": "BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
-        "gridSize": {
+        "GlobalSize": {
             "X": "((65536 + OUTER_UNROLL_FACTOR - 1)//OUTER_UNROLL_FACTOR + BLOCK_SIZE - 1) // BLOCK_SIZE",
             "Y": 1,
             "Z": 1
         },
-        "sharedMemory": null,
-        "stream": null,
-        "arguments": [
-          {
-            "name": "timeDelta",
-            "type": "float",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": "0.001"
-          },
-          {
-            "name": "oldBodyInfo",
-            "type": "float4",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "fillType": "random"
-        },
-        {
-            "name": "oldPosX",
-            "type": "float",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "fillType": "random"
-        },
-        {
-          "name": "oldPosY",
-          "type": "float",
-          "length": 65536,
-          "memoryType": "Vector",
-          "accessType": "ReadWrite",
-          "fillType": "random"
-        },
-        {
-          "name": "oldPosZ",
-          "type": "float",
-          "length": 65536,
-          "memoryType": "Vector",
-          "accessType": "ReadWrite",
-          "fillType": "random"
-        },
-          {
-            "name": "mass",
-            "type": "float",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "random"
-          },
-          {
-            "name": "newBodyInfo",
-            "type": "float4",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "uninitialized"
-          },
-          {
-            "name": "oldVel",
-            "type": "float4",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "random"
-          },
-          {
-            "name": "oldVelX",
-            "type": "float",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "random"
-          },
-          {
-            "name": "oldVelY",
-            "type": "float",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "random"
-          },
-          {
-            "name": "oldVelZ",
-            "type": "float",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "random"
-          },
-          {
-            "name": "newVel",
-            "type": "float4",
-            "length": 65536,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "uninitialized"
-          },
-          {
-            "name": "damping",
-            "type": "float",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": "0.5"
-          },
-          {
-            "name": "softeningSqr",
-            "type": "float",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": "0.01"
-          },
-        {
-          "name": "n",
-          "type": "int",
-          "memoryType": "Scalar",
-          "accessType": "ReadOnly",
-          "value": "65536"
-        }
-      ]
-    },
-  "metadata": {
-    "types": {
-      "float3": {
-        "x": "float",
-        "y": "float",
-        "z": "float"
-      },
-      "float4": {
-        "x": "float",
-        "y": "float",
-        "z": "float",
-        "w": "float"
-      },
-      "double3": {
-        "x": "double",
-        "y": "double",
-        "z": "double"
-      },
-      "double4": {
-        "x": "double",
-        "y": "double",
-        "z": "double",
-        "w": "double"
-      }
-    }
-  },
-    "verification": {
-        "type": "reference_CPU",
-        "path": "/path/reference.cpp"
+        "SharedMemory": null,
+        "Stream": null,
+        "Arguments": [
+            {
+                "Name": "timeDelta",
+                "Type": "float",
+                "MemoryType": "Scalar",
+                "AccessType": "ReadOnly",
+                "FillValue": 0.001
+            },
+            {
+                "Name": "oldBodyInfo",
+                "Type": "float4",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadOnly",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldPosX",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadOnly",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldPosY",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldPosZ",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "mass",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "newBodyInfo",
+                "Type": "float4",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Constant",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldVel",
+                "Type": "float4",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldVelX",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldVelY",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "oldVelZ",
+                "Type": "float",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Random",
+                "FillValue": 1.0
+            },
+            {
+                "Name": "newVel",
+                "Type": "float4",
+                "Size": 65536,
+                "MemoryType": "Vector",
+                "AccessType": "ReadWrite",
+                "FillType": "Constant",
+                "FillValue": 0.0
+            },
+            {
+                "Name": "damping",
+                "Type": "float",
+                "MemoryType": "Scalar",
+                "AccessType": "ReadOnly",
+                "FillValue": 0.5
+            },
+            {
+                "Name": "softeningSqr",
+                "Type": "float",
+                "MemoryType": "Scalar",
+                "AccessType": "ReadOnly",
+                "FillValue": 0.01
+            },
+            {
+                "Name": "n",
+                "Type": "int32",
+                "MemoryType": "Scalar",
+                "AccessType": "ReadOnly",
+                "FillValue": "65536"
+            }
+        ]
     }
 }
   
