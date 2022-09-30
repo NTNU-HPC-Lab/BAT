@@ -72,9 +72,10 @@ class ArgHandler:
 
     def __init__(self, spec):
         self.spec = spec
+        self.args = []
 
     def handle_custom_data_type(self, arg_data, arg):
-        t = custom_type_dict[arg["type"]]
+        t = custom_type_dict[arg["Type"]]
         return np.dtype({
             'names': t["names"],
             'formats': t["types"]
@@ -107,7 +108,9 @@ class ArgHandler:
             return (custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
 
     def populate_args(self, args):
-        return [self.populate_data(arg) for arg in args]
+        if self.args == []:
+            self.args = [self.populate_data(arg) for arg in args]
+        return self.args
 
     def populate_data(self, arg):
         m = arg["MemoryType"]
@@ -131,5 +134,5 @@ class ArgHandler:
             return self.type_conv_scalar(arg["FillValue"], arg)
 
     def get_type_length(self, t):
-        return custom_type_dict.get(t, { "Size": 1 })["Size"]
+        return custom_type_dict.get(t, { "TypeSize": 1 })["TypeSize"]
 
