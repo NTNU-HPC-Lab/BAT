@@ -24,7 +24,7 @@
                 "Default": 1
             }
         ],
-		"Constraints": ["LOOP_UNROLL_TRIAD <= WORK_PER_THREAD"]
+		"Conditions": ["LOOP_UNROLL_TRIAD <= WORK_PER_THREAD"]
     },
     "General": {
         "LoggingLevel": "Debug",
