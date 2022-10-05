@@ -15,6 +15,7 @@ class Result:
         self.total_time = total_time
         self.correctness = 1
         self.validity = "Correct"
+        self.error = None
         self.objective = float("inf")
         self.timestamp = datetime.datetime.now()
 
@@ -34,6 +35,8 @@ class Result:
         d["correctness"] = self.correctness
         d["validity"] = self.validity
         d["objective"] = self.objective
+        if self.error:
+            d["error"] = str(self.error)
         d["times"] = {}
         d["times"]["total_time"] = self.total_time
         d["times"]["compile_time"] = self.compile_time

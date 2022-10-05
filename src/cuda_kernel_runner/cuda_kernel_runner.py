@@ -89,11 +89,13 @@ class CudaKernelRunner:
             kernel_string += f.read()
         return kernel_string
 
-    def invalid_result(self, msg):
+    def invalid_result(self, msg, error=None):
         self.result.validity = msg
         self.result.correctness = 0
         self.result.objective = float('inf')
         self.result.runtimes = []
+        if error:
+            self.result.error = error
         return self.result
 
     def run_kernel(self, launch_config, tuning_config, result):
@@ -106,14 +108,14 @@ class CudaKernelRunner:
             self.compile_kernel(tuning_config)
         except Exception as e:
             print(e)
-            return self.invalid_result("Compile exception: {}".format(e))
+            return self.invalid_result("Compile exception", e)
 
         args_tuple = tuple(self.arg_handler.populate_args(self.kernel_spec["Arguments"]))
 
         try:
             self.launch_kernel(args_tuple, launch_config)
         except Exception as e:
-            return self.invalid_result("Launch exception")
+            return self.invalid_result("Launch exception", e)
 
         if DEBUG:
             correctness = correctness_funcs[self.kernel_spec["KernelName"]]
