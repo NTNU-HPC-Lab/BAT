@@ -3,8 +3,8 @@
         "LoggingLevel": "Debug",
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
-        "OutputFormat": "HDF5",
-        "FormatVersion": "0.0.1",
+        "OutputFormat": "JSON",
+        "FormatVersion": 1,
         "BenchmarkName": "nbody",
         "BenchmarksPath": "benchmarks"
     },
@@ -64,8 +64,18 @@
           }
         ],
 		"Conditions": [
-          "INNER_UNROLL_FACTOR1 * INNER_UNROLL_FACTOR2 <= 256",
-          "INNER_UNROLL_FACTOR2 <= OUTER_UNROLL_FACTOR"
+            {
+                "Expression": "INNER_UNROLL_FACTOR1 * INNER_UNROLL_FACTOR2 <= 256",
+                "Parameters": ["INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"]
+            },
+            {
+                "Expression": "INNER_UNROLL_FACTOR2 <= OUTER_UNROLL_FACTOR",
+                "Parameters": ["INNER_UNROLL_FACTOR2,", "OUTER_UNROLL_FACTOR"]
+            },
+            {
+                "Expression": "(VECTOR_TYPE == 1 and USE_SOA == 0) or USE_SOA == 1",
+                "Parameters": ["VECTOR_TYPE,", "USE_SOA"]
+            }
         ]
     },
     "BenchmarkConfig": {
@@ -80,15 +90,15 @@
         "KernelFile": "nbody.cu",
         "LocalSize": {
             "X": "BLOCK_SIZE",
-            "Y": 1,
-            "Z": 1
+            "Y": "1",
+            "Z": "1"
         },
         "GlobalSize": {
             "X": "((65536 + OUTER_UNROLL_FACTOR - 1)//OUTER_UNROLL_FACTOR + BLOCK_SIZE - 1) // BLOCK_SIZE",
-            "Y": 1,
-            "Z": 1
+            "Y": "1",
+            "Z": "1"
         },
-        "SharedMemory": null,
+        "SharedMemory": 0,
         "Stream": null,
         "Arguments": [
             {
@@ -216,7 +226,7 @@
                 "Type": "int32",
                 "MemoryType": "Scalar",
                 "AccessType": "ReadOnly",
-                "FillValue": "65536"
+                "FillValue": 65536
             }
         ]
     }
