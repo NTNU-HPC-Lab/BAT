@@ -30,13 +30,6 @@ class Manager:
     def write(self):
         self.dataset.write_data()
         self.dataset.write_metadata()
-        """
-        dump_results = {"results": []}
-        with open(self.filename, 'a') as f:
-            for result in self.results:
-                dump_results["results"].append(result.serialize())
-            json.dump(dump_results, f, indent=4)
-        """
 
     def get_spec(self, json_path):
         with open(json_path, 'r') as f:
