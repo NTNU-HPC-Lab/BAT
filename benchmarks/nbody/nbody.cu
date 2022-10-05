@@ -1,3 +1,6 @@
+
+extern "C" {
+
 #if VECTOR_TYPE == 1
     typedef float vector;
 #elif VECTOR_TYPE == 2
@@ -15,6 +18,14 @@ inline __device__ float2 make_float2(float s)
 inline __device__ float4 make_float4(float s)
 {
     return make_float4(s, s, s, s);
+}
+/*
+inline __device__ float2 rsqrtf(float2 x){
+    return make_float2(rsqrtf(x.x), rsqrtf(x.y));
+}
+
+inline __device__ float4 rsqrtf(float4 x){
+    return make_float4(rsqrtf(x.x), rsqrtf(x.y), rsqrtf(x.z), rsqrtf(x.w));
 }
 
 inline __device__ float2 operator+(float2 a, float2 b)
@@ -101,15 +112,8 @@ inline __device__ float4 operator*(float b, float4 a)
     return make_float4(b * a.x, b * a.y, b * a.z, b * a.w);
 }
 
-inline __device__ float2 rsqrtf(float2 x){
-    return make_float2(rsqrtf(x.x), rsqrtf(x.y));
-}
+*/
 
-inline __device__ float4 rsqrtf(float4 x){
-    return make_float4(rsqrtf(x.x), rsqrtf(x.y), rsqrtf(x.z), rsqrtf(x.w));
-}
-
-extern "C" {
 // method to calculate acceleration caused by body J
 __device__ void updateAcc(vector bodyAcc[3], float bodyPos[3], // position of body I
 	vector bufferPosX, vector bufferPosY, vector bufferPosZ, vector bufferMass, // position and mass of body J
