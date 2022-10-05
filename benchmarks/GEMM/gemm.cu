@@ -121,6 +121,11 @@
     typedef real4 realN;
 #endif
 
+extern "C" {  // Needed by CUPY for Python-based tuners
+
+
+/*
+
 inline __device__ float2 make_float2(float s)
 {
     return make_float2(s, s);
@@ -223,6 +228,7 @@ inline __device__ float4 rsqrtf(float4 x){
     return make_float4(rsqrtf(x.x), rsqrtf(x.y), rsqrtf(x.z), rsqrtf(x.w));
 }
 
+*/
 // =================================================================================================
 
 // Caches global off-chip memory into local (shared) memory on-chip. This function is specific for
@@ -500,7 +506,7 @@ inline __device__ void MultiplyAccumulate(realM cpm[NWI][MWI/VWM], realM apm[MWI
 
 // Main entry of the kernel. This function contains the basic skeleton, the functionality is
 // provided by the inlined functions above.
-extern "C" __global__ void gemm_fast(const int kSizeM, const int kSizeN, const int kSizeK,
+__global__ void gemm_fast(const int kSizeM, const int kSizeN, const int kSizeK,
                         const  realM* __restrict__ agm,
                         const  realN* __restrict__ bgm,
                          realM* cgm) {
@@ -596,5 +602,7 @@ extern "C" __global__ void gemm_fast(const int kSizeM, const int kSizeN, const i
   // Stores an MWG * NWG tile of results
   StoreResults(cgm, cpm, kSizeM);
 }
+
+} // Extern C
 
 // =================================================================================================

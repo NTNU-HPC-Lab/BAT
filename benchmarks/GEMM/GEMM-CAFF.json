@@ -1,211 +1,218 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarkName": "GEMM",
-        "benchmarksPath": "src/benchmarks"
+    "General": {
+        "FormatVersion": 1,
+        "OutputFormat": "JSON",
+        "BenchmarkName": "GEMM",
+        "BenchmarksPath": "src/benchmarks"
     },
-    "configurationSpace": {
-        "tuningParameters": [
+    "SearchSettings": {
+        "TunerName": "Optuna",
+        "Trials": 10
+    },
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "MWG",
-                "type": "int",
-                "values": [16, 32, 64, 128],
-                "default": 16 
+                "Name": "MWG",
+                "Type": "int",
+                "Values": "[16, 32, 64, 128]",
+                "Default": 16 
             },
             {
-                "name": "NWG",
-                "type": "int",
-                "values": [16, 32, 64, 128],
-                "default": 16 
+                "Name": "NWG",
+                "Type": "int",
+                "Values": "[16, 32, 64, 128]",
+                "Default": 16 
             },
             {
-                "name": "KWG",
-                "type": "int",
-                "values": [16, 32],
-                "default": 32 
+                "Name": "KWG",
+                "Type": "int",
+                "Values": "[16, 32]",
+                "Default": 32 
             },
             {
-                "name": "MDIMC",
-                "type": "int",
-                "values": [8, 16, 32],
-                "default": 16 
+                "Name": "MDIMC",
+                "Type": "int",
+                "Values": "[8, 16, 32]",
+                "Default": 16 
             },
             {
-                "name": "NDIMC",
-                "type": "int",
-                "values": [8, 16, 32],
-                "default": 16 
+                "Name": "NDIMC",
+                "Type": "int",
+                "Values": "[8, 16, 32]",
+                "Default": 16 
             },
             {
-                "name": "MDIMA",
-                "type": "int",
-                "values": [8, 16, 32],
-                "default": 16 
+                "Name": "MDIMA",
+                "Type": "int",
+                "Values": "[8, 16, 32]",
+                "Default": 16 
             },
             {
-                "name": "MDIMB",
-                "type": "int",
-                "values": [8, 16, 32],
-                "default": 16 
+                "Name": "NDIMB",
+                "Type": "int",
+                "Values": "[8, 16, 32]",
+                "Default": 16 
             },
             {
-                "name": "KWI",
-                "type": "int",
-                "values": [2, 8],
-                "default": 2 
+                "Name": "KWI",
+                "Type": "int",
+                "Values": "[2, 8]",
+                "Default": 2 
             },
             {
-                "name": "VWM",
-                "type": "int",
-                "values": [1],
-                "default": 1 
+                "Name": "VWM",
+                "Type": "int",
+                "Values": "[1]",
+                "Default": 1 
             },
             {
-                "name": "VMN",
-                "type": "int",
-                "values": [1],
-                "default": 1 
+                "Name": "VWN",
+                "Type": "int",
+                "Values": "[1]",
+                "Default": 1 
             },
             {
-                "name": "STRM",
-                "type": "int",
-                "values": [0, 1],
-                "default": 0 
+                "Name": "STRM",
+                "Type": "int",
+                "Values": "[0, 1]",
+                "Default": 0 
             },
             {
-                "name": "STRN",
-                "type": "int",
-                "values": [0, 1],
-                "default": 0 
+                "Name": "STRN",
+                "Type": "int",
+                "Values": "[0, 1]",
+                "Default": 0 
             },
             {
-                "name": "SA",
-                "type": "int",
-                "values": [0, 1],
-                "default": 0 
+                "Name": "SA",
+                "Type": "int",
+                "Values": "[0, 1]",
+                "Default": 0 
             },
             {
-                "name": "SB",
-                "type": "int",
-                "values": [0, 1],
-                "default": 0 
+                "Name": "SB",
+                "Type": "int",
+                "Values": "[0, 1]",
+                "Default": 0 
             },
             {
-                "name": "PRECISION",
-                "type": "int",
-                "values": [32],
-                "default": 32 
+                "Name": "PRECISION",
+                "Type": "int",
+                "Values": "[32]",
+                "Default": 32 
             }
         ],
-		"constraints": []
+		"Conditions": [
+            {
+                "Expression": "not (KWG % KWI)",
+                "Parameters": ["KWG", "KWI"]
+            },
+            {
+                "Expression": "not (MWG % (MDIMC * VWM))",
+                "Parameters": ["MWG", "MDIMC", "VWM"]
+            },
+            {
+                "Expression": "not (NWG % (NDIMC * VWN))",
+                "Parameters": ["NWG", "NDIMC", "VWN"]
+            },
+            {
+                "Expression": "not (MWG % (MDIMA * VWM))",
+                "Parameters": ["MWG", "MDIMA", "VWM"]
+            },
+            {
+                "Expression": "not (NWG % (NDIMB * VWN))",
+                "Parameters": ["NWG", "NDIMB", "VWN"]
+            },
+            {
+                "Expression": "not (KWG % ((MDIMC * NDIMC) // MDIMA))",
+                "Parameters": ["KWG", "MDIMC", "NDIMC", "MDIMA"]
+            },
+            {
+                "Expression": "not (KWG % ((MDIMC * NDIMC) // NDIMB))",
+                "Parameters": ["KWG", "MDIMC", "NDIMC", "NDIMB"]
+            }
+        ]
     },
-    "benchmarkConfig": {
+    "BenchmarkConfig": {
       "dataSize": 4096,
       "iterations": 1000
     },
-    "kernelSpecification": {
-        "language": "CUDA",
-        "compilerOptions": ["-std=c++11"],
-        "benchmarkPath": "src/benchmarks",
-        "benchmarkName": "GEMM",
-        "kernelName": "gemm_fast",
-        "kernelFile": "gemm.cu",
-        "blockSize": {
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "BenchmarkPath": "src/benchmarks",
+        "BenchmarkName": "GEMM",
+        "KernelName": "gemm_fast",
+        "KernelFile": "gemm.cu",
+        "LocalSize": {
             "X": "MDIMC * MWG",
             "Y": "NDIMC * NWG",
-            "Z": 1
+            "Z": "1"
         },
-        "gridSize": {
+        "GlobalSize": {
             "X": "((2048 + MDIMC -1 )// MDIMC + MWG - 1) // MWG",
             "Y": "((2048 + NDIMC -1 )// NDIMC + NWG - 1) // NWG",
-            "Z": 1
+            "Z": "1"
         },
-        "sharedMemory": null,
-        "stream": null,
-        "arguments": [
+        "SharedMemory": 0,
+        "Stream": null,
+        "Arguments": [
         {
-            "name": "kSizeM",
-            "type": "int",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": 2048 
-        },
-        {
-            "name": "kSizeN",
-            "type": "int",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": 2048 
+            "Name": "kSizeM",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 2048 
         },
         {
-            "name": "kSizeK",
-            "type": "int",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": 2048 
+            "Name": "kSizeN",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 2048 
         },
         {
-            "name": "kSizeK",
-            "type": "int",
-            "memoryType": "Scalar",
-            "accessType": "ReadOnly",
-            "value": 2048 
+            "Name": "kSizeK",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 2048 
         },
         {
-            "name": "agm",
-            "type": "float",
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "length": 2048,
-            "fillType": "random"
+            "Name": "kSizeK",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 2048 
         },
         {
-            "name": "bgm",
-            "type": "float",
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "length": 2048,
-            "fillType": "random"
+            "Name": "agm",
+            "Type": "float",
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "Size": 2048,
+            "FillType": "Random",
+            "FillValue": 1.0
         },
         {
-            "name": "cgm",
-            "type": "float",
-            "memoryType": "Vector",
-            "accessType": "ReadOnly",
-            "length": 2048,
-            "fillType": "uninitialized"
+            "Name": "bgm",
+            "Type": "float",
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "Size": 2048,
+            "FillType": "Random",
+            "FillValue": 1.0
+        },
+        {
+            "Name": "cgm",
+            "Type": "float",
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "Size": 2048,
+            "FillType": "Constant",
+            "FillValue": 0.0
         }
       ]
-    },
-  "metadata": {
-    "types": {
-      "float3": {
-        "x": "float",
-        "y": "float",
-        "z": "float"
-      },
-      "float4": {
-        "x": "float",
-        "y": "float",
-        "z": "float",
-        "w": "float"
-      },
-      "double3": {
-        "x": "double",
-        "y": "double",
-        "z": "double"
-      },
-      "double4": {
-        "x": "double",
-        "y": "double",
-        "z": "double",
-        "w": "double"
-      }
-    }
-  },
-    "verification": {
-        "type": "reference_CPU",
-        "path": "/path/reference.cpp"
     }
 }
   
