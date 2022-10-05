@@ -38,7 +38,7 @@ class ConfigSpace:
         for expr in self.constraints:
             for name, value in tuning_config.items():
                 locals()[name] = value
-            if not eval(expr):
+            if not eval(expr["Expression"]):
                 return False
         return True
 

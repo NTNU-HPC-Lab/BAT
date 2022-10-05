@@ -1,0 +1,3 @@
+[submodule "schemas/TuningSchema"]
+	path = schemas/TuningSchema
+	url = https://github.com/odgaard/TuningSchema

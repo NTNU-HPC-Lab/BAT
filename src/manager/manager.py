@@ -6,6 +6,7 @@ from src.result.dataset import Dataset
 class Manager:
     def __init__(self, args):
         self.spec = self.get_spec(args.json)
+        self.validate_schema()
         self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
         self.dataset = Dataset(self.spec)
         self.search_settings = self.spec["SearchSettings"]
@@ -18,6 +19,13 @@ class Manager:
 
         #self.filename = "optuna-results.hdf5"
         self.testing = 0
+
+    def validate_schema(self):
+        from jsonschema import validate
+        with open('schemas/TuningSchema/TuningSchema.json', 'r') as f:
+            schema = json.loads(f.read())
+        validate(instance=self.spec, schema=schema)
+
 
     def write(self):
         self.dataset.write_data()
