@@ -1,0 +1,211 @@
+{
+    "general": {
+        "formatVersion": "0.0.1",
+        "benchmarkName": "GEMM",
+        "benchmarksPath": "src/benchmarks"
+    },
+    "configurationSpace": {
+        "tuningParameters": [
+            {
+                "name": "MWG",
+                "type": "int",
+                "values": [16, 32, 64, 128],
+                "default": 16 
+            },
+            {
+                "name": "NWG",
+                "type": "int",
+                "values": [16, 32, 64, 128],
+                "default": 16 
+            },
+            {
+                "name": "KWG",
+                "type": "int",
+                "values": [16, 32],
+                "default": 32 
+            },
+            {
+                "name": "MDIMC",
+                "type": "int",
+                "values": [8, 16, 32],
+                "default": 16 
+            },
+            {
+                "name": "NDIMC",
+                "type": "int",
+                "values": [8, 16, 32],
+                "default": 16 
+            },
+            {
+                "name": "MDIMA",
+                "type": "int",
+                "values": [8, 16, 32],
+                "default": 16 
+            },
+            {
+                "name": "MDIMB",
+                "type": "int",
+                "values": [8, 16, 32],
+                "default": 16 
+            },
+            {
+                "name": "KWI",
+                "type": "int",
+                "values": [2, 8],
+                "default": 2 
+            },
+            {
+                "name": "VWM",
+                "type": "int",
+                "values": [1],
+                "default": 1 
+            },
+            {
+                "name": "VMN",
+                "type": "int",
+                "values": [1],
+                "default": 1 
+            },
+            {
+                "name": "STRM",
+                "type": "int",
+                "values": [0, 1],
+                "default": 0 
+            },
+            {
+                "name": "STRN",
+                "type": "int",
+                "values": [0, 1],
+                "default": 0 
+            },
+            {
+                "name": "SA",
+                "type": "int",
+                "values": [0, 1],
+                "default": 0 
+            },
+            {
+                "name": "SB",
+                "type": "int",
+                "values": [0, 1],
+                "default": 0 
+            },
+            {
+                "name": "PRECISION",
+                "type": "int",
+                "values": [32],
+                "default": 32 
+            }
+        ],
+		"constraints": []
+    },
+    "benchmarkConfig": {
+      "dataSize": 4096,
+      "iterations": 1000
+    },
+    "kernelSpecification": {
+        "language": "CUDA",
+        "compilerOptions": ["-std=c++11"],
+        "benchmarkPath": "src/benchmarks",
+        "benchmarkName": "GEMM",
+        "kernelName": "gemm_fast",
+        "kernelFile": "gemm.cu",
+        "blockSize": {
+            "X": "MDIMC * MWG",
+            "Y": "NDIMC * NWG",
+            "Z": 1
+        },
+        "gridSize": {
+            "X": "((2048 + MDIMC -1 )// MDIMC + MWG - 1) // MWG",
+            "Y": "((2048 + NDIMC -1 )// NDIMC + NWG - 1) // NWG",
+            "Z": 1
+        },
+        "sharedMemory": null,
+        "stream": null,
+        "arguments": [
+        {
+            "name": "kSizeM",
+            "type": "int",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 2048 
+        },
+        {
+            "name": "kSizeN",
+            "type": "int",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 2048 
+        },
+        {
+            "name": "kSizeK",
+            "type": "int",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 2048 
+        },
+        {
+            "name": "kSizeK",
+            "type": "int",
+            "memoryType": "Scalar",
+            "accessType": "ReadOnly",
+            "value": 2048 
+        },
+        {
+            "name": "agm",
+            "type": "float",
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "length": 2048,
+            "fillType": "random"
+        },
+        {
+            "name": "bgm",
+            "type": "float",
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "length": 2048,
+            "fillType": "random"
+        },
+        {
+            "name": "cgm",
+            "type": "float",
+            "memoryType": "Vector",
+            "accessType": "ReadOnly",
+            "length": 2048,
+            "fillType": "uninitialized"
+        }
+      ]
+    },
+  "metadata": {
+    "types": {
+      "float3": {
+        "x": "float",
+        "y": "float",
+        "z": "float"
+      },
+      "float4": {
+        "x": "float",
+        "y": "float",
+        "z": "float",
+        "w": "float"
+      },
+      "double3": {
+        "x": "double",
+        "y": "double",
+        "z": "double"
+      },
+      "double4": {
+        "x": "double",
+        "y": "double",
+        "z": "double",
+        "w": "double"
+      }
+    }
+  },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  
