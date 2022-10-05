@@ -1,153 +1,146 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarksPath": "src/benchmarks",
-        "benchmarkName": "FFT"
+    "General": {
+        "FormatVersion": 1,
+        "BenchmarksPath": "src/benchmarks",
+        "BenchmarkName": "FFT",
+        "OutputFormat": "JSON"
     },
-    "metadata": {
-      "types": {
-        "float2": {
-          "x": "float",
-          "y": "float"
-        },
-        "double2": {
-          "x": "double",
-          "y": "double"
-        }
-      }
-    },
-    "configurationSpace": {
-        "tuningParameters": [
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "FFT2_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "FFT2_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "FFT4_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "FFT4_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "IFFT4_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "IFFT4_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "FFT8_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "FFT8_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "IFFT8_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "IFFT8_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "TWIDDLE_8_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "TWIDDLE_8_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "ITWIDDLE_8_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "ITWIDDLE_8_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "TRANSPOSE_8_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "TRANSPOSE_8_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "TRANSPOSE_4X4_INLINE",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 1
+                "Name": "TRANSPOSE_4X4_INLINE",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_LOAD_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_LOAD_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_LOADX_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_LOADX_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_LOADX_16",
-                "type": "int",
-                "values": [1, 2, 4, 8, 16],
-                "default": 1
+                "Name": "LOOP_UNROLL_LOADX_16",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8, 16]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_LOADY_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_LOADY_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_LOADY_16",
-                "type": "int",
-                "values": [1, 2, 4, 8, 16],
-                "default": 1
+                "Name": "LOOP_UNROLL_LOADY_16",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8, 16]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_STORE_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_STORE_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_STOREX_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_STOREX_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_STOREY_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_STOREY_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_STOREX_4X4",
-                "type": "int",
-                "values": [1, 2, 4, 8, 16],
-                "default": 1
+                "Name": "LOOP_UNROLL_STOREX_4X4",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8, 16]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_STOREY_4X4",
-                "type": "int",
-                "values": [1, 2, 4, 8, 16],
-                "default": 1
+                "Name": "LOOP_UNROLL_STOREY_4X4",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8, 16]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_TWIDDLE_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_TWIDDLE_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             },
             {
-                "name": "LOOP_UNROLL_ITWIDDLE_8",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 1
+                "Name": "LOOP_UNROLL_ITWIDDLE_8",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 1
             }
         ],
-		"constraints": []
+		"Conditions": []
     },
-    "benchmarkConfig": {
+    "SearchSettings": {
+        "TunerName": "Optuna",
+        "Trials": 10
+    },
+    "BenchmarkConfig": {
         "dataSize": 73728,
         "jitify": true,
         "iterations": 3000,
@@ -158,39 +151,36 @@
         "N": 131072,
         "used_bytes": 1048576
     },
-    "kernelSpecification": {
-        "language": "CUDA",
-        "compilerOptions": ["-std=c++11"],
-        "kernelName": "FFT512_device",
-        "kernelFile": "fft.cu",
-        "benchmarkPath": "src/benchmarks",
-        "benchmarkName": "FFT",
-        "blockSize": {
-            "X": 64,
-            "Y": 1,
-            "Z": 1
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "KernelName": "FFT512_device",
+        "KernelFile": "fft.cu",
+        "BenchmarkPath": "src/benchmarks",
+        "BenchmarkName": "FFT",
+        "LocalSize": {
+            "X": "64",
+            "Y": "1",
+            "Z": "1"
         },
-        "gridSize": {
-            "X": 512,
-            "Y": 1,
-            "Z": 1
+        "GlobalSize": {
+            "X": "512",
+            "Y": "1",
+            "Z": "1"
         },
-        "sharedMemory": 4608,
-        "stream": null,
-        "arguments": [
+        "SharedMemory": 4608,
+        "Stream": null,
+        "Arguments": [
         {
-            "name": "work",
-            "type": "float2",
-            "length": 262144,
-            "memoryType": "Vector",
-            "accessType": "ReadWrite",
-            "fillType": "random"
+            "Name": "work",
+            "Type": "float2",
+            "Size": 262144,
+            "MemoryType": "Vector",
+            "AccessType": "ReadWrite",
+            "FillType": "Random",
+            "FillValue": 1.0
         }
       ]
-    },
-    "verification": {
-        "type": "reference_CPU",
-        "path": "/path/reference.cpp"
     }
 }
   
