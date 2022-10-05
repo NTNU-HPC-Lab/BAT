@@ -7,31 +7,36 @@
         "TuningParameters": [
             {
                 "Name": "BLOCK_SIZE",
-                "Type": "int32",
+                "Type": "int",
                 "Values": "list(range(32, 1024+1, 32))",
                 "Default": 128
             },
             {
                 "Name": "LOOP_UNROLL_TRIAD",
-                "Type": "int32",
+                "Type": "int",
                 "Values": "list(range(1,16))",
                 "Default": 1
             },
             {
                 "Name": "WORK_PER_THREAD",
-                "Type": "int32",
+                "Type": "int",
                 "Values": "list(range(1, 17))",
                 "Default": 1
             }
         ],
-		"Conditions": ["LOOP_UNROLL_TRIAD <= WORK_PER_THREAD"]
+		"Conditions": [
+            {
+                "Expression": "LOOP_UNROLL_TRIAD <= WORK_PER_THREAD",
+                "Parameters": ["LOOP_UNROLL_TRIAD", "WORK_PER_THREAD"]
+            }
+        ]
     },
     "General": {
         "LoggingLevel": "Debug",
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
-        "OutputFormat": "HDF5",
-        "FormatVersion": "0.0.1",
+        "OutputFormat": "JSON",
+        "FormatVersion": 1,
         "BenchmarksPath": "benchmarks",
         "BenchmarkName": "TRIAD"
     },
