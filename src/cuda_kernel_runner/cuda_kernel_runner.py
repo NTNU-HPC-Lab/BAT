@@ -107,10 +107,11 @@ class CudaKernelRunner:
         try:
             self.compile_kernel(tuning_config)
         except Exception as e:
-            print(e)
             return self.invalid_result("Compile exception", e)
 
+        t0 = time.time()
         args_tuple = tuple(self.arg_handler.populate_args(self.kernel_spec["Arguments"]))
+        self.result.arg_time = time.time() - t0
 
         try:
             self.launch_kernel(args_tuple, launch_config)

@@ -4,7 +4,7 @@ from statistics import mean
 
 
 class Result:
-    def __init__(self, spec, config=[0], compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0):
+    def __init__(self, spec, config=[0], compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0):
         self.spec = spec
         self.benchmark = spec["General"]["BenchmarkName"]
         self.config = config
@@ -12,6 +12,7 @@ class Result:
         self.runtimes = runtimes
         self.algorithm_time = algorithm_time
         self.framework_time = framework_time
+        self.arg_time = arg_time
         self.total_time = total_time
         self.correctness = 1
         self.validity = "Correct"
@@ -40,6 +41,7 @@ class Result:
         d["times"] = {}
         d["times"]["total_time"] = self.total_time
         d["times"]["compile_time"] = self.compile_time
+        d["times"]["arg_time"] = self.arg_time
         #d["times"]["runtimes"] = mean(self.runtimes) if len(self.runtimes) else 0
         d["times"]["runtimes"] = self.runtimes
         d["times"]["algorithm_time"] = self.algorithm_time

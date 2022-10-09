@@ -8,6 +8,8 @@ from src.manager import get_data_path
 type_conv_dict = {
     "bool": np.bool_,
     "byte": np.byte,
+    "int8": np.byte,
+    "uint8": np.ubyte,
     "int16": np.short,
     "uint16": np.ushort,
     "int32": np.intc,
