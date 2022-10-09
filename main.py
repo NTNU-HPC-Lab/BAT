@@ -8,6 +8,10 @@ def run_opentuner(args):
     from src.tuners.opentuner_runner import OpenTunerT
     OpenTunerT.main(args)
 
+def run_smac(args):
+    from src.tuners.smac3_runner.smac3_runner import SMAC3
+    smac3_runner = SMAC3()
+    print(smac3_runner.main(args))
 
 def run_optuna(args):
     from src.tuners.optuna_runner import Optuna
@@ -31,6 +35,8 @@ runner_dict = {
     "opentuner": run_opentuner,
     "optuna": run_optuna,
     "kerneltuner": run_kerneltuner,
+    "smac": run_smac,
+    "smac3": run_smac
 }
 
 
