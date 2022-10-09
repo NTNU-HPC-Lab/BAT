@@ -124,8 +124,6 @@
 extern "C" {  // Needed by CUPY for Python-based tuners
 
 
-/*
-
 inline __device__ float2 make_float2(float s)
 {
     return make_float2(s, s);
@@ -135,6 +133,8 @@ inline __device__ float4 make_float4(float s)
 {
     return make_float4(s, s, s, s);
 }
+
+/*
 
 inline __device__ float2 operator+(float2 a, float2 b)
 {
@@ -506,11 +506,10 @@ inline __device__ void MultiplyAccumulate(realM cpm[NWI][MWI/VWM], realM apm[MWI
 
 // Main entry of the kernel. This function contains the basic skeleton, the functionality is
 // provided by the inlined functions above.
-__global__ void gemm_fast(const int kSizeM, const int kSizeN, const int kSizeK,
-                        const  realM* __restrict__ agm,
-                        const  realN* __restrict__ bgm,
-                         realM* cgm) {
-
+__global__ void gemm_fast(int kSizeM, int kSizeN, int kSizeK,
+                        realM* agm,
+                        realN* bgm,
+                        realM* cgm) {
   // Combined thread identifier
   #if SA == 1 || SB == 1
     volatile int tid = threadIdx.x + MDIMC*threadIdx.y;
@@ -537,9 +536,9 @@ __global__ void gemm_fast(const int kSizeM, const int kSizeN, const int kSizeK,
       #if VWM == 1
         cpm[ni][mi] = (realM)ZERO;
       #elif VWM == 2
-        cpm[ni][mi] = make_float2(ZERO, ZERO); /* XXX float hardcoded */
+        cpm[ni][mi] = make_float2(ZERO, ZERO); // XXX float hardcoded
       #elif VWM == 4
-        cpm[ni][mi] = make_float4(ZERO, ZERO, ZERO, ZERO); /* XXX float hardcoded */
+        cpm[ni][mi] = make_float4(ZERO, ZERO, ZERO, ZERO); // XXX float hardcoded 
       #endif
     }
   }
@@ -560,7 +559,6 @@ __global__ void gemm_fast(const int kSizeM, const int kSizeN, const int kSizeK,
     #if SA == 1 || SB == 1
       __syncthreads();
     #endif
-
     // Loops over all workitem tiles, unrolled by a factor KWI
     for (int pwi=0; pwi<KWG; pwi+=KWI) {
       #pragma unroll
@@ -600,7 +598,7 @@ __global__ void gemm_fast(const int kSizeM, const int kSizeN, const int kSizeK,
   }
 
   // Stores an MWG * NWG tile of results
-  StoreResults(cgm, cpm, kSizeM);
+  // StoreResults(cgm, cpm, kSizeM);
 }
 
 } // Extern C

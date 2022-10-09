@@ -1,7 +1,10 @@
 {
     "General": {
-        "FormatVersion": 1,
+        "LoggingLevel": "Debug",
+        "TimeUnit": "Microseconds",
+        "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
+        "FormatVersion": 1,
         "BenchmarkName": "GEMM",
         "BenchmarksPath": "src/benchmarks"
     },
@@ -86,13 +89,13 @@
             {
                 "Name": "SA",
                 "Type": "int",
-                "Values": "[0, 1]",
+                "Values": "[0]",
                 "Default": 0 
             },
             {
                 "Name": "SB",
                 "Type": "int",
-                "Values": "[0, 1]",
+                "Values": "[0]",
                 "Default": 0 
             },
             {
@@ -134,7 +137,7 @@
         ]
     },
     "BenchmarkConfig": {
-      "dataSize": 4096,
+      "dataSize": 512,
       "iterations": 1000
     },
     "KernelSpecification": {
@@ -145,16 +148,16 @@
         "KernelName": "gemm_fast",
         "KernelFile": "gemm.cu",
         "LocalSize": {
-            "X": "MDIMC * MWG",
-            "Y": "NDIMC * NWG",
+            "X": "MDIMC",
+            "Y": "NDIMC",
             "Z": "1"
         },
         "GlobalSize": {
-            "X": "((2048 + MDIMC -1 )// MDIMC + MWG - 1) // MWG",
-            "Y": "((2048 + NDIMC -1 )// NDIMC + NWG - 1) // NWG",
+            "X": "(512 * MDIMC) // MWG",
+            "Y": "(512 * NDIMC) // NWG",
             "Z": "1"
         },
-        "SharedMemory": 0,
+        "SharedMemory": 16384,
         "Stream": null,
         "Arguments": [
         {
@@ -162,35 +165,28 @@
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 2048 
+            "FillValue": 512 
         },
         {
             "Name": "kSizeN",
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 2048 
+            "FillValue": 512 
         },
         {
             "Name": "kSizeK",
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 2048 
-        },
-        {
-            "Name": "kSizeK",
-            "Type": "int32",
-            "MemoryType": "Scalar",
-            "AccessType": "ReadOnly",
-            "FillValue": 2048 
+            "FillValue": 512 
         },
         {
             "Name": "agm",
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 2048,
+            "Size": 512,
             "FillType": "Random",
             "FillValue": 1.0
         },
@@ -199,7 +195,7 @@
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 2048,
+            "Size": 512,
             "FillType": "Random",
             "FillValue": 1.0
         },
@@ -208,7 +204,7 @@
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 2048,
+            "Size": 512,
             "FillType": "Constant",
             "FillValue": 0.0
         }
