@@ -1,28 +1,28 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarksPath": "src/benchmarks",
-        "benchmarkName": "Reduction"
+    "General": {
+        "FormatVersion": "0.0.1",
+        "BenchmarksPath": "src/benchmarks",
+        "BenchmarkName": "Reduction"
     },
-    "configurationSpace": {
-        "tuningParameters": [
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "BLOCK_SIZE",
-                "type": "int",
-                "values": "[2**i for i in range(5, 11)]",
-                "default": 256
+                "Name": "BLOCK_SIZE",
+                "Type": "int",
+                "Values": "[2**i for i in range(5, 11)]",
+                "Default": 256
             },
             {
-                "name": "LOOP_UNROLL_REDUCE_1",
-                "type": "int",
-                "values": [1, 2, 4],
-                "default": 4
+                "Name": "LOOP_UNROLL_REDUCE_1",
+                "Type": "int",
+                "Values": [1, 2, 4],
+                "Default": 4
             },
             {
-                "name": "LOOP_UNROLL_REDUCE_2",
-                "type": "int",
-                "values": [1, 2, 3, 6],
-                "default": 6
+                "Name": "LOOP_UNROLL_REDUCE_2",
+                "Type": "int",
+                "Values": [1, 2, 3, 6],
+                "Default": 6
             }
         ],
 		"constraints": []
@@ -53,24 +53,24 @@
         "stream": null,
         "arguments": [
         {
-            "name": "d_idata",
-            "type": "double",
+            "Name": "d_idata",
+            "Type": "double",
             "length": 65536,
             "accessType": "ReadOnly",
             "memoryType": "vector",
             "fillType": "random"
         },
         {
-            "name": "d_odata",
-            "type": "double",
+            "Name": "d_odata",
+            "Type": "double",
             "length": 65536,
             "accessType": "ReadWrite",
             "memoryType": "vector",
             "fillType": "uninitialized"
         },
         {
-            "name": "size",
-            "type": "int",
+            "Name": "size",
+            "Type": "int",
             "memoryType": "scalar",
             "accessType": "ReadOnly",
             "value": 65536
@@ -78,7 +78,7 @@
       ]
     },
     "verification": {
-        "type": "reference_CPU",
+        "Type": "reference_CPU",
         "path": "/path/reference.cpp"
     }
 }

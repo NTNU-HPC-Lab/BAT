@@ -12,6 +12,10 @@
         "TunerName": "Optuna",
         "Trials": 10
     },
+    "Budget": {
+        "Type": "ConfigurationCount",
+        "BudgetValue": 10
+    },
     "ConfigurationSpace": {
         "TuningParameters": [
             {
@@ -137,7 +141,7 @@
         ]
     },
     "BenchmarkConfig": {
-      "dataSize": 512,
+      "dataSize": 16384,
       "iterations": 1000
     },
     "KernelSpecification": {
@@ -153,8 +157,8 @@
             "Z": "1"
         },
         "GlobalSize": {
-            "X": "(512 * MDIMC) // MWG",
-            "Y": "(512 * NDIMC) // NWG",
+            "X": "(16384 * MDIMC) // MWG",
+            "Y": "(16384 * NDIMC) // NWG",
             "Z": "1"
         },
         "SharedMemory": 16384,
@@ -165,28 +169,28 @@
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 512 
+            "FillValue": 16384 
         },
         {
             "Name": "kSizeN",
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 512 
+            "FillValue": 16384 
         },
         {
             "Name": "kSizeK",
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 512 
+            "FillValue": 16384 
         },
         {
             "Name": "agm",
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 512,
+            "Size": 16384,
             "FillType": "Random",
             "FillValue": 1.0
         },
@@ -195,7 +199,7 @@
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 512,
+            "Size": 16384,
             "FillType": "Random",
             "FillValue": 1.0
         },
@@ -204,7 +208,7 @@
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 512,
+            "Size": 16384,
             "FillType": "Constant",
             "FillValue": 0.0
         }

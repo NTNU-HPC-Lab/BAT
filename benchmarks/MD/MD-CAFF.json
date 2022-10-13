@@ -1,54 +1,28 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarksPath": "src/benchmarks",
-        "benchmarkName": "MD"
+    "General": {
+        "FormatVersion": "0.0.1",
+        "BenchmarksPath": "src/benchmarks",
+        "BenchmarkName": "MD"
     },
-    "metadata": {
-      "types": {
-        "float3": {
-          "x": "float",
-          "y": "float",
-          "z": "float"
-        },
-        "float4": {
-          "x": "float",
-          "y": "float",
-          "z": "float",
-          "w": "float"
-        },
-        "double3": {
-          "x": "double",
-          "y": "double",
-          "z": "double"
-        },
-        "double4": {
-          "x": "double",
-          "y": "double",
-          "z": "double",
-          "w": "double"
-        }
-      }
-    },
-    "configurationSpace": {
-        "tuningParameters": [
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "BLOCK_SIZE",
-                "type": "int",
-                "values": "[2**i for i in range(5, 11)]",
-                "default": 256
+                "Name": "BLOCK_SIZE",
+                "Type": "int",
+                "Values": "[2**i for i in range(5, 11)]",
+                "Default": 256
             },
             {
-                "name": "TEXTURE_MEMORY",
-                "type": "int",
-                "values": [0],
-                "default": 1
+                "Name": "TEXTURE_MEMORY",
+                "Type": "int",
+                "Values": [0],
+                "Default": 1
             },
             {
-                "name": "WORK_PER_THREAD",
-                "type": "int",
-                "values": "list(range(1,11))",
-                "default": 1
+                "Name": "WORK_PER_THREAD",
+                "Type": "int",
+                "Values": "list(range(1,11))",
+                "Default": 1
             }
         ],
 		"constraints": []
@@ -79,31 +53,31 @@
         "stream": null,
         "arguments": [
         {
-            "name": "force3",
-            "type": "float3",
+            "Name": "force3",
+            "Type": "float3",
             "length": 73728,
             "memoryType": "Vector",
             "accessType": "ReadWrite",
             "fillType": "uninitialized"
         },
         {
-            "name": "position",
-            "type": "float4",
+            "Name": "position",
+            "Type": "float4",
             "length": 73728,
             "memoryType": "Vector",
             "accessType": "ReadOnly",
             "fillType": "random"
         },
         {
-            "name": "neighCount",
-            "type": "int",
+            "Name": "neighCount",
+            "Type": "int",
             "memoryType": "Scalar",
             "accessType": "ReadOnly",
             "value": 128
         },
         {
-            "name": "neighList",
-            "type": "int",
+            "Name": "neighList",
+            "Type": "int",
             "length": 9437184,
             "memoryType": "Vector",
             "accessType": "ReadOnly",
@@ -111,38 +85,34 @@
             "path": "MD-neighList-data.txt"
         },
         {
-            "name": "cutsq",
-            "type": "float",
+            "Name": "cutsq",
+            "Type": "float",
             "memoryType": "Scalar",
             "accessType": "ReadOnly",
             "value": 16.0
         },
         {
-            "name": "lj1",
-            "type": "float",
+            "Name": "lj1",
+            "Type": "float",
             "memoryType": "Scalar",
             "accessType": "ReadOnly",
             "value": 1.5
         },
         {
-            "name": "lj2",
-            "type": "float",
+            "Name": "lj2",
+            "Type": "float",
             "memoryType": "Scalar",
             "accessType": "ReadOnly",
             "value": 2.0
         },
         {
-            "name": "nAtom",
-            "type": "int",
+            "Name": "nAtom",
+            "Type": "int",
             "memoryType": "Scalar",
             "accessType": "ReadOnly",
             "value": 73728
         }
       ]
-    },
-    "verification": {
-        "type": "reference_CPU",
-        "path": "/path/reference.cpp"
     }
 }
   

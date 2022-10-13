@@ -1,164 +1,169 @@
 {
-    "general": {
-        "formatVersion": "0.0.1",
-        "benchmarksPath": "src/benchmarks",
-        "benchmarkName": "MD5Hash"
+    "General": {
+        "FormatVersion": 1,
+        "OutputFormat": "JSON",
+        "BenchmarksPath": "src/benchmarks",
+        "BenchmarkName": "MD5Hash"
     },
-    "configurationSpace": {
-        "tuningParameters": [
+    "ConfigurationSpace": {
+        "TuningParameters": [
             {
-                "name": "BLOCK_SIZE",
-                "type": "int",
-                "values": "list(range(32, 1024+1, 32))",
-                "default": 256
+                "Name": "BLOCK_SIZE",
+                "Type": "int",
+                "Values": "list(range(32, 1024+1, 32))",
+                "Default": 256
             },
             {
-                "name": "ROUND_STYLE",
-                "type": "int",
-                "values": [0, 1],
-                "default": 0
+                "Name": "ROUND_STYLE",
+                "Type": "int",
+                "Values": "[0, 1]",
+                "Default": 0
             },
             {
-                "name": "INLINE_1",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 0
+                "Name": "INLINE_1",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 0
             },
             {
-                "name": "INLINE_2",
-                "type": "int",
-                "values": [0, 1, 2],
-                "default": 0
+                "Name": "INLINE_2",
+                "Type": "int",
+                "Values": "[0, 1, 2]",
+                "Default": 0
             },
             {
-                "name": "UNROLL_LOOP_1",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 8
+                "Name": "UNROLL_LOOP_1",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 8
             },
             {
-                "name": "UNROLL_LOOP_2",
-                "type": "int",
-                "values": [1, 2, 4, 8],
-                "default": 8
+                "Name": "UNROLL_LOOP_2",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8]",
+                "Default": 8
             },
             {
-                "name": "UNROLL_LOOP_3",
-                "type": "int",
-                "values": [1, 2, 4],
-                "default": 4
+                "Name": "UNROLL_LOOP_3",
+                "Type": "int",
+                "Values": "[1, 2, 4]",
+                "Default": 4
             },
             {
-                "name": "WORK_PER_THREAD_FACTOR",
-                "type": "int",
-                "values": [1, 2, 3, 4, 5, 6],
-                "default": 1
+                "Name": "WORK_PER_THREAD_FACTOR",
+                "Type": "int",
+                "Values": "[1, 2, 3, 4, 5, 6]",
+                "Default": 1
             }
         ],
-		"constraints": []
+		"Conditions": []
     },
-    "benchmarkConfig": {
+    "BenchmarkConfig": {
         "dataSize": 1000000,
         "iterations": 1000
     },
-    "kernelSpecification": {
-        "language": "CUDA",
-        "compilerOptions": ["-std=c++11"],
-        "benchmarkPath": "src/benchmarks",
-        "benchmarkName": "MD5Hash",
-        "kernelName": "FindKeyWithDigest_Kernel",
-        "kernelFile": "md5hash_kernel.h",
-        "blockSize": {
+    "SearchSettings": {
+        "TunerName": "Optuna",
+        "Trials": 10
+    },
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "BenchmarkPath": "src/benchmarks",
+        "BenchmarkName": "MD5Hash",
+        "KernelName": "FindKeyWithDigest_Kernel",
+        "KernelFile": "md5hash_kernel.h",
+        "LocalSize": {
             "X": "BLOCK_SIZE",
-            "Y": 1,
-            "Z": 1
+            "Y": "1",
+            "Z": "1"
         },
-        "gridSize": {
+        "GlobalSize": {
             "X": "(1000000//BLOCK_SIZE//WORK_PER_THREAD_FACTOR) + 1",
-            "Y": 1,
-            "Z": 1
+            "Y": "1",
+            "Z": "1"
         },
-        "sharedMemory": "4*BLOCK_SIZE",
-        "stream": null,
-        "arguments": [
+        "SharedMemoryOriginal": "4*BLOCK_SIZE",
+        "SharedMemory": 4096,
+        "Stream": null,
+        "Arguments": [
         {
-            "name": "searchDigest0",
-            "type": "uint",
-            "accessType": "ReadOnly",
-            "memoryType": "scalar",
-            "value": 2745829788
-        },
-        {
-            "name": "searchDigest1",
-            "type": "uint",
-            "accessType": "ReadOnly",
-            "memoryType": "scalar",
-            "value": 1540754381
+            "Name": "searchDigest0",
+            "Type": "uint32",
+            "AccessType": "ReadOnly",
+            "MemoryType": "Scalar",
+            "FillValue": 2745829788
         },
         {
-            "name": "searchDigest2",
-            "type": "uint",
-            "accessType": "ReadOnly",
-            "memoryType": "scalar",
-            "value": 615701928
+            "Name": "searchDigest1",
+            "Type": "uint32",
+            "AccessType": "ReadOnly",
+            "MemoryType": "Scalar",
+            "FillValue": 1540754381
         },
         {
-            "name": "searchDigest3",
-            "type": "uint",
-            "accessType": "ReadOnly",
-            "memoryType": "scalar",
-            "value": 1640371132
+            "Name": "searchDigest2",
+            "Type": "uint32",
+            "AccessType": "ReadOnly",
+            "MemoryType": "Scalar",
+            "FillValue": 615701928
         },
         {
-            "name": "keyspace",
-            "type": "int",
-            "memoryType": "scalar",
-            "accessType": "ReadOnly",
-            "value": 10000000
+            "Name": "searchDigest3",
+            "Type": "uint32",
+            "AccessType": "ReadOnly",
+            "MemoryType": "Scalar",
+            "FillValue": 1640371132
         },
         {
-            "name": "byteLength",
-            "type": "int",
-            "memoryType": "scalar",
-            "accessType": "ReadOnly",
-            "value": 7
+            "Name": "keyspace",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 10000000
         },
         {
-            "name": "valsPerByte",
-            "type": "int",
-            "memoryType": "scalar",
-            "accessType": "ReadOnly",
-            "value": 10
+            "Name": "byteLength",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 7
         },
         {
-            "name": "foundIndex",
-            "type": "int",
-            "memoryType": "vector",
-            "length": 1,
-            "accessType": "ReadWrite",
-            "fillType": "uninitialized"
+            "Name": "valsPerByte",
+            "Type": "int32",
+            "MemoryType": "Scalar",
+            "AccessType": "ReadOnly",
+            "FillValue": 10
         },
         {
-            "name": "foundKey",
-            "type": "byte",
-            "length": 8,
-            "memoryType": "vector",
-            "accessType": "ReadWrite",
-            "fillType": "uninitialized"
+            "Name": "foundIndex",
+            "Type": "int32",
+            "MemoryType": "Vector",
+            "Size": 1,
+            "AccessType": "ReadWrite",
+            "FillType": "Constant",
+            "FillValue": 0
         },
         {
-            "name": "foundDigest",
-            "type": "uint",
-            "length": 4,
-            "memoryType": "vector",
-            "accessType": "ReadWrite",
-            "fillType": "uninitialized"
+            "Name": "foundKey",
+            "Type": "int8",
+            "Size": 8,
+            "MemoryType": "Vector",
+            "AccessType": "ReadWrite",
+            "FillType": "Constant",
+            "FillValue": 0
+        },
+        {
+            "Name": "foundDigest",
+            "Type": "uint32",
+            "Size": 4,
+            "MemoryType": "Vector",
+            "AccessType": "ReadWrite",
+            "FillType": "Constant",
+            "FillValue": 0
         }
       ]
-    },
-    "verification": {
-        "type": "reference_CPU",
-        "path": "/path/reference.cpp"
     }
 }
   
