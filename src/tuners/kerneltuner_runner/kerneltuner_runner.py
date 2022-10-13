@@ -85,7 +85,10 @@ class KernelTuner:
         tune_params = OrderedDict(self.manager.config_space.get_parameters())
 
         # add restrictions
-        restrict = self.manager.config_space.get_constraints()
+        constraints = self.manager.config_space.get_constraints()
+        restrict = [c["Expression"] for c in constraints]
+        print(restrict)
+
 
         results, env = kernel_tuner.tune_kernel(
             kernel_name,
