@@ -18,6 +18,16 @@ class CudaKernelRunner:
         self.config_space = config_space if config_space else ConfigSpace(self.spec["ConfigurationSpace"])
         self.kernel_spec = self.spec["KernelSpecification"]
         self.results = []
+        self.stream = cp.cuda.Stream()
+        self.timers = {
+                "runtime_start": cp.cuda.Event(),
+                "runtime_end": cp.cuda.Event(),
+                "total_start": cp.cuda.Event(),
+                "total_end": cp.cuda.Event(),
+                "start": cp.cuda.Event(),
+                "end": cp.cuda.Event(),
+        }
+        self.dev = cp.cuda.Device(0)
         self.result = Result(self.spec)
 
     def run(self, tuning_config, result):
@@ -66,21 +76,29 @@ class CudaKernelRunner:
                     backend=self.spec["BenchmarkConfig"].get("backend", "nvrtc"),
                     options=tuple(self.generate_compiler_options(tuning_config)),
                     jitify=self.spec["BenchmarkConfig"].get("jitify", False))
-        t0 = time.time()
+        self.start_timer()
         self.kernel = module.get_function(self.kernel_spec["KernelName"])
+        self.result.compile_time = self.get_duration()
 
-        self.result.compile_time = time.time() - t0
+
+
+    def start_timer(self, name="start"):
+        self.timers[name].record(stream=self.stream)
+
+    def get_duration(self, start_name="start", end_name="end"):
+        self.timers[end_name].record(stream=self.stream)
+        self.dev.synchronize()
+        return cp.cuda.get_elapsed_time(self.timers[start_name], self.timers[end_name]) / 1000
 
     def launch_kernel(self, args_tuple, launch_config):
-        t0 = time.time()
+        self.start_timer("runtime_start")
         self.result.runtimes = []
-        for i in range(launch_config.get("iterations", 10)):
-            t00 = time.time()
+        for _ in range(launch_config.get("iterations", 10)):
+            self.start_timer()
             self.kernel(grid=self.grid_dim, block=self.block_dim, args=args_tuple, shared_mem=self.shared_mem_size)
-            inner_duration = time.time() - t00
-            self.result.runtimes.append(inner_duration)
+            self.result.runtimes.append(self.get_duration())
 
-        self.result.objective = time.time() - t0
+        self.result.objective = self.get_duration("runtime_start", "runtime_end")
 
     def get_kernel_string(self) -> str:
         """ Reads in the kernel as a string """
