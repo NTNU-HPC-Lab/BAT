@@ -1,0 +1,19 @@
+{
+    "metadata": {
+        "title": "BAT Submission",
+        "access_right": "open",
+        "upload_type": "dataset",
+        "communities": [
+            {
+                "identifier": "autotuning-benchmarking"
+            }
+        ],
+        "description": "This is a submission for the BAT benchmark platform",
+        "creators": [
+            {
+                "name": "Doe, John",
+                "affiliation": "Zenodo"
+            }
+        ]
+    }
+}

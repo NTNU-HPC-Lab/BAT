@@ -16,6 +16,10 @@
         "Type": "ConfigurationCount",
         "BudgetValue": 10
     },
+    "BenchmarkConfig": {
+      "dataSize": 16384,
+      "iterations": 1000
+    },
     "ConfigurationSpace": {
         "TuningParameters": [
             {
@@ -139,10 +143,6 @@
                 "Parameters": ["KWG", "MDIMC", "NDIMC", "NDIMB"]
             }
         ]
-    },
-    "BenchmarkConfig": {
-      "dataSize": 16384,
-      "iterations": 1000
     },
     "KernelSpecification": {
         "Language": "CUDA",

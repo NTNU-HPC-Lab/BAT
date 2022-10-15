@@ -1,2 +1,2 @@
-from .manager import *
-from .util import *
+from src.manager.manager import *
+from src.manager.util import *
