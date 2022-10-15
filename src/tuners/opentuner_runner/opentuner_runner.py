@@ -35,10 +35,10 @@ class OpenTunerT(MeasurementInterface):
         return manipulator
 
     def program_name(self):
-        return self.manager.spec["kernelSpecification"]["kernelName"]
+        return self.manager.spec["KernelSpecification"]["KernelName"]
 
     def program_version(self):
-        return self.manager.spec["general"]["formatVersion"]
+        return self.manager.spec["General"]["FormatVersion"]
 
     def save_final_config(self, configuration):
         """

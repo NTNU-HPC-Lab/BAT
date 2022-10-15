@@ -18,6 +18,10 @@ def get_data_path(spec, local_data_path):
 def print_json(j):
     print(json.dumps(j, indent=4, sort_keys=True))
 
+def get_spec(json_path):
+    with open(json_path, 'r') as f:
+        r = json.load(f)
+    return r
 
 type_conv_dict = {
     "bool": np.bool_,

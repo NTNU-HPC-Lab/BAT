@@ -110,7 +110,6 @@ class CudaKernelRunner:
     def invalid_result(self, msg, error=None):
         self.result.validity = msg
         self.result.correctness = 0
-        self.result.objective = float('inf')
         self.result.runtimes = []
         if error:
             self.result.error = error
