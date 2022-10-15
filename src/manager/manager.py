@@ -1,4 +1,5 @@
 import json
+import os
 
 from src.config_space import ConfigSpace
 from src.result.dataset import Dataset
@@ -6,6 +7,7 @@ from src.manager.util import get_spec
 
 class Manager:
     def __init__(self, args):
+        self.root_results_path = "./results"
         self.spec = get_spec(args.json)
         self.validate_schema(self.spec)
 
@@ -21,7 +23,6 @@ class Manager:
 
         #self.filename = "optuna-results.hdf5"
         self.testing = 0
-        self.upload_zenodo = True
 
     def validate_schema(self, spec):
         from jsonschema import validate
@@ -29,12 +30,15 @@ class Manager:
             schema = json.loads(f.read())
         validate(instance=spec, schema=schema)
 
+    @staticmethod
+    def upload(root_results_path):
+        from src.result.zenodo import Zenodo
+        datasets = os.listdir(root_results_path)
+        z = Zenodo(datasets)
+        z.upload()
+
     def write(self):
         self.dataset.write_data()
-        if self.upload_zenodo:
-            from src.result.zenodo import Zenodo
-            z = Zenodo(self.dataset)
-            z.upload()
 
     def run(self, tuning_config, result):
         result = self.runner.run(tuning_config, result)

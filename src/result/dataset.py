@@ -8,40 +8,56 @@ import xmltodict
 import pandas as pd
 
 from src.manager.util import get_spec, get_kernel_path
+from src.result.zenodo import Zenodo
 
 class Dataset:
     def __init__(self, spec_path):
+        self.files = []
+        self.results = []
+        self.write_interval = 10
+
         self.spec = get_spec(spec_path)
         self.spec_path = spec_path
         self.kernel_path = get_kernel_path(self.spec)
+
         self.search_settings = self.spec["SearchSettings"]
         self.ext = self.spec["General"]["OutputFormat"]
         self.benchmark_name = self.spec["General"]["BenchmarkName"]
+
         if self.ext not in ("JSON", "HDF5"):
             raise Exception("Invalid output format", self.ext)
 
         self.create_dataset_folder()
+
+        self.copy_spec()
         self.create_source_folder()
         self.write_metadata()
+
         self.input_zip = "input-data.zip"
+        self.results_setup()
 
+    def zip_folders(self, files):
+        # Zipping of folders
+        for f in files:
+            f_split = f.split(".")
+            if f_split[-1] == 'zip':
+                name = ''.join(f_split[:-1])
+                shutil.make_archive(f"{self.path}/{name}", 'zip', f"{self.path}/{name}")
 
+    def results_setup(self):
         # Generate name and paths for output files
         self.results_path = f"{self.path}/results"
         Path(self.results_path).mkdir(parents=True, exist_ok=True)
         self.result_id = sum([1 if element.is_file() else 0 for element in Path(self.results_path).iterdir()]) + 1
         self.results_filename = f"{self.result_id}.{self.ext.lower()}"
         self.output_results_path = f"{self.results_path}/{self.results_filename}"
-        self.results_zip = "results.zip"
-        self.files = [self.metadata_filename, self.results_zip]
-        self.results = []
-        self.write_interval = 10
+        results_zip = "results.zip"
+        self.files.append(results_zip)
 
     def copy_spec(self):
         spec_filename = "spec.json"
         shutil.copyfile(self.spec_path, f"{self.path}/{spec_filename}")
         self.files.append(spec_filename)
-
 
     def create_source_folder(self):
         self.source_zip = "source.zip"
@@ -52,6 +68,7 @@ class Dataset:
     def create_dataset_folder(self):
         # Create dataset folder
         self.root_path = "./results"
+        # TODO: Also include metadata json, so that the same config on different computers don't provide the same hash
         self.hash = hashlib.md5(json.dumps(self.spec,
             ensure_ascii=False,
             sort_keys=True,
@@ -63,16 +80,17 @@ class Dataset:
 
     def write_metadata(self):
         metadata = {}
-        metadata["zenodo"] = self.zenodo_metadata
+        metadata["zenodo"] = Zenodo.get_zenodo_metadata()
         metadata["environment"] = self.get_environment_metadata()
-        self.metadata_filename = "metadata.json"
-        with open(f"{self.path}/{self.metadata_filename}", 'w') as f:
-            f.write(json.dumps(metadata))
+        metadata_filename = "metadata.json"
+        with open(f"{self.path}/{metadata_filename}", 'w') as f:
+            f.write(json.dumps(metadata, indent=4))
+        self.files.append(metadata_filename)
 
 
     def save_requirements(self):
         requirements_path = f"{self.path}/requirements.txt"
-        subprocess.call(['sh', './update-dependencies.sh', requirements_path])
+        subprocess.call(['sh', './update-dependencies.sh', requirements_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         with open(requirements_path, 'r') as f:
             requirements_list = [line.strip() for line in f.readlines()]
         os.remove(requirements_path)

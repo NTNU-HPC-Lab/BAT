@@ -17,7 +17,8 @@ class Result:
         self.correctness = 1
         self.validity = "Correct"
         self.error = None
-        self.objective = float("inf")
+        #self.objective = float("inf")
+        self.objective = -1
         self.timestamp = datetime.datetime.now()
 
     def __repr__(self):

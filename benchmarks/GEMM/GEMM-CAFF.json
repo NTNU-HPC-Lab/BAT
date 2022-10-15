@@ -9,7 +9,7 @@
         "BenchmarksPath": "src/benchmarks"
     },
     "SearchSettings": {
-        "TunerName": "Optuna",
+        "TunerName": "optuna",
         "Trials": 10
     },
     "Budget": {
