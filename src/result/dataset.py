@@ -29,7 +29,8 @@ class Dataset:
 
         self.create_dataset_folder()
 
-        self.copy_spec()
+        self.copy_file("spec.json", self.spec_path)
+        self.copy_file("search-spec.json", "./search-settings.json")
         self.create_source_folder()
         self.write_metadata()
 
@@ -54,10 +55,9 @@ class Dataset:
         results_zip = "results.zip"
         self.files.append(results_zip)
 
-    def copy_spec(self):
-        spec_filename = "spec.json"
-        shutil.copyfile(self.spec_path, f"{self.path}/{spec_filename}")
-        self.files.append(spec_filename)
+    def copy_file(self, filename, filepath):
+        shutil.copyfile(filepath, f"{self.path}/{filename}")
+        self.files.append(filename)
 
     def create_source_folder(self):
         self.source_zip = "source.zip"

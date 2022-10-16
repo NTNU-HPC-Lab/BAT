@@ -11,9 +11,11 @@ from src.manager import get_kernel_path
 DEBUG = 0
 
 
+
 class CudaKernelRunner:
-    def __init__(self, spec, config_space=None):
+    def __init__(self, spec, config_space, search_spec):
         self.spec = spec
+        self.search_spec = search_spec
         self.arg_handler = ArgHandler(self.spec)
         self.config_space = config_space if config_space else ConfigSpace(self.spec["ConfigurationSpace"])
         self.kernel_spec = self.spec["KernelSpecification"]
@@ -29,13 +31,19 @@ class CudaKernelRunner:
         }
         self.dev = cp.cuda.Device(0)
         self.result = Result(self.spec)
+        self.tuning_config = {}
+        self.context = {}
 
     def run(self, tuning_config, result):
+        self.tuning_config = tuning_config
         result.config = tuning_config
-        return self.run_kernel(self.get_launch_config(tuning_config), tuning_config, result)
+
+        self.add_to_context(self.search_spec["BenchmarkConfig"])
+        self.add_to_context(self.tuning_config)
+        return self.run_kernel(self.get_launch_config(), tuning_config, result)
 
     def generate_compiler_options(self, tuning_config):
-        benchmark_config = self.spec.get("BenchmarkConfig", {})
+        benchmark_config = self.search_spec.get("BenchmarkConfig", {})
         compiler_options = self.kernel_spec.get("CompilerOptions", [])
         for (key, val) in tuning_config.items():
             compiler_options.append("-D{}={}".format(key, val))
@@ -43,13 +51,22 @@ class CudaKernelRunner:
             compiler_options.append("-D{}={}".format(key, val))
         return compiler_options
 
-    def get_launch_config(self, tuning_config):
+    def reset_context(self):
+        self.context = {}
+
+    def add_to_context(self, d):
+        self.context.update(d)
+
+    def create_context(self):
+        context = {}
+        context.update(self.search_spec["BenchmarkConfig"])
+        context.update(self.tuning_config)
+        return context
+
+    def get_launch_config(self):
         kernel_spec = self.spec["KernelSpecification"]
-        benchmark_config = self.spec["BenchmarkConfig"]
-        for name, value in benchmark_config.items():
+        for name, value in self.context.items():
             locals()[name] = eval(str(value))
-        for name, value in tuning_config.items():
-            locals()[name] = value
 
         launch_config = {
             "GRID_SIZE_X": eval(str(kernel_spec["GlobalSize"].get("X", 1))),
@@ -59,6 +76,8 @@ class CudaKernelRunner:
             "BLOCK_SIZE_Y": eval(str(kernel_spec["LocalSize"].get("Y", 1))),
             "BLOCK_SIZE_Z": eval(str(kernel_spec["LocalSize"].get("Z", 1))),
         }
+
+        self.add_to_context(launch_config)
         for name, value in launch_config.items():
             locals()[name] = value
 
@@ -73,9 +92,9 @@ class CudaKernelRunner:
     def compile_kernel(self, tuning_config):
         with open(get_kernel_path(self.spec), 'r') as f:
             module = cp.RawModule(code=f.read(),
-                    backend=self.spec["BenchmarkConfig"].get("backend", "nvrtc"),
+                    backend=self.search_spec["BenchmarkConfig"].get("backend", "nvrtc"),
                     options=tuple(self.generate_compiler_options(tuning_config)),
-                    jitify=self.spec["BenchmarkConfig"].get("jitify", False))
+                    jitify=self.search_spec["BenchmarkConfig"].get("jitify", False))
         self.start_timer()
         self.kernel = module.get_function(self.kernel_spec["KernelName"])
         self.result.compile_time = self.get_duration()
