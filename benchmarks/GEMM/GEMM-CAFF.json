@@ -5,8 +5,7 @@
         "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
         "FormatVersion": 1,
-        "BenchmarkName": "GEMM",
-        "BenchmarksPath": "src/benchmarks"
+        "BenchmarkName": "GEMM"
     },
     "SearchSettings": {
         "TunerName": "optuna",
