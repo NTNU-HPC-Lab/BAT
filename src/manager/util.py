@@ -23,9 +23,13 @@ def get_spec(json_path):
         r = json.load(f)
     return r
 
-def get_search_spec():
-    with open('search-settings.json', 'r') as f:
+def get_search_spec(path):
+    with open(path, 'r') as f:
         return json.loads(f.read())
+
+def write_search_spec(spec, path):
+    with open(path, 'w') as f:
+        f.write(json.dumps(spec, indent=4, sort_keys=True))
 
 type_conv_dict = {
     "bool": np.bool_,

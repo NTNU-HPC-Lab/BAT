@@ -20,6 +20,15 @@ class Result:
         self.objective = -1
         self.timestamp = datetime.datetime.now()
 
+    def pickBest(self, cmp_result):
+        if self.isValid():
+            if cmp_result.isValid():
+                if self.objective < cmp_result.objective:
+                    return self
+            else:
+                return self
+        return cmp_result
+
     def isValid(self):
         return self.validity == "Correct" and self.objective > 0
 

@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import sys
 from builtins import str
 
 import opentuner
@@ -31,14 +32,7 @@ class OpenTunerT(MeasurementInterface):
         self.result = Result(self.manager.spec)
         self.result.config = tuning_config
         self.result = self.manager.run(tuning_config, self.result)
-
-        if self.result.isValid():
-            if self.best_result.isValid():
-                if self.result.objective < self.best_result.objective:
-                    self.best_result = self.result
-            else:
-                self.best_result = self.result
-
+        self.result = self.result.pickBest(self.best_result)
 
         return opentuner.resultsdb.models.Result(time=self.result.objective)
 
@@ -60,7 +54,7 @@ class OpenTunerT(MeasurementInterface):
         """
         if isinstance(configuration, Result):
             print("Best result:", configuration)
-            quit()
+            sys.exit()
         else:
             print("Final configuration", configuration.data)
 

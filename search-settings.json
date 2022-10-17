@@ -1,21 +1,23 @@
 {
+    "BenchmarkConfig": {
+        "Benchmarks": [
+            "GEMM"
+        ],
+        "dataSize": 16384,
+        "iterations": 1000
+    },
+    "Budget": {
+        "BudgetValue": 20,
+        "Type": "ConfigurationCount"
+    },
     "General": {
+        "FormatVersion": 1,
         "LoggingLevel": "Minimal",
-        "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
-        "FormatVersion": 1
+        "TimeUnit": "Microseconds"
     },
     "SearchSettings": {
         "TunerName": "optuna"
-    },
-    "Budget": {
-        "Type": "ConfigurationCount",
-        "BudgetValue": 30
-    },
-    "BenchmarkConfig": {
-        "Benchmarks": ["GEMM"],
-        "dataSize": 16384,
-        "iterations": 1000
     }
 }

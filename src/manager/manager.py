@@ -3,7 +3,7 @@ import os
 
 from src.config_space import ConfigSpace
 from src.result.dataset import Dataset
-from src.manager.util import get_spec, get_search_spec
+from src.manager.util import get_spec, get_search_spec, write_search_spec
 
 
 class ExperimentManager:
@@ -35,14 +35,27 @@ class ExperimentManager:
         from src.tuners.kerneltuner_runner import KernelTuner
         print(KernelTuner().main(args))
 
+    @staticmethod
+    def update_search_settings(args):
+        search = get_search_spec(args.search_path)
+        if args.trials: search["Budget"]["BudgetValue"] = args.trials
+        if args.logging: search["General"]["LoggingLevel"] = args.logging
+        if args.output_format: search["General"]["OutputFormat"] = args.output_format
+        write_search_spec(search, args.search_path)
+        return search
+
     def start(self, args):
-        self.search_spec = get_search_spec()
-        benchmarks = args.benchmarks if args.benchmarks else self.search_spec["BenchmarkConfig"]["Benchmarks"]
+        search_spec = self.update_search_settings(args)
+        benchmarks = args.benchmarks if args.benchmarks else search_spec["BenchmarkConfig"]["Benchmarks"]
 
         if benchmarks[0].lower() == "all":
             benchmarks = ["GEMM","nbody", "MD5Hash", "FFT", "TRIAD"]
 
-        tuner = args.tuner if args.tuner else self.search_spec["SearchSettings"]["TunerName"]
+        tuner = args.tuner if args.tuner else search_spec["SearchSettings"]["TunerName"]
+
+        if args.json and tuner is not None:
+            print("Running {} with {}".format(tuner, args))
+            self.runner_dict[tuner](args)
 
         for benchmark in benchmarks:
             args.json = "./benchmarks/{}/{}-CAFF.json".format(benchmark, benchmark)
@@ -56,7 +69,7 @@ class Manager:
     def __init__(self, args):
         self.root_results_path = "./results"
         self.spec = get_spec(args.json)
-        self.search_spec = get_search_spec()
+        self.search_spec = get_search_spec(args.search_path)
         self.validate_schema(self.spec)
 
         self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
