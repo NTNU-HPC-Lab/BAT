@@ -19,12 +19,26 @@ class OpenTunerT(MeasurementInterface):
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
         self.manager = Manager(self.args)
         self.result = Result(self.manager.spec)
+        self.n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
+        self.current_trial = 0
+        self.best_result = Result(self.manager.spec)
 
     def run(self, desired_result, input, limit):
+        self.current_trial += 1
+        if self.current_trial > self.n_trials:
+            self.save_final_config(self.best_result)
         tuning_config = desired_result.configuration.data
         self.result = Result(self.manager.spec)
         self.result.config = tuning_config
         self.result = self.manager.run(tuning_config, self.result)
+
+        if self.result.isValid():
+            if self.best_result.isValid():
+                if self.result.objective < self.best_result.objective:
+                    self.best_result = self.result
+            else:
+                self.best_result = self.result
+
 
         return opentuner.resultsdb.models.Result(time=self.result.objective)
 
@@ -44,7 +58,11 @@ class OpenTunerT(MeasurementInterface):
         """
         called at the end of autotuning with the best resultsdb.models.Configuration
         """
-        print("Final configuration", configuration.data)
+        if isinstance(configuration, Result):
+            print("Best result:", configuration)
+            quit()
+        else:
+            print("Final configuration", configuration.data)
 
 
 def main():

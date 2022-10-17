@@ -17,12 +17,14 @@ class Result:
         self.correctness = 1
         self.validity = "Correct"
         self.error = None
-        #self.objective = float("inf")
         self.objective = -1
         self.timestamp = datetime.datetime.now()
 
-    def __repr__(self):
-        return "Timestamp: {self.timestamp},\nBenchmark: {self.benchmark}\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {self.runtimesself.compile_timed:.2E}\nSearch Algorithm: {:.2E}\nFramework time: {:.2E}".format(self.timestamp, self.benchmark, self.config, self.validity, self.objective, self.compile_time, mean(self.runtimes), self.algorithm_time, self.framework_time)
+    def isValid(self):
+        return self.validity == "Correct" and self.objective > 0
+
+    def __str__(self):
+        return f"Timestamp: {self.timestamp},\nBenchmark: {self.benchmark}\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {mean(self.runtimes):.2E}\nSearch Algorithm: {self.algorithm_time:.2E}\nFramework time: {self.framework_time:.2E}"
 
     def calculate_time(self):
         self.total_time = (datetime.datetime.now() - self.timestamp).total_seconds()
