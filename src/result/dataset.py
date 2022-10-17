@@ -3,6 +3,7 @@ import json
 import hashlib
 import shutil
 import os
+import copy
 from pathlib import Path
 import xmltodict
 import pandas as pd
@@ -72,10 +73,11 @@ class Dataset:
     def create_dataset_folder(self):
         # Create dataset folder
         self.root_path = "./results"
-        hash_set = self.spec
+        hash_set = copy.deepcopy(self.spec)
         hash_set.update(self.metadata)
         del hash_set["General"]
         del hash_set["zenodo"]
+        del hash_set["environment"]["lshw"][0]["children"][0]["children"][1]["size"]
         del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
         del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fan_speed"]
         del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["performance_state"]
