@@ -30,8 +30,8 @@ class SMAC3:
         })
 
         smac = SMAC4BB(scenario=scenario, tae_runner=self.objective)
-        best_found_config = smac.optimize()
+        smac.optimize()
         self.manager.write()
-        return best_found_config
+        return self.manager.dataset.best_result
 
 
