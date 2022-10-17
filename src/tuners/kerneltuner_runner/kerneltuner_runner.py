@@ -77,7 +77,7 @@ class KernelTuner:
         # get problem-, block-, thread-, and grid sizes
         problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
         block_size_names = list(n for n in kernel_spec["LocalSize"].values()
-                                if isinstance(n, str))
+                                if not n.isdigit())
         grid_div_x = []
         grid_div_y = []
 
@@ -87,8 +87,6 @@ class KernelTuner:
         # add restrictions
         constraints = self.manager.config_space.get_constraints()
         restrict = [c["Expression"] for c in constraints]
-        print(restrict)
-
 
         results, env = kernel_tuner.tune_kernel(
             kernel_name,
