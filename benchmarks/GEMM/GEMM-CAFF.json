@@ -17,7 +17,7 @@
     },
     "BenchmarkConfig": {
       "dataSize": 16384,
-      "iterations": 1000
+      "iterations": 10
     },
     "ConfigurationSpace": {
         "TuningParameters": [
@@ -114,31 +114,31 @@
         ],
 		"Conditions": [
             {
-                "Expression": "not (KWG % KWI)",
+                "Expression": "(KWG % KWI) == 0",
                 "Parameters": ["KWG", "KWI"]
             },
             {
-                "Expression": "not (MWG % (MDIMC * VWM))",
+                "Expression": "(MWG % (MDIMC * VWM)) == 0",
                 "Parameters": ["MWG", "MDIMC", "VWM"]
             },
             {
-                "Expression": "not (NWG % (NDIMC * VWN))",
+                "Expression": "(NWG % (NDIMC * VWN)) == 0",
                 "Parameters": ["NWG", "NDIMC", "VWN"]
             },
             {
-                "Expression": "not (MWG % (MDIMA * VWM))",
+                "Expression": "(MWG % (MDIMA * VWM)) == 0",
                 "Parameters": ["MWG", "MDIMA", "VWM"]
             },
             {
-                "Expression": "not (NWG % (NDIMB * VWN))",
+                "Expression": "(NWG % (NDIMB * VWN)) == 0",
                 "Parameters": ["NWG", "NDIMB", "VWN"]
             },
             {
-                "Expression": "not (KWG % ((MDIMC * NDIMC) // MDIMA))",
+                "Expression": "(KWG % ((MDIMC * NDIMC) // MDIMA)) == 0",
                 "Parameters": ["KWG", "MDIMC", "NDIMC", "MDIMA"]
             },
             {
-                "Expression": "not (KWG % ((MDIMC * NDIMC) // NDIMB))",
+                "Expression": "(KWG % ((MDIMC * NDIMC) // NDIMB)) == 0",
                 "Parameters": ["KWG", "MDIMC", "NDIMC", "NDIMB"]
             }
         ]
