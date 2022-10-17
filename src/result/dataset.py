@@ -77,7 +77,10 @@ class Dataset:
         hash_set.update(self.metadata)
         del hash_set["General"]
         del hash_set["zenodo"]
-        del hash_set["environment"]["lshw"][0]["children"][0]["children"][1]["size"]
+        hostname = hash_set["environment"]["lshw"][0]["id"]
+        del hash_set["environment"]["lshw"]
+        hash_set["environment"]["hostname"] = hostname
+        # del hash_set["environment"]["lshw"][0]["children"][0]["children"][1]["size"] TODO: This is not consistent across systems
         del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
         del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fan_speed"]
         del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["performance_state"]
