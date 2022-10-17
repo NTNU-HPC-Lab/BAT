@@ -17,9 +17,10 @@ class Result:
         self.correctness = 1
         self.validity = "Correct"
         self.error = None
-        self.objective = -1
+        self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
         self.timestamp = datetime.datetime.now()
 
+    # TODO: Convert this to a python comparision
     def pickBest(self, cmp_result):
         if self.isValid():
             if cmp_result.isValid():
@@ -33,11 +34,11 @@ class Result:
         return self.validity == "Correct" and self.objective > 0
 
     def __str__(self):
-        return f"Timestamp: {self.timestamp},\nBenchmark: {self.benchmark}\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {mean(self.runtimes):.2E}\nSearch Algorithm: {self.algorithm_time:.2E}\nFramework time: {self.framework_time:.2E}"
+        runtime = mean(self.runtimes) if len(self.runtimes) else 0
+        return f"Timestamp: {self.timestamp},\nBenchmark: {self.benchmark}\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {runtime:.2E}\nSearch Algorithm: {self.algorithm_time:.2E}\nFramework time: {self.framework_time:.2E}"
 
     def calculate_time(self):
         self.total_time = (datetime.datetime.now() - self.timestamp).total_seconds()
-        print(self.total_time)
         self.framework_time = self.total_time - self.compile_time - sum(self.runtimes) - self.algorithm_time
 
     def serialize(self):
