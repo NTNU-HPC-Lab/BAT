@@ -10,12 +10,12 @@ from smac.scenario.scenario import Scenario
 class SMAC3:
     def objective(self, config):
         self.result = Result(self.manager.spec)
-        self.result = self.manager.run(config, self.result)
+        self.result = self.manager.run(config._values, self.result)
         return min(self.result.objective, 1000)
 
     def main(self, args):
         self.manager = Manager(args)
-        n_trials = args.trials
+        n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
         cs = ConfigurationSpace(seed=1234)
         hyperparams = []
         for (name, values) in self.manager.config_space.get_parameters_pair():

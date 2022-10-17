@@ -30,7 +30,7 @@ class Optuna:
         study = optuna.create_study()
         study.optimize(self.objective, n_trials=n_trials)
         self.manager.write()
-        return study.best_params
+        return self.manager.dataset.best_result
 
 
 def main():

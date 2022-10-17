@@ -12,7 +12,8 @@ class KernelTuner:
     def main(self, args):
         self.prog_args = args
         self.manager = Manager(args)
-        strategy_options = dict(popsize=0, max_fevals=10)
+        self.f_evals = self.manager.search_spec["Budget"]["BudgetValue"]
+        strategy_options = dict(popsize=0, max_fevals=self.f_evals)
         self.tune(args.gpu_name, strategy_options=strategy_options)
 
     def problemsize_from_gridsizes(self, gridsizes: dict):

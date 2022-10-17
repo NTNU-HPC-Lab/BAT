@@ -22,18 +22,15 @@ class OpenTunerT(MeasurementInterface):
         self.result = Result(self.manager.spec)
         self.n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
         self.current_trial = 0
-        self.best_result = Result(self.manager.spec)
 
     def run(self, desired_result, input, limit):
         self.current_trial += 1
         if self.current_trial > self.n_trials:
-            self.save_final_config(self.best_result)
+            self.save_final_config(self.manager.dataset.best_result)
         tuning_config = desired_result.configuration.data
         self.result = Result(self.manager.spec)
         self.result.config = tuning_config
         self.result = self.manager.run(tuning_config, self.result)
-        self.result = self.result.pickBest(self.best_result)
-
         return opentuner.resultsdb.models.Result(time=self.result.objective)
 
     def manipulator(self):
