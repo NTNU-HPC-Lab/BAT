@@ -10,9 +10,14 @@ class ConfigSpace:
         if spec_config.get("Conditions"):
             for expr in spec_config["Conditions"]:
                 self.add_constraint(expr)
+        self.sort_parameters()
+
+    def sort_parameters(self):
+        self.parameters = dict(sorted(self.parameters.items()))
 
     def add_enum(self, key, enum):
         self.parameters[key] = enum
+        self.sort_parameters()
 
     def add_constraint(self, expr):
         self.constraints.append(expr)
