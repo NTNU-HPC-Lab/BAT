@@ -71,6 +71,9 @@ class Manager:
         self.spec = get_spec(args.json)
         self.search_spec = get_search_spec(args.search_path)
         self.validate_schema(self.spec)
+        self.budget = self.search_spec["Budget"]["BudgetValue"]
+        self.trial = 0
+        self.total_time = 0
 
         self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
         self.dataset = Dataset(args.json)
@@ -81,8 +84,6 @@ class Manager:
             self.runner = CudaKernelRunner(self.spec, self.config_space, self.search_spec)
             self.arg_handler = ArgHandler(self.spec)
 
-
-        #self.filename = "optuna-results.hdf5"
         self.testing = 0
 
 
@@ -106,6 +107,9 @@ class Manager:
     def run(self, tuning_config, result):
         result = self.runner.run(tuning_config, result)
         result.calculate_time()
+        self.trial += 1
+        self.total_time += result.total_time
+        print(f"Trials: {self.trial}/{self.budget} | Total time: {self.total_time:.3f}s", end="\r")
         self.dataset.add_result(result)
         return result
 

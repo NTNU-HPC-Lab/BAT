@@ -9,6 +9,7 @@ import pandas as pd
 
 from src.manager.util import get_spec, get_kernel_path
 from src.result.zenodo import Zenodo
+from src.result.result import Result
 
 class Dataset:
     def __init__(self, spec_path):
@@ -17,12 +18,14 @@ class Dataset:
         self.write_interval = 10
 
         self.spec = get_spec(spec_path)
+        self.metadata = Dataset.get_metadata()
         self.spec_path = spec_path
         self.kernel_path = get_kernel_path(self.spec)
 
         self.search_settings = self.spec["SearchSettings"]
         self.ext = self.spec["General"]["OutputFormat"]
         self.benchmark_name = self.spec["General"]["BenchmarkName"]
+        self.best_result = Result(self.spec)
 
         if self.ext not in ("JSON", "HDF5"):
             raise Exception("Invalid output format", self.ext)
@@ -32,10 +35,11 @@ class Dataset:
         self.copy_file("spec.json", self.spec_path)
         self.copy_file("search-spec.json", "./search-settings.json")
         self.create_source_folder()
-        self.write_metadata()
+        self.write_metadata(self.metadata)
 
         self.input_zip = "input-data.zip"
         self.results_setup()
+
 
     def zip_folders(self, files):
         # Zipping of folders
@@ -68,8 +72,23 @@ class Dataset:
     def create_dataset_folder(self):
         # Create dataset folder
         self.root_path = "./results"
-        # TODO: Also include metadata json, so that the same config on different computers don't provide the same hash
-        self.hash = hashlib.md5(json.dumps(self.spec,
+        hash_set = self.spec
+        hash_set.update(self.metadata)
+        del hash_set["General"]
+        del hash_set["zenodo"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fan_speed"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["performance_state"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fb_memory_usage"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["bar1_memory_usage"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["utilization"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["temperature"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["power_readings"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["applications_clocks"]
+        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["default_applications_clocks"]
+
+        self.hash = hashlib.md5(json.dumps(hash_set,
             ensure_ascii=False,
             sort_keys=True,
             indent=None,
@@ -78,30 +97,37 @@ class Dataset:
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
-    def write_metadata(self):
-        metadata = {}
-        metadata["zenodo"] = Zenodo.get_zenodo_metadata()
-        metadata["environment"] = self.get_environment_metadata()
+    def add_result(self, result):
+        self.results.append(result)
+        self.best_result = result.pickBest(self.best_result)
+
+        if len(self.results) % self.write_interval == 0:
+            self.write_data()
+
+    def write_metadata(self, metadata):
         metadata_filename = "metadata.json"
         with open(f"{self.path}/{metadata_filename}", 'w') as f:
             f.write(json.dumps(metadata, indent=4))
         self.files.append(metadata_filename)
 
+    @staticmethod
+    def get_metadata():
+        metadata = {}
+        metadata["zenodo"] = Zenodo.get_zenodo_metadata()
+        metadata["environment"] = Dataset.get_environment_metadata()
+        return metadata
 
-    def save_requirements(self):
-        requirements_path = f"{self.path}/requirements.txt"
+    @staticmethod
+    def save_requirements():
+        requirements_path = f"requirements-temp.txt"
         subprocess.call(['sh', './update-dependencies.sh', requirements_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         with open(requirements_path, 'r') as f:
             requirements_list = [line.strip() for line in f.readlines()]
         os.remove(requirements_path)
         return requirements_list
 
-    def add_result(self, result):
-        self.results.append(result)
-        if len(self.results) % self.write_interval == 0:
-            self.write_data()
-
-    def get_hardware_metadata(self, metadata):
+    @staticmethod
+    def get_hardware_metadata(metadata):
         nvidia_smi_out = subprocess.run(["nvidia-smi", "--query", "-x"], capture_output=True)
         o = xmltodict.parse(nvidia_smi_out.stdout)
         del o["nvidia_smi_log"]["gpu"]["processes"]
@@ -110,10 +136,11 @@ class Dataset:
         metadata["lshw"] = json.loads(lshw_out.stdout)
         return metadata
 
-    def get_environment_metadata(self):
+    @staticmethod
+    def get_environment_metadata():
         env_metadata = {}
-        env_metadata["requirements"] = self.save_requirements()
-        env_metadata = self.get_hardware_metadata(env_metadata)
+        env_metadata["requirements"] = Dataset.save_requirements()
+        env_metadata = Dataset.get_hardware_metadata(env_metadata)
         return env_metadata
 
     def write_data(self):
