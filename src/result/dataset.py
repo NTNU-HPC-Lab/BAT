@@ -23,7 +23,6 @@ class Dataset:
         self.spec_path = spec_path
         self.kernel_path = get_kernel_path(self.spec)
 
-        self.search_settings = self.spec["SearchSettings"]
         self.ext = self.spec["General"]["OutputFormat"]
         self.benchmark_name = self.spec["General"]["BenchmarkName"]
         self.best_result = Result(self.spec)

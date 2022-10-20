@@ -77,7 +77,6 @@ class Manager:
 
         self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
         self.dataset = Dataset(args.json)
-        self.search_settings = self.spec["SearchSettings"]
         lang = self.spec["KernelSpecification"]["Language"]
         if lang == "CUDA":
             from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler

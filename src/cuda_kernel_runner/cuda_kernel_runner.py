@@ -1,4 +1,5 @@
 import time
+import math
 import cupy as cp
 
 from src.result import Result
@@ -6,6 +7,8 @@ from src.config_space import ConfigSpace
 
 from .arg_handler import ArgHandler
 from src.manager import get_kernel_path
+
+
 
 
 DEBUG = 0
@@ -76,6 +79,12 @@ class CudaKernelRunner:
             "BLOCK_SIZE_Y": eval(str(kernel_spec["LocalSize"].get("Y", 1))),
             "BLOCK_SIZE_Z": eval(str(kernel_spec["LocalSize"].get("Z", 1))),
         }
+
+        global_size_type = kernel_spec.get("GlobalSizeType")
+        if global_size_type.lower() == "opencl":
+            launch_config["GRID_SIZE_X"] = math.ceil(launch_config["GRID_SIZE_X"]/launch_config["BLOCK_SIZE_X"])
+            launch_config["GRID_SIZE_Y"] = math.ceil(launch_config["GRID_SIZE_Y"]/launch_config["BLOCK_SIZE_Y"])
+            launch_config["GRID_SIZE_Z"] = math.ceil(launch_config["GRID_SIZE_Z"]/launch_config["BLOCK_SIZE_Z"])
 
         self.add_to_context(launch_config)
         for name, value in launch_config.items():
