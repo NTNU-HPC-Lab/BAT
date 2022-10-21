@@ -1,10 +1,13 @@
 from builtins import str
 import ast
+import json
+import shutil
 from collections import OrderedDict
 
 import kernel_tuner
 
 from src.manager import Manager
+from src.result import Result
 
 
 class KernelTuner:
@@ -14,7 +17,7 @@ class KernelTuner:
         self.manager = Manager(args)
         self.f_evals = self.manager.search_spec["Budget"]["BudgetValue"]
         strategy_options = dict(popsize=0, max_fevals=self.f_evals)
-        self.tune(args.gpu_name, strategy_options=strategy_options)
+        return self.tune(args.gpu_name, strategy_options=strategy_options)
 
     def problemsize_from_gridsizes(self, gridsizes: dict):
         """ Takes the grid sizes and returns the problem size as a lambda function """
@@ -49,6 +52,34 @@ class KernelTuner:
         return lambda p: tuple(
             eval(ps, dict(p=p)) if isinstance(ps, str) else ps
             for ps in problemsizes)
+
+
+    def convert_results(self, kt):
+        cache = kt["cache"]
+        results = []
+        time_names = ("verification_time", "compile_time", "times", "time")
+        for conf in cache.values():
+            new_conf = {}
+            new_times = {}
+            for (key, value) in conf.items():
+                if key in time_names:
+                    if key == "times":
+                        new_times["runtimes"] = value
+                    elif key == "time":
+                        new_times["runtime"] = value
+                    else:
+                        new_times[key] = value
+                else:
+                    new_conf[key] = value
+            results.append(Result(config=new_conf, times=new_times, objective=new_times["runtime"]))
+        return results
+
+
+    def get_results(self, cache_path):
+        with open(f"{cache_path}.json", 'r') as f:
+            kt = json.loads(f.read())
+        return self.convert_results(kt)
+
 
     def tune(self,
              gpu_name,
@@ -89,6 +120,7 @@ class KernelTuner:
         constraints = self.manager.config_space.get_constraints()
         restrict = [c["Expression"] for c in constraints]
 
+        cache_path = "BAT_temp"
         results, env = kernel_tuner.tune_kernel(
             kernel_name,
             kernel_string,
@@ -105,8 +137,15 @@ class KernelTuner:
             device=0,
             platform=0,
             iterations=iterations,
-            cache="BAT_" + kernel_name + "_" + gpu_name,
+            cache=cache_path,
             compiler_options=compiler_options,
             strategy=strategy,
             strategy_options=strategy_options,
             simulation_mode=simulation_mode)
+
+        self.manager.dataset.results = self.get_results(cache_path)
+        self.manager.dataset.copy_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
+        self.manager.write()
+
+        self.manager.dataset.update_best()
+        return self.manager.dataset.best_result

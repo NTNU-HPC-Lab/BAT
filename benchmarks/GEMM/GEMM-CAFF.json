@@ -4,7 +4,6 @@
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
-        "FormatVersion": "0.0.1",
         "BenchmarkName": "GEMM"
     },
     "SearchSettings": {

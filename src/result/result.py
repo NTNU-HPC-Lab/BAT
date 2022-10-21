@@ -4,9 +4,8 @@ from statistics import mean
 
 
 class Result:
-    def __init__(self, spec, config=[0], compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0):
-        self.spec = spec
-        self.benchmark = spec["General"]["BenchmarkName"]
+    def __init__(self, config=[0], objective=10000, compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0, times={}):
+        self.times = times
         self.config = config
         self.compile_time = compile_time
         self.runtimes = runtimes
@@ -17,7 +16,8 @@ class Result:
         self.correctness = 1
         self.validity = "Correct"
         self.error = None
-        self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
+        self.objective = objective
+        #self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
         self.timestamp = datetime.datetime.now()
 
     # TODO: Convert this to a python comparision
@@ -35,7 +35,7 @@ class Result:
 
     def __str__(self):
         runtime = mean(self.runtimes) if len(self.runtimes) else 0
-        return f"Timestamp: {self.timestamp},\nBenchmark: {self.benchmark}\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {runtime:.2E}\nSearch Algorithm: {self.algorithm_time:.2E}\nFramework time: {self.framework_time:.2E}"
+        return f"Timestamp: {self.timestamp},\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {runtime:.2E}\nSearch Algorithm: {self.algorithm_time:.2E}\nFramework time: {self.framework_time:.2E}"
 
     def calculate_time(self):
         self.total_time = (datetime.datetime.now() - self.timestamp).total_seconds()
@@ -44,20 +44,22 @@ class Result:
     def serialize(self):
         d = {}
         d["timestamp"] = str(self.timestamp)
-        d["benchmark"] = self.benchmark
         d["config"] = self.config
         d["correctness"] = self.correctness
         d["validity"] = self.validity
         d["objective"] = self.objective
         if self.error:
             d["error"] = str(self.error)
-        d["times"] = {}
-        d["times"]["total_time"] = self.total_time
-        d["times"]["compile_time"] = self.compile_time
-        d["times"]["arg_time"] = self.arg_time
-        #d["times"]["runtimes"] = mean(self.runtimes) if len(self.runtimes) else 0
-        d["times"]["runtimes"] = self.runtimes
-        d["times"]["algorithm_time"] = self.algorithm_time
-        d["times"]["framework_time"] = self.framework_time
+        if (len(self.times)):
+            d["times"] = self.times
+        else:
+            d["times"] = {}
+            d["times"]["total_time"] = self.total_time
+            d["times"]["compile_time"] = self.compile_time
+            d["times"]["arg_time"] = self.arg_time
+            #d["times"]["runtimes"] = mean(self.runtimes) if len(self.runtimes) else 0
+            d["times"]["runtimes"] = self.runtimes
+            d["times"]["algorithm_time"] = self.algorithm_time
+            d["times"]["framework_time"] = self.framework_time
         return d
 

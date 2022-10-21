@@ -33,7 +33,7 @@ class CudaKernelRunner:
                 "end": cp.cuda.Event(),
         }
         self.dev = cp.cuda.Device(0)
-        self.result = Result(self.spec)
+        self.result = Result()
         self.tuning_config = {}
         self.context = {}
 

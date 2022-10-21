@@ -104,6 +104,10 @@ class Dataset:
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
+    def update_best(self):
+        for result in self.results:
+            self.best_result = result.pickBest(self.best_result)
+
     def add_result(self, result):
         self.results.append(result)
         self.best_result = result.pickBest(self.best_result)

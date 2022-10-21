@@ -86,7 +86,6 @@ class Manager:
         self.testing = 0
 
 
-
     def validate_schema(self, spec):
         from jsonschema import validate
         with open('schemas/TuningSchema/TuningSchema.json', 'r') as f:
