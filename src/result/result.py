@@ -34,8 +34,7 @@ class Result:
         return self.validity == "Correct" and self.objective > 0
 
     def __str__(self):
-        runtime = mean(self.runtimes) if len(self.runtimes) else 0
-        return f"Timestamp: {self.timestamp},\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}\nCompile time: {self.compile_time:.2E}\nRuntime: {runtime:.2E}\nSearch Algorithm: {self.algorithm_time:.2E}\nFramework time: {self.framework_time:.2E}"
+        return f"Timestamp: {self.timestamp},\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}"
 
     def calculate_time(self):
         self.total_time = (datetime.datetime.now() - self.timestamp).total_seconds()
