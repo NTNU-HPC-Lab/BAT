@@ -1,3 +1,6 @@
 [submodule "schemas/TuningSchema"]
 	path = schemas/TuningSchema
 	url = https://github.com/odgaard/TuningSchema
+[submodule "src/tuners/KTT_runner/KTT"]
+	path = src/tuners/KTT_runner/KTT
+	url = https://github.com/HiPerCoRe/KTT

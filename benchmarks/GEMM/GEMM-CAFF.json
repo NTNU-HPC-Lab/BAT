@@ -3,17 +3,17 @@
         "LoggingLevel": "Debug",
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
-        "OutputFormat": "JSON",
+        "OutputFormat": "CSV",
         "BenchmarkName": "GEMM"
     },
     "SearchSettings": {
         "TunerName": "optuna",
         "Trials": 10
     },
-    "Budget": {
+    "Budget": [{
         "Type": "ConfigurationCount",
         "BudgetValue": 10
-    },
+    }],
     "BenchmarkConfig": {
       "dataSize": 16384,
       "iterations": 10
@@ -149,6 +149,7 @@
         "BenchmarkName": "GEMM",
         "KernelName": "gemm_fast",
         "KernelFile": "gemm.cu",
+        "GlobalSizeType": "CUDA",
         "LocalSize": {
             "X": "MDIMC",
             "Y": "NDIMC",

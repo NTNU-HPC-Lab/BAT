@@ -15,7 +15,7 @@ from src.result.result import Result
 class Dataset:
     def __init__(self, spec_path):
         self.files = []
-        self.results = []
+        self.cache_df = pd.DataFrame({})
         self.write_interval = 10
 
         self.spec = get_spec(spec_path)
@@ -25,9 +25,8 @@ class Dataset:
 
         self.ext = self.spec["General"]["OutputFormat"]
         self.benchmark_name = self.spec["General"]["BenchmarkName"]
-        self.best_result = Result(self.spec)
 
-        if self.ext not in ("JSON", "HDF5"):
+        if self.ext not in ("JSON", "HDF5", "CSV"):
             raise Exception("Invalid output format", self.ext)
 
         self.create_dataset_folder()
@@ -104,16 +103,22 @@ class Dataset:
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
-    def update_best(self):
-        for result in self.results:
-            self.best_result = result.pickBest(self.best_result)
+    def get_best(self):
+        self.df = pd.read_csv(self.output_results_path)
+        min_index = self.df['objective'].idxmin()
+        best_row = self.df.loc[min_index]
+        del self.df
+        return best_row
 
     def add_result(self, result):
-        self.results.append(result)
-        self.best_result = result.pickBest(self.best_result)
+        new_df = pd.DataFrame([result.serialize()])
+        self.cache_df = pd.concat([self.cache_df.reset_index(), new_df]).set_index('config')
+        if "index" in self.cache_df.columns:
+            self.cache_df = self.cache_df.drop(columns="index")
 
-        if len(self.results) % self.write_interval == 0:
+        if len(self.cache_df.index) == self.write_interval:
             self.write_data()
+            self.cache_df = pd.DataFrame({})
 
     def write_metadata(self, metadata):
         metadata_filename = "metadata.json"
@@ -155,16 +160,9 @@ class Dataset:
         return env_metadata
 
     def write_data(self):
-        dump_results = {"results": []}
-        for result in self.results:
-            dump_results["results"].append(result.serialize())
-
-        p = self.output_results_path
-        if self.ext == "JSON":
-            with open(p, 'w') as f:
-                json.dump(dump_results, f, indent=4)
+        if self.ext == "CSV":
+            self.cache_df.to_csv(self.output_results_path, mode='a', header=not os.path.exists(self.output_results_path))
         elif self.ext == "HDF5":
-            df = pd.json_normalize(dump_results["results"])
-            df.to_hdf(p, key="Results", mode="w", complevel=9)
+            self.cache_df.to_hdf(self.output_results_path, key="Results", mode="a", complevel=9)
         else:
             print("Unsupported file extention", self.ext)

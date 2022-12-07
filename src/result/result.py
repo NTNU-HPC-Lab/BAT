@@ -1,7 +1,5 @@
 import datetime
 
-from statistics import mean
-
 
 class Result:
     def __init__(self, config=[0], objective=10000, compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0, times={}):
@@ -19,16 +17,6 @@ class Result:
         self.objective = objective
         #self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
         self.timestamp = datetime.datetime.now()
-
-    # TODO: Convert this to a python comparision
-    def pickBest(self, cmp_result):
-        if self.isValid():
-            if cmp_result.isValid():
-                if self.objective < cmp_result.objective:
-                    return self
-            else:
-                return self
-        return cmp_result
 
     def isValid(self):
         return self.validity == "Correct" and self.objective > 0

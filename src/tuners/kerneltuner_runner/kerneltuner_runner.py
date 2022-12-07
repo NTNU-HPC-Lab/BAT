@@ -1,7 +1,7 @@
 from builtins import str
 import ast
 import json
-import shutil
+import pandas as pd
 from collections import OrderedDict
 
 import kernel_tuner
@@ -143,9 +143,8 @@ class KernelTuner:
             strategy_options=strategy_options,
             simulation_mode=simulation_mode)
 
-        self.manager.dataset.results = self.get_results(cache_path)
+        self.manager.dataset.df = pd.DataFrame(self.get_results(cache_path))
         self.manager.dataset.copy_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
         self.manager.write()
 
-        self.manager.dataset.update_best()
-        return self.manager.dataset.best_result
+        return self.manager.dataset.get_best()

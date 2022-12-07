@@ -2,6 +2,8 @@ import argparse
 import optuna
 import time
 
+from memory_profiler import profile
+
 from src.manager import Manager
 from src.result import Result
 
@@ -27,10 +29,15 @@ class Optuna:
         n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
         if self.manager.search_spec["General"]["LoggingLevel"] != "Debug":
             optuna.logging.set_verbosity(optuna.logging.WARNING)
-        study = optuna.create_study()
+
+        search_space = {}
+        for (name, values) in self.manager.config_space.get_parameters_pair():
+            search_space[name] = values
+
+        study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space))
         study.optimize(self.objective, n_trials=n_trials)
         self.manager.write()
-        return self.manager.dataset.best_result
+        return self.manager.dataset.get_best()
 
 
 def main():

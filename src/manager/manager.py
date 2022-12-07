@@ -13,12 +13,18 @@ class ExperimentManager:
             "optuna": self.run_optuna,
             "kerneltuner": self.run_kerneltuner,
             "smac": self.run_smac,
-            "smac3": self.run_smac
+            "smac3": self.run_smac,
+            "mintuner": self.run_mintuner
         }
     @staticmethod
     def run_opentuner(args):
         from src.tuners.opentuner_runner import OpenTunerT
         print(OpenTunerT.main(args))
+
+    @staticmethod
+    def run_mintuner(args):
+        from src.tuners.mintuner_runner.mintuner_runner import MinTuner
+        print(MinTuner().main(args))
 
     @staticmethod
     def run_smac(args):
@@ -85,7 +91,6 @@ class Manager:
 
         self.testing = 0
 
-
     def validate_schema(self, spec):
         from jsonschema import validate
         with open('schemas/TuningSchema/TuningSchema.json', 'r') as f:
@@ -107,7 +112,9 @@ class Manager:
         result.calculate_time()
         self.trial += 1
         self.total_time += result.total_time
-        print(f"Trials: {self.trial}/{self.budget} | Total time: {self.total_time:.3f}s", end="\r")
+        estimated_time = (self.budget/self.trial) * self.total_time
+
+        print(f"Trials: {self.trial}/{self.budget} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
         self.dataset.add_result(result)
         return result
 
