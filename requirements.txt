@@ -10,3 +10,4 @@ requests==2.22.0
 smac==1.4.0
 xmltodict==0.13.0
 pipreqs==0.4.11
+jc==1.22.2
