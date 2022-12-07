@@ -105,12 +105,9 @@ class Dataset:
         json_hash_set = json.dumps(hash_set,
             ensure_ascii=False,
             sort_keys=True,
-            indent=4,
+            indent=None,
             separators=(',', ':'),
         )
-
-        with open("test", 'w') as f:
-            f.write(json_hash_set)
 
         self.hash = hashlib.md5(json_hash_set.encode('utf-8')).hexdigest()
         self.path = f"{self.root_path}/{self.hash}"
