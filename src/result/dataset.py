@@ -81,26 +81,24 @@ class Dataset:
         del hash_set["General"]
         del hash_set["zenodo"]
 
-        del hash_set["environment"]["lshw"]
-        del hash_set["environment"]["lscpu"]
-        del hash_set["environment"]["meminfo"]
-        hash_set["environment"]["hostname"] = Dataset.get_hostname()
-        # del hash_set["environment"]["lshw"][0]["children"][0]["children"][1]["size"] TODO: This is not consistent across systems
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fan_speed"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks_throttle_reasons"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["performance_state"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fb_memory_usage"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["bar1_memory_usage"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["utilization"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["temperature"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["power_readings"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["applications_clocks"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["default_applications_clocks"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["rx_util"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["tx_util"]
-        del hash_set["environment"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
+        del hash_set["hardware"]["lshw"]
+        del hash_set["hardware"]["lscpu"]
+        del hash_set["hardware"]["meminfo"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fan_speed"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks_throttle_reasons"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["performance_state"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fb_memory_usage"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["bar1_memory_usage"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["utilization"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["temperature"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["power_readings"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["applications_clocks"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["default_applications_clocks"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["rx_util"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["tx_util"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
 
         json_hash_set = json.dumps(hash_set,
             ensure_ascii=False,
@@ -138,13 +136,14 @@ class Dataset:
 
     @staticmethod
     def get_hostname():
-        return subprocess.run(["hostname"], capture_output=True).stdout.decode("utf-8")
+        return subprocess.run(["hostname"], capture_output=True).stdout.decode("utf-8").strip()
 
     @staticmethod
     def get_metadata():
         metadata = {}
         metadata["zenodo"] = Zenodo.get_zenodo_metadata()
         metadata["environment"] = Dataset.get_environment_metadata()
+        metadata["hardware"] = Dataset.get_hardware_metadata()
         return metadata
 
     @staticmethod
@@ -157,7 +156,8 @@ class Dataset:
         return requirements_list
 
     @staticmethod
-    def get_hardware_metadata(metadata):
+    def get_hardware_metadata():
+        metadata = {}
         nvidia_smi_out = subprocess.run(["nvidia-smi", "--query", "-x"], capture_output=True)
         o = xmltodict.parse(nvidia_smi_out.stdout)
         del o["nvidia_smi_log"]["gpu"]["processes"]
@@ -170,7 +170,6 @@ class Dataset:
         metadata["meminfo"] = jc.parse('proc_meminfo', proc_out.stdout.decode("utf-8"))
         lsblk_out = subprocess.run(["lsblk", "-a"], capture_output=True)
         metadata["lsblk"] = jc.parse('lsblk', lsblk_out.stdout.decode("utf-8"))
-
         return metadata
 
     @staticmethod
@@ -179,6 +178,8 @@ class Dataset:
         r = {}
         for line in lsb_release_out.stdout.decode("utf-8").split("\n"):
             line_list = line.split("\t")
+            if line_list[0] == "" or line_list[-1] == "":
+                continue
             r[line_list[0]] = line_list[-1]
         return r
 
@@ -187,8 +188,8 @@ class Dataset:
     def get_environment_metadata():
         env_metadata = {}
         env_metadata["requirements"] = Dataset.save_requirements()
-        env_metadata = Dataset.get_hardware_metadata(env_metadata)
         env_metadata["lsb_release"] = Dataset.get_lsb_release()
+        env_metadata["hostname"] = Dataset.get_hostname()
         return env_metadata
 
     def write_data(self):
