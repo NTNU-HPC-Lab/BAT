@@ -22,6 +22,8 @@ class Dataset:
 
         self.spec = get_spec(spec_path)
         self.metadata = Dataset.get_metadata()
+        self.validate_schema(self.metadata)
+
         self.spec_path = spec_path
         self.kernel_path = get_kernel_path(self.spec)
 
@@ -41,6 +43,11 @@ class Dataset:
         self.input_zip = "input-data.zip"
         self.results_setup()
 
+    def validate_schema(self, metadata):
+        from jsonschema import validate
+        with open('schemas/TuningSchema/metadata-schema.json', 'r') as f:
+            schema = json.loads(f.read())
+        validate(instance=metadata, schema=schema)
 
     def zip_folders(self, files):
         # Zipping of folders
