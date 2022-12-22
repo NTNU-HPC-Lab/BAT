@@ -86,7 +86,7 @@ class CudaKernelRunner:
             "BLOCK_SIZE_Z": eval(str(kernel_spec["LocalSize"].get("Z", 1)), self.get_context()),
         }
 
-        global_size_type = kernel_spec.get("GlobalSizeType")
+        global_size_type = kernel_spec.get("GlobalSizeType", "CUDA")
         if global_size_type.lower() == "opencl":
             launch_config["GRID_SIZE_X"] = math.ceil(launch_config["GRID_SIZE_X"]/launch_config["BLOCK_SIZE_X"])
             launch_config["GRID_SIZE_Y"] = math.ceil(launch_config["GRID_SIZE_Y"]/launch_config["BLOCK_SIZE_Y"])
