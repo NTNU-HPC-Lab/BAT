@@ -2,7 +2,7 @@ import datetime
 
 
 class Result:
-    def __init__(self, config=[0], objective=10000, compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0, times={}):
+    def __init__(self, config=[0], objective=10000.0, compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0, times={}):
         self.times = times
         self.config = config
         self.compile_time = compile_time

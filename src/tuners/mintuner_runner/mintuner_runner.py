@@ -1,6 +1,5 @@
 import time
 
-from memory_profiler import profile
 import copy
 
 from src.manager import Manager
@@ -29,5 +28,5 @@ class MinTuner:
             t0 = time.time()
 
 
-        self.manager.write()
+        self.manager.dataset.final_write_data()
         return self.manager.dataset.get_best()

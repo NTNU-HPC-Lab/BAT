@@ -14,7 +14,8 @@ class ExperimentManager:
             "kerneltuner": self.run_kerneltuner,
             "smac": self.run_smac,
             "smac3": self.run_smac,
-            "mintuner": self.run_mintuner
+            "mintuner": self.run_mintuner,
+            "ktt": self.run_ktt
         }
     @staticmethod
     def run_opentuner(args):
@@ -42,6 +43,11 @@ class ExperimentManager:
         print(KernelTuner().main(args))
 
     @staticmethod
+    def run_ktt(args):
+        from src.tuners.KTT_runner import KTTRunner
+        print(KTTRunner().main(args))
+
+    @staticmethod
     def update_search_settings(args):
         search = get_search_spec(args.search_path)
         if args.trials: search["Budget"]["BudgetValue"] = args.trials
@@ -57,17 +63,22 @@ class ExperimentManager:
         if benchmarks[0].lower() == "all":
             benchmarks = ["GEMM","nbody", "MD5Hash", "FFT", "TRIAD"]
 
-        tuner = args.tuner if args.tuner else search_spec["SearchSettings"]["TunerName"]
+        # tuner = args.tuner if args.tuner else search_spec["SearchSettings"]["TunerName"]
+        tuners = args.tuner
+        if tuners is None:
+            return
 
-        if args.json and tuner is not None:
-            print("Running {} with {}".format(tuner, args))
-            self.runner_dict[tuner](args)
+        if args.json:
+            for tuner in tuners:
+                print(f"Running {tuner} with {args}")
+                self.runner_dict[tuner.lower()](args)
+            return
 
         for benchmark in benchmarks:
-            args.json = "./benchmarks/{}/{}-CAFF.json".format(benchmark, benchmark)
-            if tuner is not None:
-                print("Running {} with {}".format(tuner, args))
-                self.runner_dict[tuner](args)
+            args.json = f"./benchmarks/{benchmark}/{benchmark}-CAFF.json"
+            for tuner in tuners:
+                print(f"Running {tuner} with {args}")
+                self.runner_dict[tuner.lower()](args)
 
 
 
@@ -87,6 +98,10 @@ class Manager:
         if lang == "CUDA":
             from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler
             self.runner = CudaKernelRunner(self.spec, self.config_space, self.search_spec)
+            self.arg_handler = ArgHandler(self.spec)
+        else:
+            from src.simulated_runner import SimulatedRunner, ArgHandler
+            self.runner = SimulatedRunner(self.spec, self.config_space, self.search_spec)
             self.arg_handler = ArgHandler(self.spec)
 
         self.testing = 0

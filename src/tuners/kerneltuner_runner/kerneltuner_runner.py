@@ -64,11 +64,11 @@ class KernelTuner:
             for (key, value) in conf.items():
                 if key in time_names:
                     if key == "times":
-                        new_times["runtimes"] = value
+                        new_times["runtimes"] = [v/1000 for v in value]
                     elif key == "time":
-                        new_times["runtime"] = value
+                        new_times["runtime"] = value / 1000
                     else:
-                        new_times[key] = value
+                        new_times[key] = value / 1000
                 else:
                     new_conf[key] = value
             results.append(Result(config=new_conf, times=new_times, objective=new_times["runtime"]))
@@ -142,9 +142,14 @@ class KernelTuner:
             strategy=strategy,
             strategy_options=strategy_options,
             simulation_mode=simulation_mode)
+        results = self.get_results(cache_path)
+        self.manager.dataset.write_interval = len(results)
+        for res in results:
+            self.manager.dataset.add_result(res)
 
-        self.manager.dataset.df = pd.DataFrame(self.get_results(cache_path))
-        self.manager.dataset.copy_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
-        self.manager.write()
+        #self.manager.write()
+        self.manager.dataset.copy_and_delete_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
+        self.manager.dataset.final_write_data()
+
 
         return self.manager.dataset.get_best()

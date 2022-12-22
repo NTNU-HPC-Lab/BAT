@@ -22,6 +22,10 @@ class Dataset:
 
         self.spec = get_spec(spec_path)
         self.metadata = Dataset.get_metadata()
+        self.metadata["spec"] = self.spec
+        with open('./search-settings.json', 'r') as f:
+            self.search_settings = json.loads(f.read())
+        self.metadata["search_settings"] = self.search_settings
         self.validate_schema(self.metadata)
 
         self.spec_path = spec_path
@@ -35,8 +39,8 @@ class Dataset:
 
         self.create_dataset_folder()
 
-        self.copy_file("spec.json", self.spec_path)
-        self.copy_file("search-spec.json", "./search-settings.json")
+        #self.copy_file("spec.json", self.spec_path)
+        #self.copy_file("search-spec.json", "./search-settings.json")
         self.create_source_folder()
         self.write_metadata(self.metadata)
 
@@ -63,6 +67,7 @@ class Dataset:
         Path(self.results_path).mkdir(parents=True, exist_ok=True)
         self.result_id = sum([1 if element.is_file() else 0 for element in Path(self.results_path).iterdir()]) + 1
         self.results_filename = f"{self.result_id}.{self.ext.lower()}"
+        self.cache_results_path = f"{self.results_path}/{self.result_id}.hdf"
         self.output_results_path = f"{self.results_path}/{self.results_filename}"
         results_zip = "results.zip"
         self.files.append(results_zip)
@@ -71,13 +76,17 @@ class Dataset:
         shutil.copyfile(filepath, f"{self.path}/{filename}")
         self.files.append(filename)
 
+    def copy_and_delete_file(self, filename, filepath):
+        self.copy_file(filename, filepath)
+        os.remove(filepath)
+
+
+
     def create_source_folder(self):
         self.source_zip = "source.zip"
         Path(f"{self.path}/source").mkdir(parents=True, exist_ok=True)
         shutil.copyfile(self.kernel_path, f"{self.path}/source/kernel.cu")
         self.files.append(self.source_zip)
-
-
 
     def create_dataset_folder(self):
         # Create dataset folder
@@ -110,16 +119,20 @@ class Dataset:
         json_hash_set = json.dumps(hash_set,
             ensure_ascii=False,
             sort_keys=True,
+            #indent=4,
             indent=None,
             separators=(',', ':'),
         )
 
+
         self.hash = hashlib.md5(json_hash_set.encode('utf-8')).hexdigest()
+        #with open(f'test-{self.hash}.json', 'w') as f:
+        #    f.write(json_hash_set)
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
     def get_best(self):
-        self.df = pd.read_csv(self.output_results_path)
+        self.df = pd.read_hdf(self.cache_results_path)
         min_index = self.df['objective'].idxmin()
         best_row = self.df.loc[min_index]
         del self.df
@@ -199,10 +212,73 @@ class Dataset:
         env_metadata["hostname"] = Dataset.get_hostname()
         return env_metadata
 
+    def flatten_df(self, df):
+        df_flat = pd.json_normalize(eval(df.to_json(orient="records")))
+        df_flat = df_flat.astype({"times.runtimes": "str"})
+        #df_concat = pd.concat([df1, df2])
+        #df_result = df.join(df_flat)
+        #return df_result
+        return df_flat
+
+
     def write_data(self):
+        #if self.ext == "CSV":
+        #   self.cache_df.to_csv(self.output_results_path, mode='a', header=not os.path.exists(self.output_results_path))
+        #elif self.ext == "HDF5":
+        df = self.cache_df.reset_index()
+        df = self.flatten_df(df)
+        df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True)
+        #else:
+            #print("Unsupported file extention", self.ext)
+
+
+    def final_write_data(self, df=None):
+        df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
         if self.ext == "CSV":
-            self.cache_df.to_csv(self.output_results_path, mode='a', header=not os.path.exists(self.output_results_path))
+            df_iter.to_csv(self.output_results_path, mode='w')
+        elif self.ext == "JSON":
+            df_iter = Dataset.to_formatted_df(df_iter)
+            df_iter.to_json(self.output_results_path, orient="records", indent=4)
         elif self.ext == "HDF5":
-            self.cache_df.to_hdf(self.output_results_path, key="Results", mode="a", complevel=9)
+            return
         else:
             print("Unsupported file extention", self.ext)
+
+    @staticmethod
+    def set_for_keys(my_dict, key_arr, val):
+        """
+        Set val at path in my_dict defined by the string (or serializable object) array key_arr
+        """
+        current = my_dict
+        for i in range(len(key_arr)):
+            key = key_arr[i]
+            if key not in current:
+                if i==len(key_arr)-1:
+                    current[key] = val
+                else:
+                    current[key] = {}
+            else:
+                if type(current[key]) is not dict:
+                    print("Given dictionary is not compatible with key structure requested")
+                    raise ValueError("Dictionary key already occupied")
+
+            current = current[key]
+
+        return my_dict
+
+    @staticmethod
+    def to_formatted_json(df, sep="."):
+        result = []
+        for _, row in df.iterrows():
+            parsed_row = {}
+            for idx, val in row.iteritems():
+                keys = idx.split(sep)
+                parsed_row = Dataset.set_for_keys(parsed_row, keys, val)
+
+            result.append(parsed_row)
+        return result
+
+    @staticmethod
+    def to_formatted_df(df):
+        return pd.DataFrame(Dataset.to_formatted_json(df))
+
