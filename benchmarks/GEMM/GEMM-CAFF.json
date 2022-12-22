@@ -3,12 +3,8 @@
         "LoggingLevel": "Debug",
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
-        "OutputFormat": "CSV",
+        "OutputFormat": "JSON",
         "BenchmarkName": "GEMM"
-    },
-    "SearchSettings": {
-        "TunerName": "optuna",
-        "Trials": 10
     },
     "Budget": [{
         "Type": "ConfigurationCount",
