@@ -5,6 +5,10 @@
         "BenchmarksPath": "src/benchmarks",
         "BenchmarkName": "MD5Hash"
     },
+    "Budget": [{
+        "Type": "ConfigurationCount",
+        "BudgetValue": 10
+    }],
     "ConfigurationSpace": {
         "TuningParameters": [
             {
@@ -61,10 +65,6 @@
     "BenchmarkConfig": {
         "dataSize": 1000000,
         "iterations": 1000
-    },
-    "SearchSettings": {
-        "TunerName": "Optuna",
-        "Trials": 10
     },
     "KernelSpecification": {
         "Language": "CUDA",

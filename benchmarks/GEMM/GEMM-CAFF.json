@@ -4,7 +4,8 @@
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
-        "BenchmarkName": "GEMM"
+        "BenchmarkName": "GEMM",
+        "FormatVersion": 1
     },
     "Budget": [{
         "Type": "ConfigurationCount",

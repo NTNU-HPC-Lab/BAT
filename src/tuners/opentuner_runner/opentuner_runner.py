@@ -26,7 +26,7 @@ class OpenTunerT(MeasurementInterface):
     def run(self, desired_result, input, limit):
         self.current_trial += 1
         if self.current_trial > self.n_trials:
-            self.save_final_config(self.manager.dataset.best_result)
+            self.save_final_config(self.manager.dataset.get_best())
         tuning_config = desired_result.configuration.data
         self.result = Result(self.manager.spec)
         self.result.config = tuning_config
@@ -49,11 +49,11 @@ class OpenTunerT(MeasurementInterface):
         """
         called at the end of autotuning with the best resultsdb.models.Configuration
         """
-        if isinstance(configuration, Result):
-            print("Best result:", configuration)
-            sys.exit()
-        else:
-            print("Final configuration", configuration.data)
+        #if isinstance(configuration, pd.Dataframe):
+        print("Best result:", configuration)
+        sys.exit()
+        #else:
+            #print("Final configuration", configuration.data)
 
 
 def main():

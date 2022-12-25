@@ -20,14 +20,9 @@ def print_json(j):
 
 def get_spec(json_path):
     with open(json_path, 'r') as f:
-        r = json.load(f)
-    return r
+        return json.load(f)
 
-def get_search_spec(path):
-    with open(path, 'r') as f:
-        return json.loads(f.read())
-
-def write_search_spec(spec, path):
+def write_spec(spec, path):
     with open(path, 'w') as f:
         f.write(json.dumps(spec, indent=4, sort_keys=True))
 
@@ -43,7 +38,7 @@ type_conv_dict = {
     "int128": np.longlong,
     "uint128": np.ulonglong,
     "half": np.half,
-    "float": np.float,
+    "float": np.float32,
     "double": np.float64,
     "quad": np.longdouble,
     "csingle": np.csingle,
@@ -54,23 +49,23 @@ type_conv_dict = {
 custom_type_dict = {
     "float2": {
         "names": ['x', 'y'],
-        "types": [np.float] * 2,
+        "types": [np.float32] * 2,
         "length": 2,
-        "repr_type": np.float
+        "repr_type": np.float32
     },
 
     "float3": {
         "names": ['x', 'y', 'z'],
-        "types": [np.float] * 3,
+        "types": [np.float32] * 3,
         "length": 3,
-        "repr_type": np.float
+        "repr_type": np.float32
     },
 
     "float4": {
         "names": ['x', 'y', 'z', 'w'],
-        "types": [np.float] * 4,
+        "types": [np.float32] * 4,
         "length": 4,
-        "repr_type": np.float
+        "repr_type": np.float32
     },
 
     "double2": {

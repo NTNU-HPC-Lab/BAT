@@ -5,6 +5,10 @@
         "BenchmarkName": "FFT",
         "OutputFormat": "JSON"
     },
+    "Budget": [{
+        "Type": "ConfigurationCount",
+        "BudgetValue": 10
+    }],
     "ConfigurationSpace": {
         "TuningParameters": [
             {

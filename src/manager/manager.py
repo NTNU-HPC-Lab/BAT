@@ -3,7 +3,7 @@ import os
 
 from src.config_space import ConfigSpace
 from src.result.dataset import Dataset
-from src.manager.util import get_spec, get_search_spec, write_search_spec
+from src.manager.util import get_spec, write_spec
 
 
 class ExperimentManager:
@@ -47,26 +47,31 @@ class ExperimentManager:
         from src.tuners.KTT_runner import KTTRunner
         print(KTTRunner().main(args))
 
+
     @staticmethod
-    def update_search_settings(args):
-        search = get_search_spec(args.search_path)
-        if args.trials: search["Budget"]["BudgetValue"] = args.trials
-        if args.logging: search["General"]["LoggingLevel"] = args.logging
-        if args.output_format: search["General"]["OutputFormat"] = args.output_format
-        write_search_spec(search, args.search_path)
-        return search
+    def update_experiment_settings(args):
+        experiment_settings = get_spec(args.experiment_settings)
+        if args.tuner:
+            experiment_settings["SearchSettings"]["TunerName"] = args.tuner
+        if args.trials:
+            experiment_settings["Budget"]["BudgetValue"] = args.trials
+        if args.logging:
+            experiment_settings["General"]["LoggingLevel"] = args.logging
+        if args.output_format:
+            experiment_settings["General"]["OutputFormat"] = args.output_format
+        if args.benchmarks:
+            if args.benchmarks[0].lower() == "all":
+                benchmarks = ["GEMM","nbody", "MD5Hash", "FFT", "TRIAD"]
+            else:
+                benchmarks = args.benchmarks
+            experiment_settings["BenchmarkConfig"]["Benchmarks"] = benchmarks
+        write_spec(experiment_settings, args.experiment_settings)
+        return experiment_settings
 
     def start(self, args):
-        search_spec = self.update_search_settings(args)
-        benchmarks = args.benchmarks if args.benchmarks else search_spec["BenchmarkConfig"]["Benchmarks"]
-
-        if benchmarks[0].lower() == "all":
-            benchmarks = ["GEMM","nbody", "MD5Hash", "FFT", "TRIAD"]
-
-        # tuner = args.tuner if args.tuner else search_spec["SearchSettings"]["TunerName"]
-        tuners = args.tuner
-        if tuners is None:
-            return
+        experiment_settings = self.update_experiment_settings(args)
+        tuners = experiment_settings["SearchSettings"]["TunerName"]
+        benchmarks = experiment_settings["BenchmarkConfig"]["Benchmarks"]
 
         if args.json:
             for tuner in tuners:
@@ -86,9 +91,9 @@ class Manager:
     def __init__(self, args):
         self.root_results_path = "./results"
         self.spec = get_spec(args.json)
-        self.search_spec = get_search_spec(args.search_path)
+        self.experiment_settings = get_spec(args.experiment_settings)
         self.validate_schema(self.spec)
-        self.budget = self.search_spec["Budget"]["BudgetValue"]
+        self.budget = self.experiment_settings["Budget"]["BudgetValue"]
         self.trial = 0
         self.total_time = 0
 
@@ -97,14 +102,15 @@ class Manager:
         lang = self.spec["KernelSpecification"]["Language"]
         if lang == "CUDA":
             from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler
-            self.runner = CudaKernelRunner(self.spec, self.config_space, self.search_spec)
+            self.runner = CudaKernelRunner(self.spec, self.config_space, self.experiment_settings)
             self.arg_handler = ArgHandler(self.spec)
         else:
             from src.simulated_runner import SimulatedRunner, ArgHandler
-            self.runner = SimulatedRunner(self.spec, self.config_space, self.search_spec)
+            self.runner = SimulatedRunner(self.spec, self.config_space, self.experiment_settings)
             self.arg_handler = ArgHandler(self.spec)
 
         self.testing = 0
+
 
     def validate_schema(self, spec):
         from jsonschema import validate

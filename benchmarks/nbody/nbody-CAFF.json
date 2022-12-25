@@ -1,10 +1,14 @@
 {
   "General": {
     "TimeUnit": "Microseconds",
-    "OutputFile": "NbodyOutput",
+    "OutputFile": "TuningOutput",
     "OutputFormat": "JSON",
     "BenchmarkName": "nbody"
   },
+    "Budget": [{
+        "Type": "ConfigurationCount",
+        "BudgetValue": 10
+    }],
   "ConfigurationSpace": {
     "TuningParameters": [
       {

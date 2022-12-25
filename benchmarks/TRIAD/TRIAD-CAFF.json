@@ -1,8 +1,8 @@
 {
-    "SearchSettings": {
-        "TunerName": "Optuna",
-        "Trials": 10
-    },
+    "Budget": [{
+        "Type": "ConfigurationCount",
+        "BudgetValue": 10
+    }],
     "ConfigurationSpace": {
         "TuningParameters": [
             {

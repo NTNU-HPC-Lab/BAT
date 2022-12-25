@@ -49,9 +49,9 @@ class CudaKernelRunner:
         benchmark_config = self.search_spec.get("BenchmarkConfig", {})
         compiler_options = self.kernel_spec.get("CompilerOptions", [])
         for (key, val) in tuning_config.items():
-            compiler_options.append("-D{}={}".format(key, val))
+            compiler_options.append(f"-D{key}={val}")
         for (key, val) in benchmark_config.items():
-            compiler_options.append("-D{}={}".format(key, val))
+            compiler_options.append(f"-D{key}={val}")
         return compiler_options
 
     def reset_context(self):
@@ -63,18 +63,10 @@ class CudaKernelRunner:
     def add_to_context(self, d):
         self.context.update(d)
 
-    def create_context(self):
-        context = {}
-        context.update(self.search_spec["BenchmarkConfig"])
-        context.update(self.tuning_config)
-        self.context = context
-        return context
-
     def get_context(self):
         return self.context
 
     def get_launch_config(self):
-        self.create_context()
         kernel_spec = self.spec["KernelSpecification"]
 
         launch_config = {

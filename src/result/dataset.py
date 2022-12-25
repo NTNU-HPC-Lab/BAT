@@ -271,7 +271,7 @@ class Dataset:
         result = []
         for _, row in df.iterrows():
             parsed_row = {}
-            for idx, val in row.iteritems():
+            for idx, val in row.items():
                 keys = idx.split(sep)
                 parsed_row = Dataset.set_for_keys(parsed_row, keys, val)
 
