@@ -17,13 +17,14 @@ class SMAC3:
 
     def main(self, args):
         self.manager = Manager(args)
-        n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
+        n_trials = self.manager.budget_trials
         cs = ConfigurationSpace(seed=1234)
         hyperparams = []
         for (name, values) in self.manager.config_space.get_parameters_pair():
             hyperparams.append(Categorical(name, items=values))
-
+        print(hyperparams)
         cs.add_hyperparameters(hyperparams)
+        print(cs)
 
         scenario = Scenario({
             "run_obj": "quality",  # Optimize quality (alternatively runtime)

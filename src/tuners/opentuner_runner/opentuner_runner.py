@@ -20,7 +20,7 @@ class OpenTunerT(MeasurementInterface):
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
         self.manager = Manager(self.args)
         self.result = Result(self.manager.spec)
-        self.n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
+        self.n_trials = self.manager.budget_trials
         self.current_trial = 0
 
     def run(self, desired_result, input, limit):
@@ -50,6 +50,7 @@ class OpenTunerT(MeasurementInterface):
         called at the end of autotuning with the best resultsdb.models.Configuration
         """
         #if isinstance(configuration, pd.Dataframe):
+        self.manager.dataset.final_write_data()
         print("Best result:", configuration)
         sys.exit()
         #else:

@@ -15,7 +15,7 @@ class KernelTuner:
     def main(self, args):
         self.prog_args = args
         self.manager = Manager(args)
-        self.f_evals = self.manager.search_spec["Budget"]["BudgetValue"]
+        self.f_evals = self.manager.budget_trials
         strategy_options = dict(max_fevals=self.f_evals)
         return self.tune(args.gpu_name, strategy_options=strategy_options)
 

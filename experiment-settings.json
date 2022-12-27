@@ -1,10 +1,11 @@
 {
     "BenchmarkConfig": {
         "Benchmarks": [
-            "GEMM"
+            "GEMM",
+            "nbody"
         ],
         "dataSize": 16384,
-        "iterations": 1000
+        "iterations": 10
     },
     "Budget": [
         {

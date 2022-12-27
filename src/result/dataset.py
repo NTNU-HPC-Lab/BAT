@@ -227,6 +227,7 @@ class Dataset:
 
 
     def final_write_data(self, df=None):
+        #self.write_data()
         df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
         if self.ext == "CSV":
             df_iter.to_csv(self.output_results_path, mode='w')

@@ -55,7 +55,6 @@ class ExperimentManager:
             experiment_settings["SearchSettings"]["TunerName"] = args.tuner
         if args.trials:
             found_budget = False
-            print(experiment_settings)
             budgets = experiment_settings.get("Budget", [])
             for budget in budgets:
                 if budget["Type"] == "ConfigurationCount":

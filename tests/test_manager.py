@@ -9,6 +9,7 @@ def test_manager_init():
     parser = add_standard_arguments_to_parser(parser)
     args = parser.parse_args()
     args.json = "./benchmarks/TRIAD/TRIAD-CAFF.json"
-    args.search_path = "./benchmarking-settings.json"
+    args.experiment_settings = "./experiment-settings.json"
     args.benchmark = "TRIAD"
     manager = Manager(args)
+    manager.validate_schema(manager.spec)
