@@ -12,9 +12,8 @@ from src.manager import get_kernel_path
 DEBUG = 0
 
 class CudaKernelRunner:
-    def __init__(self, spec, config_space, search_spec):
+    def __init__(self, spec, config_space):
         self.spec = spec
-        self.search_spec = search_spec
         self.arg_handler = ArgHandler(self.spec)
         self.config_space = config_space if config_space else ConfigSpace(self.spec["ConfigurationSpace"])
         self.kernel_spec = self.spec["KernelSpecification"]
@@ -39,14 +38,14 @@ class CudaKernelRunner:
         self.tuning_config = tuning_config
         result.config = tuning_config
 
-        self.add_to_context(self.search_spec["BenchmarkConfig"])
+        self.add_to_context(self.spec["BenchmarkConfig"])
         self.add_to_context(self.tuning_config)
         result = self.run_kernel(self.get_launch_config(), tuning_config, result)
         self.reset_context()
         return result
 
     def generate_compiler_options(self, tuning_config):
-        benchmark_config = self.search_spec.get("BenchmarkConfig", {})
+        benchmark_config = self.spec.get("BenchmarkConfig", {})
         compiler_options = self.kernel_spec.get("CompilerOptions", [])
         for (key, val) in tuning_config.items():
             compiler_options.append(f"-D{key}={val}")
@@ -97,9 +96,9 @@ class CudaKernelRunner:
     def compile_kernel(self, tuning_config):
         with open(get_kernel_path(self.spec), 'r') as f:
             module = cp.RawModule(code=f.read(),
-                    backend=self.search_spec["BenchmarkConfig"].get("backend", "nvrtc"),
+                    backend=self.spec["BenchmarkConfig"].get("backend", "nvrtc"),
                     options=tuple(self.generate_compiler_options(tuning_config)),
-                    jitify=self.search_spec["BenchmarkConfig"].get("jitify", False))
+                    jitify=self.spec["BenchmarkConfig"].get("jitify", False))
 
         self.start_timer()
         kernel = module.get_function(self.kernel_spec["KernelName"])

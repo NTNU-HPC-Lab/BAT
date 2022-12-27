@@ -19,7 +19,7 @@ class MinTuner:
 
         t0 = time.time()
         for i, l in enumerate(list(self.manager.config_space.get_product())):
-            if i >= self.manager.budget:
+            if i >= self.manager.budget_trials:
                 break
             t1 = time.time()
             result = Result()

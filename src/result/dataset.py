@@ -15,20 +15,16 @@ from src.result.zenodo import Zenodo
 from src.result.result import Result
 
 class Dataset:
-    def __init__(self, spec_path):
+    def __init__(self, spec):
         self.files = []
         self.cache_df = pd.DataFrame({})
         self.write_interval = 10
 
-        self.spec = get_spec(spec_path)
+        self.spec = spec
         self.metadata = Dataset.get_metadata()
         self.metadata["spec"] = self.spec
-        with open('./search-settings.json', 'r') as f:
-            self.search_settings = json.loads(f.read())
-        self.metadata["search_settings"] = self.search_settings
         self.validate_schema(self.metadata)
 
-        self.spec_path = spec_path
         self.kernel_path = get_kernel_path(self.spec)
 
         self.ext = self.spec["General"]["OutputFormat"]
@@ -39,8 +35,6 @@ class Dataset:
 
         self.create_dataset_folder()
 
-        #self.copy_file("spec.json", self.spec_path)
-        #self.copy_file("search-spec.json", "./search-settings.json")
         self.create_source_folder()
         self.write_metadata(self.metadata)
 

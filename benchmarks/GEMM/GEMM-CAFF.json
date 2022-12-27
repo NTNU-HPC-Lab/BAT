@@ -1,19 +1,7 @@
 {
     "General": {
-        "LoggingLevel": "Debug",
-        "TimeUnit": "Microseconds",
-        "OutputFile": "TuningOutput",
-        "OutputFormat": "JSON",
         "BenchmarkName": "GEMM",
-        "FormatVersion": 1
-    },
-    "Budget": [{
-        "Type": "ConfigurationCount",
-        "BudgetValue": 10
-    }],
-    "BenchmarkConfig": {
-      "dataSize": 16384,
-      "iterations": 10
+        "OutputFormat": "JSON"
     },
     "ConfigurationSpace": {
         "TuningParameters": [

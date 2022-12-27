@@ -10,4 +10,5 @@ def test_manager_init():
     args = parser.parse_args()
     args.json = "./benchmarks/TRIAD/TRIAD-CAFF.json"
     args.search_path = "./benchmarking-settings.json"
+    args.benchmark = "TRIAD"
     manager = Manager(args)

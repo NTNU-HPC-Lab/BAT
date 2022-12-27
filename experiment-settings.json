@@ -6,18 +6,22 @@
         "dataSize": 16384,
         "iterations": 1000
     },
-    "Budget": {
-        "BudgetValue": 10,
-        "Type": "ConfigurationCount"
-    },
+    "Budget": [
+        {
+            "BudgetValue": 10,
+            "Type": "ConfigurationCount"
+        }
+    ],
     "General": {
         "FormatVersion": 1,
-        "LoggingLevel": true,
+        "LoggingLevel": "Warning",
         "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
         "TimeUnit": "Microseconds"
     },
     "SearchSettings": {
-        "TunerName": "optuna"
+        "TunerName": [
+            "mintuner"
+        ]
     }
 }

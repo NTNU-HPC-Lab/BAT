@@ -54,7 +54,19 @@ class ExperimentManager:
         if args.tuner:
             experiment_settings["SearchSettings"]["TunerName"] = args.tuner
         if args.trials:
-            experiment_settings["Budget"]["BudgetValue"] = args.trials
+            found_budget = False
+            print(experiment_settings)
+            budgets = experiment_settings.get("Budget", [])
+            for budget in budgets:
+                if budget["Type"] == "ConfigurationCount":
+                    budget["BudgetValue"] = args.trials
+                    found_budget = True
+            if len(budgets) == 0 or not found_budget:
+                budgets.append({
+                    "BudgetValue": args.trials,
+                    "Type": "ConfigurationCount"
+                })
+                experiment_settings["Budget"] = budgets
         if args.logging:
             experiment_settings["General"]["LoggingLevel"] = args.logging
         if args.output_format:
@@ -81,32 +93,42 @@ class ExperimentManager:
 
         for benchmark in benchmarks:
             args.json = f"./benchmarks/{benchmark}/{benchmark}-CAFF.json"
+            args.benchmark = benchmark
             for tuner in tuners:
                 print(f"Running {tuner} with {args}")
                 self.runner_dict[tuner.lower()](args)
 
 
 
+def get_budget_trials(spec):
+    budgets = spec.get("Budget", [])
+    for budget in budgets:
+        if budget["Type"] == "ConfigurationCount":
+            return budget["BudgetValue"]
+
+
 class Manager:
     def __init__(self, args):
         self.root_results_path = "./results"
         self.spec = get_spec(args.json)
-        self.experiment_settings = get_spec(args.experiment_settings)
+        self.spec.update(get_spec(args.experiment_settings))
+        self.spec["General"]["BenchmarkName"] = args.benchmark
         self.validate_schema(self.spec)
-        self.budget = self.experiment_settings["Budget"]["BudgetValue"]
+        # write_spec(self.spec, args.json)
+        self.budget_trials = get_budget_trials(self.spec)
         self.trial = 0
         self.total_time = 0
 
         self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
-        self.dataset = Dataset(args.json)
+        self.dataset = Dataset(self.spec)
         lang = self.spec["KernelSpecification"]["Language"]
         if lang == "CUDA":
             from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler
-            self.runner = CudaKernelRunner(self.spec, self.config_space, self.experiment_settings)
+            self.runner = CudaKernelRunner(self.spec, self.config_space, )
             self.arg_handler = ArgHandler(self.spec)
         else:
             from src.simulated_runner import SimulatedRunner, ArgHandler
-            self.runner = SimulatedRunner(self.spec, self.config_space, self.experiment_settings)
+            self.runner = SimulatedRunner(self.spec, self.config_space)
             self.arg_handler = ArgHandler(self.spec)
 
         self.testing = 0
@@ -133,9 +155,9 @@ class Manager:
         result.calculate_time()
         self.trial += 1
         self.total_time += result.total_time
-        estimated_time = (self.budget/self.trial) * self.total_time
+        estimated_time = (self.budget_trials/self.trial) * self.total_time
 
-        print(f"Trials: {self.trial}/{self.budget} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
+        print(f"Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
         self.dataset.add_result(result)
         return result
 
