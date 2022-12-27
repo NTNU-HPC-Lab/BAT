@@ -125,6 +125,9 @@ class Dataset:
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
+    def delete_files(self):
+        shutil.rmtree(self.path)
+
     def get_best(self):
         self.df = pd.read_hdf(self.cache_results_path)
         min_index = self.df['objective'].idxmin()
