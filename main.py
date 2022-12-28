@@ -16,6 +16,7 @@ def add_standard_arguments_to_parser(parser):
     parser.add_argument('--output-format', type=str, default=None, help='Which file format to use to store results')
     parser.add_argument('--trials', type=int, default=None, help='Path to T1-compliant JSON')
     parser.add_argument('--logging', type=str, default=None, help='Verbosity level for tuner output')
+    parser.add_argument('--cleanup', type=bool, default=False, help='Whether or not to delete produced files after running.')
     return parser
 
 def main():

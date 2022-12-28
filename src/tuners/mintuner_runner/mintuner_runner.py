@@ -29,4 +29,6 @@ class MinTuner:
 
 
         self.manager.dataset.final_write_data()
-        return self.manager.dataset.get_best()
+        best = self.manager.dataset.get_best()
+        self.manager.finished()
+        return best

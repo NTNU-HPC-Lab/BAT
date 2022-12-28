@@ -51,8 +51,10 @@ class OpenTunerT(MeasurementInterface):
         """
         #if isinstance(configuration, pd.Dataframe):
         self.manager.dataset.final_write_data()
+        self.manager.finished()
         print("Best result:", configuration)
-        sys.exit()
+        # sys.exit(0)
+        raise NotImplementedError()
         #else:
             #print("Final configuration", configuration.data)
 

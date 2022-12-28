@@ -37,7 +37,9 @@ class Optuna:
         study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space))
         study.optimize(self.objective, n_trials=n_trials)
         self.manager.dataset.final_write_data()
-        return self.manager.dataset.get_best()
+        best = self.manager.dataset.get_best()
+        self.manager.finished()
+        return best
 
 
 def main():

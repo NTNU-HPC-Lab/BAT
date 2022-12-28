@@ -20,7 +20,10 @@ class ExperimentManager:
     @staticmethod
     def run_opentuner(args):
         from src.tuners.opentuner_runner import OpenTunerT
-        print(OpenTunerT.main(args))
+        try:
+            print(OpenTunerT.main(args))
+        except NotImplementedError:
+            print("Terminated")
 
     @staticmethod
     def run_mintuner(args):
@@ -108,6 +111,7 @@ def get_budget_trials(spec):
 
 class Manager:
     def __init__(self, args):
+        self.cleanup = args.cleanup
         self.root_results_path = "./results"
         self.spec = get_spec(args.json)
         self.spec.update(get_spec(args.experiment_settings))
@@ -145,6 +149,10 @@ class Manager:
         datasets = os.listdir(root_results_path)
         z = Zenodo(datasets)
         z.upload()
+
+    def finished(self):
+        if self.cleanup:
+            self.dataset.delete_files()
 
     def write(self):
         self.dataset.write_data()

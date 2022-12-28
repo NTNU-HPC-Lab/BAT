@@ -37,6 +37,8 @@ class SMAC3:
         smac = SMAC4BB(scenario=scenario, tae_runner=self.objective)
         smac.optimize()
         self.manager.dataset.final_write_data()
-        return self.manager.dataset.get_best()
+        best = self.manager.dataset.get_best()
+        self.manager.finished()
+        return best
 
 
