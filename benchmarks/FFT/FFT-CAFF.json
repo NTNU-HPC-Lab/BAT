@@ -146,7 +146,6 @@
     },
     "BenchmarkConfig": {
         "dataSize": 73728,
-        "jitify": true,
         "iterations": 3000,
         "PRECISION": 32,
         "nffts": 256,
@@ -161,6 +160,9 @@
         "KernelName": "FFT512_device",
         "KernelFile": "fft.cu",
         "BenchmarkPath": "src/benchmarks",
+        "Misc": {
+            "jitify": true
+        },
         "BenchmarkName": "FFT",
         "LocalSize": {
             "X": "64",

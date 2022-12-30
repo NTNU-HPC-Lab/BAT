@@ -94,11 +94,14 @@ class CudaKernelRunner:
         return launch_config
 
     def compile_kernel(self, tuning_config):
+        jitify = self.spec["BenchmarkConfig"].get("jitify", False)
+        if jitify == False and self.kernel_spec.get("Misc", False):
+            jitify = self.kernel_spec["Misc"].get("jitify", False)
         with open(get_kernel_path(self.spec), 'r') as f:
             module = cp.RawModule(code=f.read(),
                     backend=self.spec["BenchmarkConfig"].get("backend", "nvrtc"),
                     options=tuple(self.generate_compiler_options(tuning_config)),
-                    jitify=self.spec["BenchmarkConfig"].get("jitify", False))
+                    jitify=jitify)
 
         self.start_timer()
         kernel = module.get_function(self.kernel_spec["KernelName"])
