@@ -2,8 +2,6 @@ import argparse
 import optuna
 import time
 
-from memory_profiler import profile
-
 from src.manager import Manager
 from src.result import Result
 
@@ -26,8 +24,8 @@ class Optuna:
 
     def main(self, args):
         self.manager = Manager(args)
-        n_trials = self.manager.search_spec["Budget"]["BudgetValue"]
-        if self.manager.search_spec["General"]["LoggingLevel"] != "Debug":
+        n_trials = self.manager.budget_trials
+        if self.manager.spec["General"]["LoggingLevel"] != "Debug":
             optuna.logging.set_verbosity(optuna.logging.WARNING)
 
         search_space = {}
