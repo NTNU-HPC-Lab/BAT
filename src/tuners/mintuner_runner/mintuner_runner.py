@@ -18,7 +18,8 @@ class MinTuner:
         self.manager = Manager(args)
 
         t0 = time.time()
-        for i, l in enumerate(list(self.manager.config_space.get_product())):
+        i = 0
+        for l in self.manager.config_space.get_product():
             if i >= self.manager.budget_trials:
                 break
             t1 = time.time()
@@ -26,6 +27,7 @@ class MinTuner:
             result.algorithm_time = t1 - t0
             self.run(l, result)
             t0 = time.time()
+            i += 1
 
 
         self.manager.dataset.final_write_data()
