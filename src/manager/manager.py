@@ -127,7 +127,7 @@ class Manager:
         lang = self.spec["KernelSpecification"]["Language"]
         if lang == "CUDA":
             from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler
-            self.runner = CudaKernelRunner(self.spec, self.config_space, )
+            self.runner = CudaKernelRunner(self.spec, self.config_space)
             self.arg_handler = ArgHandler(self.spec)
         else:
             from src.simulated_runner import SimulatedRunner, ArgHandler
