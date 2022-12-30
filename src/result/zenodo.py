@@ -45,7 +45,7 @@ class Zenodo:
 
         self.upload_datasets(self.datasets, ret_json)
 
-        print("Do you want to make the deposition public (publish)? Write 'Yes I am sure'. You can always publish later from the website")
+        print("Do you want to make the deposition permanently public (publish)? Write 'Yes I am sure'. You can always publish later from the website")
         a = input()
         if a.lower() == "yes i am sure":
             self.publish()
