@@ -10,6 +10,12 @@ import shutil
 import xmltodict
 import jc
 
+import warnings
+from tables import NaturalNameWarning
+
+# PyTables doesn't like that the field times.runtimes has a dot in it's name. This warning only occured when adding it to the min_itemsize dictionary.
+warnings.filterwarnings('ignore', category=NaturalNameWarning)
+
 from src.manager.util import get_spec, get_kernel_path
 from src.result.zenodo import Zenodo
 from src.result.result import Result
@@ -211,7 +217,13 @@ class Dataset:
 
     def flatten_df(self, df):
         df_flat = pd.json_normalize(eval(df.to_json(orient="records")))
+        #df_flat = df_flat.astype({"validity": "str"})
         df_flat = df_flat.astype({"times.runtimes": "str"})
+        df_flat = df_flat.astype({"times.compile_time": "float64"})
+        df_flat = df_flat.astype({"times.arg_time": "float64"})
+        df_flat = df_flat.astype({"times.total_time": "float64"})
+        df_flat = df_flat.astype({"times.algorithm_time": "float64"})
+        df_flat = df_flat.astype({"times.framework_time": "float64"})
         #df_concat = pd.concat([df1, df2])
         #df_result = df.join(df_flat)
         #return df_result
@@ -224,7 +236,8 @@ class Dataset:
         #elif self.ext == "HDF5":
         df = self.cache_df.reset_index()
         df = self.flatten_df(df)
-        df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True)
+
+        df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True, min_itemsize={"times.runtimes": 200})
         #else:
             #print("Unsupported file extention", self.ext)
 
