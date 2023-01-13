@@ -4,11 +4,13 @@ import json
 import pandas as pd
 import copy
 from collections import OrderedDict
+import traceback
 
 import kernel_tuner
 from kernel_tuner.interface import Options, _kernel_options, _device_options, _tuning_options
 from kernel_tuner.runners.sequential import SequentialRunner
 from kernel_tuner import util
+from kernel_tuner.util import (ErrorConfig)
 
 from src.manager import get_kernel_path
 from src.manager import Manager
@@ -125,34 +127,6 @@ class KernelBackend:
         return lam
 
 
-
-
-    def convert_results(self, kt):
-        cache = kt["cache"]
-        results = []
-        time_names = ("verification_time", "compile_time", "times", "time")
-        for conf in cache.values():
-            new_conf = {}
-            new_times = {}
-            for (key, value) in conf.items():
-                if key in time_names:
-                    if key == "times":
-                        new_times["runtimes"] = [v/1000 for v in value]
-                    elif key == "time":
-                        new_times["runtime"] = value / 1000
-                    else:
-                        new_times[key] = value / 1000
-                else:
-                    new_conf[key] = value
-            results.append(Result(config=new_conf, times=new_times, objective=new_times["runtime"]))
-        return results
-
-
-    def get_results(self, cache_path):
-        with open(f"{cache_path}.json", 'r') as f:
-            kt = json.loads(f.read())
-        return self.convert_results(kt)
-
     def invalid_result(self, result, msg, error=None):
         result.validity = msg
         result.correctness = 0
@@ -167,23 +141,26 @@ class KernelBackend:
         self.tuning_config = tuning_config
         searchspace = [ tuning_config.values() ]
 
-        try:
-             # create runner
-            self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
-            self.runner.warmed_up = True # disable warm up for this test
-            results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
-            kt_result = results[0]
-            result.runtimes = [t/1000 for t in kt_result["times"]]
-            result.objective = kt_result["time"]/1000
-            result.compile_time = kt_result["compile_time"]/1000
-            #result.time = kt_result["verification_time"]
-            #result.time = kt_result["benchmark_time"]
-            result.algorithm_time = kt_result["strategy_time"]/1000
-            result.framework_time = kt_result["framework_time"]/1000
-        except Exception as e:
-            #print(e)
-            print(self.tuning_config)
-            return self.invalid_result(result, "Compile exception", e)
+        #try:
+         # create runner
+        self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
+        self.runner.warmed_up = True # disable warm up for this test
+        results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
+        kt_result = results[0]
+        if kt_result["time"] == ErrorConfig:
+            return self.invalid_result(result, "Compile exception")
+        result.runtimes = [t/1000 for t in kt_result["times"]]
+        result.objective = kt_result["time"]/1000
+        result.compile_time = kt_result["compile_time"]/1000
+        #result.time = kt_result["verification_time"]
+        #result.time = kt_result["benchmark_time"]
+        result.algorithm_time = kt_result["strategy_time"]/1000
+        result.framework_time = kt_result["framework_time"]/1000
+        print(self.tuning_config)
+        #except Exception as e:
+        #    traceback.print_exc()
+        #    print(e)
+        #    return self.invalid_result(result, "Compile exception", e)
         #print(result)
         return result
 
