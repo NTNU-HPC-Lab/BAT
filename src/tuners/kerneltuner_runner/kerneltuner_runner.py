@@ -48,6 +48,7 @@ class KernelTuner:
                 f"The problem size dimensions ({dimensions}) do not match the gridsizes specified ({gridsizes})"
             )
 
+
         # return the lambda function for future evaluation
         return lambda p: tuple(
             eval(ps, dict(p=p)) if isinstance(ps, str) else ps
@@ -81,13 +82,7 @@ class KernelTuner:
         return self.convert_results(kt)
 
 
-    def tune(self,
-             gpu_name,
-             strategy="mls",
-             strategy_options=None,
-             verbose=True,
-             quiet=False,
-             simulation_mode=False):
+    def run_tune(self, gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode):
         kernel_spec = self.manager.spec["KernelSpecification"]
         kernel_name = kernel_spec["KernelName"]
         language = kernel_spec["Language"]
@@ -100,6 +95,7 @@ class KernelTuner:
 
         # get arguments
         args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
+        print(f"Len of args: {len(args)}")
         iterations = eval(
             str(self.manager.spec["BenchmarkConfig"]["iterations"])
         )  # number of times each kernel configuration is ran
@@ -119,8 +115,6 @@ class KernelTuner:
         # add restrictions
         constraints = self.manager.config_space.get_constraints()
         restrict = [c["Expression"] for c in constraints]
-
-        cache_path = "BAT_temp"
         results, env = kernel_tuner.tune_kernel(
             kernel_name,
             kernel_string,
@@ -137,18 +131,34 @@ class KernelTuner:
             device=0,
             platform=0,
             iterations=iterations,
-            cache=cache_path,
+            cache=self.cache_path,
             compiler_options=compiler_options,
             strategy=strategy,
             strategy_options=strategy_options,
             simulation_mode=simulation_mode)
-        results = self.get_results(cache_path)
+
+
+
+    def tune(self,
+             gpu_name,
+             strategy="random_sample",
+             strategy_options=None,
+             verbose=True,
+             quiet=False,
+             simulation_mode=False):
+        if self.prog_args.cache:
+            self.cache_path = self.prog_args.cache
+        else:
+            self.cache_path = f"BAT_{self.manager.dataset.hash}"
+            self.run_tune(gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode)
+
+        results = self.get_results(self.cache_path)
         self.manager.dataset.write_interval = len(results)
         for res in results:
             self.manager.dataset.add_result(res)
 
         #self.manager.write()
-        self.manager.dataset.copy_and_delete_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
+        #self.manager.dataset.copy_and_delete_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
         self.manager.dataset.final_write_data()
 
 

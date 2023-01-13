@@ -126,13 +126,17 @@ class Manager:
         self.dataset = Dataset(self.spec)
         lang = self.spec["KernelSpecification"]["Language"]
         if lang == "CUDA":
-            from src.cuda_kernel_runner import CudaKernelRunner, ArgHandler
-            self.runner = CudaKernelRunner(self.spec, self.config_space)
+            from src.cuda_kernel_runner import ArgHandler
             self.arg_handler = ArgHandler(self.spec)
+
+            #from src.cuda_kernel_runner import CudaKernelRunner
+            #self.runner = CudaKernelRunner(self.spec, self.config_space)
+            from src.kernelbackend import KernelBackend
+            self.runner = KernelBackend(args, self)
         else:
             from src.simulated_runner import SimulatedRunner, ArgHandler
-            self.runner = SimulatedRunner(self.spec, self.config_space)
             self.arg_handler = ArgHandler(self.spec)
+            self.runner = SimulatedRunner(self.spec, self.config_space)
 
         self.testing = 0
 

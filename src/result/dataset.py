@@ -112,6 +112,7 @@ class Dataset:
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["applications_clocks"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["default_applications_clocks"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["voltage"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["rx_util"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["tx_util"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
@@ -119,15 +120,15 @@ class Dataset:
         json_hash_set = json.dumps(hash_set,
             ensure_ascii=False,
             sort_keys=True,
-            #indent=4,
-            indent=None,
+            indent=4,
+            #indent=None,
             separators=(',', ':'),
         )
 
 
         self.hash = hashlib.md5(json_hash_set.encode('utf-8')).hexdigest()
-        #with open(f'test-{self.hash}.json', 'w') as f:
-        #    f.write(json_hash_set)
+        with open(f'test-{self.hash}.json', 'w') as f:
+            f.write(json_hash_set)
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
@@ -216,14 +217,18 @@ class Dataset:
         return env_metadata
 
     def flatten_df(self, df):
-        df_flat = pd.json_normalize(eval(df.to_json(orient="records")))
+        df_json = df.to_json(orient="records")
+        #print(df_json)
+        evaled_json = eval(df_json)
+        #print(evaled_json)
+        df_flat = pd.json_normalize(evaled_json)
         #df_flat = df_flat.astype({"validity": "str"})
         df_flat = df_flat.astype({"times.runtimes": "str"})
-        df_flat = df_flat.astype({"times.compile_time": "float64"})
-        df_flat = df_flat.astype({"times.arg_time": "float64"})
-        df_flat = df_flat.astype({"times.total_time": "float64"})
-        df_flat = df_flat.astype({"times.algorithm_time": "float64"})
-        df_flat = df_flat.astype({"times.framework_time": "float64"})
+        #df_flat = df_flat.astype({"times.compile_time": "float64"})
+        #df_flat = df_flat.astype({"times.arg_time": "float64"})
+        #df_flat = df_flat.astype({"times.total_time": "float64"})
+        #df_flat = df_flat.astype({"times.algorithm_time": "float64"})
+        #df_flat = df_flat.astype({"times.framework_time": "float64"})
         #df_concat = pd.concat([df1, df2])
         #df_result = df.join(df_flat)
         #return df_result
@@ -235,7 +240,9 @@ class Dataset:
         #   self.cache_df.to_csv(self.output_results_path, mode='a', header=not os.path.exists(self.output_results_path))
         #elif self.ext == "HDF5":
         df = self.cache_df.reset_index()
+        #print(df)
         df = self.flatten_df(df)
+        #print(df)
 
         df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True, min_itemsize={"times.runtimes": 200})
         #else:

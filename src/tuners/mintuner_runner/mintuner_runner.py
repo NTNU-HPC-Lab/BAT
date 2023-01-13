@@ -14,9 +14,8 @@ class MinTuner:
         result.config = copy.deepcopy(tuning_config)
         return self.manager.run(tuning_config, result)
 
-    def main(self, args):
-        self.manager = Manager(args)
 
+    def exhaustive_search(self, args):
         t0 = time.time()
         i = 0
         for l in self.manager.config_space.get_product():
@@ -29,6 +28,25 @@ class MinTuner:
             t0 = time.time()
             i += 1
 
+    def random_search(self, args):
+        from random import randint
+        t0 = time.time()
+        for i in range(self.manager.budget_trials):
+            config = {}
+            for key, values in self.manager.config_space.get_parameters_pair():
+                config[key] = values[randint(0, len(values)-1)]
+
+            t1 = time.time()
+            result = Result()
+            result.algorithm_time = t1 - t0
+            self.run(list(config.values()), result)
+            t0 = time.time()
+
+    def main(self, args):
+        self.manager = Manager(args)
+
+        #self.exhaustive_search(args)
+        self.random_search(args)
 
         self.manager.dataset.final_write_data()
         best = self.manager.dataset.get_best()

@@ -13,7 +13,7 @@ class Result:
         self.total_time = total_time
         self.correctness = 1
         self.validity = "Correct"
-        self.error = None
+        self.error = "no error"
         self.objective = objective
         #self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
         self.timestamp = datetime.datetime.now()

@@ -4,3 +4,6 @@
 [submodule "src/tuners/KTT_runner/KTT"]
 	path = src/tuners/KTT_runner/KTT
 	url = https://github.com/HiPerCoRe/KTT
+[submodule "src/kernelbackend/kernel_tuner"]
+	path = src/kernelbackend/kernel_tuner
+	url = https://github.com/KernelTuner/kernel_tuner

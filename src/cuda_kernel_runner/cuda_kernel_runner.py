@@ -51,6 +51,8 @@ class CudaKernelRunner:
             compiler_options.append(f"-D{key}={val}")
         for (key, val) in benchmark_config.items():
             compiler_options.append(f"-D{key}={val}")
+        for (key, val) in self.result.launch.items():
+            compiler_options.append(f"-D{key}={val}")
         return compiler_options
 
     def reset_context(self):
@@ -150,6 +152,7 @@ class CudaKernelRunner:
         try:
             self.compile_kernel(tuning_config)
         except Exception as e:
+            print(e)
             return self.invalid_result("Compile exception", e)
 
         t0 = time.time()
