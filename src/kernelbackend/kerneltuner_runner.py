@@ -21,7 +21,6 @@ class KernelBackend:
         self.manager = manager
         self.spec = manager.spec
         self.kernel_spec = self.spec["KernelSpecification"]
-        self.original_compiler_options = copy.deepcopy(self.kernel_spec["CompilerOptions"])
         kernel_spec = self.kernel_spec
         if kernel_spec["Language"] != "CUDA":
             raise NotImplementedError(
@@ -162,71 +161,13 @@ class KernelBackend:
             result.error = error
         return result
 
-    def generate_compiler_options(self, tuning_config, result):
-        benchmark_config = self.spec.get("BenchmarkConfig", {})
-        compiler_options = self.kernel_spec.get("CompilerOptions", [])
-        for (key, val) in tuning_config.items():
-            compiler_options.append(f"-D{key}={val}")
-        #for (key, val) in benchmark_config.items():
-        #    compiler_options.append(f"-D{key}={val}")
-        for (key, val) in result.launch.items():
-            compiler_options.append(f"-D{key}={val}")
-        return compiler_options
-
-    def get_context(self):
-        return self.context
-
-    def get_launch_config(self):
-        kernel_spec = self.spec["KernelSpecification"]
-
-        launch_config = {
-            "GRID_SIZE_X": eval(str(kernel_spec["GlobalSize"].get("X", 1)), self.get_context()),
-            "GRID_SIZE_Y": eval(str(kernel_spec["GlobalSize"].get("Y", 1)), self.get_context()),
-            "GRID_SIZE_Z": eval(str(kernel_spec["GlobalSize"].get("Z", 1)), self.get_context()),
-            "BLOCK_SIZE_X": eval(str(kernel_spec["LocalSize"].get("X", 1)), self.get_context()),
-            "BLOCK_SIZE_Y": eval(str(kernel_spec["LocalSize"].get("Y", 1)), self.get_context()),
-            "BLOCK_SIZE_Z": eval(str(kernel_spec["LocalSize"].get("Z", 1)), self.get_context()),
-        }
-
-        global_size_type = kernel_spec.get("GlobalSizeType", "CUDA")
-        if global_size_type.lower() == "opencl":
-            launch_config["GRID_SIZE_X"] = math.ceil(launch_config["GRID_SIZE_X"]/launch_config["BLOCK_SIZE_X"])
-            launch_config["GRID_SIZE_Y"] = math.ceil(launch_config["GRID_SIZE_Y"]/launch_config["BLOCK_SIZE_Y"])
-            launch_config["GRID_SIZE_Z"] = math.ceil(launch_config["GRID_SIZE_Z"]/launch_config["BLOCK_SIZE_Z"])
-
-        self.add_to_context(launch_config)
-
-        if kernel_spec.get("SharedMemory"):
-            launch_config["SHARED_MEMORY_SIZE"] = eval(str(kernel_spec["SharedMemory"]), self.get_context())
-
-        self.grid_dim = (launch_config["GRID_SIZE_X"], launch_config["GRID_SIZE_Y"], launch_config["GRID_SIZE_Z"])
-        self.block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
-        self.shared_mem_size = launch_config.get("SHARED_MEMORY_SIZE", 0)
-        return launch_config
-
-    def reset_context(self):
-        self.context = {}
-        self.kernel_spec["CompilerOptions"] = copy.deepcopy(self.original_compiler_options)
-
-
-    def add_to_context(self, d):
-        self.context.update(d)
-
 
     def run(self, tuning_config, result):
 
-        self.reset_context()
         self.tuning_config = tuning_config
-        self.add_to_context(self.spec["BenchmarkConfig"])
-        self.add_to_context(self.tuning_config)
-
-        result.launch = self.get_launch_config()
         searchspace = [ tuning_config.values() ]
 
-        #print(f"Config: {tuning_config}")
         try:
-            self.kernel_options["compiler_options"] = self.generate_compiler_options(tuning_config, result)
-
              # create runner
             self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
             self.runner.warmed_up = True # disable warm up for this test
@@ -241,8 +182,8 @@ class KernelBackend:
             result.framework_time = kt_result["framework_time"]/1000
         except Exception as e:
             #print(e)
+            print(self.tuning_config)
             return self.invalid_result(result, "Compile exception", e)
         #print(result)
-        self.reset_context()
         return result
 

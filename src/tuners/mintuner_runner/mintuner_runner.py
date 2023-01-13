@@ -36,6 +36,8 @@ class MinTuner:
             for key, values in self.manager.config_space.get_parameters_pair():
                 config[key] = values[randint(0, len(values)-1)]
 
+            if list(config.values()) not in self.manager.config_space:
+                continue
             t1 = time.time()
             result = Result()
             result.algorithm_time = t1 - t0

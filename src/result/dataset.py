@@ -136,10 +136,10 @@ class Dataset:
         shutil.rmtree(self.path)
 
     def get_best(self):
-        self.df = pd.read_hdf(self.cache_results_path)
-        min_index = self.df['objective'].idxmin()
-        best_row = self.df.loc[min_index]
-        del self.df
+        df = pd.read_hdf(self.cache_results_path, "Results")
+        df.reset_index(drop=True, inplace=True)
+        min_index = df['objective'].idxmin()
+        best_row = df.loc[min_index]
         return best_row
 
     def add_result(self, result):
@@ -252,6 +252,8 @@ class Dataset:
     def final_write_data(self, df=None):
         #self.write_data()
         df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
+        df_iter.reset_index(drop=True, inplace=True)
+        print(df_iter)
         if self.ext == "CSV":
             df_iter.to_csv(self.output_results_path, mode='w')
         elif self.ext == "JSON":
