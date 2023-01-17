@@ -1,0 +1,207 @@
+{
+    "General": {
+        "FormatVersion": "0.0.1",
+        "BenchmarkName": "hotspot",
+        "BenchmarksPath": "src/benchmarks"
+    },
+    "ConfigurationSpace": {
+        "TuningParameters": [
+            {
+                "Name": "BLOCK_SIZE_X",
+                "Type": "int",
+                "Values": "[1, 2, 4, 8, 16] + list(range(32, 1024+1, 32))",
+                "Default": 256
+            },
+            {
+                "Name": "BLOCK_SIZE_Y",
+                "Type": "int",
+                "Values": "[2**i for i in range(0, 6)]",
+                "Default": 1
+            },
+            {
+                "Name": "BLOCK_SIZE_Z",
+                "Type": "int",
+                "Values": "[1]",
+                "Default": 1
+            },
+            {
+                "Name": "TILE_SIZE_X",
+                "Type": "int",
+                "Values": "[i for i in range(1, 11)]",
+                "Default": 1
+            },
+            {
+                "Name": "TILE_SIZE_Y",
+                "Type": "int",
+                "Values": "[i for i in range(1, 11)]",
+                "Default": 1
+            },
+            {
+                "Name": "TEMPORAL_TILING_FACTOR",
+                "Type": "int",
+                "Values": "[i for i in range(1, 11)]",
+                "Default": 1
+            },
+            {
+                "Name": "MAX_TFACTOR",
+                "Type": "int",
+                "Values": "[10]",
+                "Default": 1
+            },
+            {
+                "Name": "LOOP_UNROLL_FACTOR_T",
+                "Type": "int",
+                "Values": "[i for i in range(1, 10+1)]",
+                "Default": 1
+            },
+            {
+                "Name": "SH_POWER",
+                "Type": "int",
+                "Values": "[0, 1]",
+                "Default": 1
+            },
+            {
+                "Name": "BLOCKS_PER_SM",
+                "Type": "int",
+                "Values": "[0, 1, 2, 3, 4]",
+                "Default": 1
+            },
+            {
+                "Name": "MAX_THREADS",
+                "Type": "int",
+                "Values": "[1024]",
+                "Default": 1
+            },
+            {
+                "Name": "MAX_SHARED_MEMORY_BLOCK",
+                "Type": "int",
+                "Values": "[49152]",
+                "Default": 1
+            },
+            {
+                "Name": "MAX_SHARED_MEMORY",
+                "Type": "int",
+                "Values": "[102400]",
+                "Default": 1
+            }
+        ],
+		"Conditions": [
+            {
+                "Expression": "BLOCK_SIZE_X*BLOCK_SIZE_Y>= 32",
+                "Parameters": ["BLOCK_SIZE_X", "BLOCK_SIZE_Y"]
+            },
+            {
+            
+                "Expression": "TEMPORAL_TILING_FACTOR % LOOP_UNROLL_FACTOR_T == 0",
+                "Parameters": ["TEMPORAL_TILING_FACTOR", "LOOP_UNROLL_FACTOR_T"]
+            },
+            {
+                "Expression": "BLOCK_SIZE_X*BLOCK_SIZE_Y <= MAX_THREADS",
+                "Parameters": ["BLOCK_SIZE_X", "BLOCK_SIZE_Y", "MAX_THREADS"]
+            },
+            {
+                "Expression": "(BLOCK_SIZE_X*TILE_SIZE_X+ TEMPORAL_TILING_FACTOR * 2) * (BLOCK_SIZE_Y*TILE_SIZE_Y+ TEMPORAL_TILING_FACTOR * 2) * (2+SH_POWER) * 4 <= MAX_SHARED_MEMORY_BLOCK",
+                "Parameters": ["BLOCK_SIZE_X", "TILE_SIZE_X", "TEMPORAL_TILING_FACTOR", "BLOCK_SIZE_Y", "TILE_SIZE_Y", "SH_POWER", "MAX_SHARED_MEMORY_BLOCK"]
+            },
+            {
+                "Expression": "BLOCKS_PER_SM == 0 or (((BLOCK_SIZE_X * TILE_SIZE_X + TEMPORAL_TILING_FACTOR * 2) * (BLOCK_SIZE_Y*TILE_SIZE_Y +  TEMPORAL_TILING_FACTOR * 2) * (2+SH_POWER) * 4) * BLOCKS_PER_SM <= MAX_SHARED_MEMORY)",
+                "Parameters": ["BLOCKS_PER_SM", "BLOCK_SIZE_X", "TILE_SIZE_X", "TEMPORAL_TILING_FACTOR", "BLOCK_SIZE_Y", "TILE_SIZE_Y", "SH_POWER", "MAX_SHARED_MEMORY"]
+            }
+            
+            
+        ]
+    },
+    "BenchmarkConfig": {
+      "dataSize": 4096,
+      "iterations": 10,
+      "MAX_THREADS": 1024,
+      "MAX_SHARED_MEMORY_BLOCK": 49152,
+      "MAX_SHARED_MEMORY": 102400
+    },
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "BenchmarkPath": "src/benchmarks",
+        "BenchmarkName": "hotspot",
+        "KernelName": "calculate_temp",
+        "KernelFile": "hotspot_kernel.cu",
+        "GlobalSizeType": "OpenCL",
+        "LocalSize": {
+            "X": "BLOCK_SIZE_X",
+            "Y": "BLOCK_SIZE_Y",
+            "Z": "1"
+        },
+        "GlobalSize": {
+            "X": "4096",
+            "Y": "1",
+            "Z": "1"
+        },
+        "SharedMemory": 0,
+        "Stream": null,
+        "Misc": {
+            "jitify": true
+        },
+        "Arguments": [
+        {
+            "Name": "power",
+            "Type": "float",
+            "Size": 25160256,
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "FillType": "Random",
+            "FillValue": 1.0
+        },
+        {
+            "Name": "temp",
+            "Type": "float",
+            "Size": 16777216,
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "FillType": "Random",
+            "FillValue": 324.0
+        },
+        {
+          "Name": "temp_dst",
+          "Type": "float",
+          "Size": 16777216,
+          "MemoryType": "Vector",
+          "AccessType": "ReadWrite",
+          "FillType": "Constant",
+          "FillValue": 0.0
+        },
+        {
+          "Name": "Rx_1",
+          "Type": "float",
+          "MemoryType": "Scalar",
+          "AccessType": "ReadOnly",
+          "FillValue": 0.1
+        },
+        {
+          "Name": "Ry_1",
+          "Type": "float",
+          "MemoryType": "Scalar",
+          "AccessType": "ReadOnly",
+          "FillValue": 0.1
+        },
+        {
+          "Name": "Rz_1",
+          "Type": "float",
+          "MemoryType": "Scalar",
+          "AccessType": "ReadOnly",
+          "FillValue": 3.0517578579
+        },
+        {
+          "Name": "step_div_cap",
+          "Type": "float",
+          "MemoryType": "Scalar",
+          "AccessType": "ReadOnly",
+          "FillValue": 21.845333099365234
+        }
+      ]
+    },
+    "verification": {
+        "type": "reference_CPU",
+        "path": "/path/reference.cpp"
+    }
+}
+  
