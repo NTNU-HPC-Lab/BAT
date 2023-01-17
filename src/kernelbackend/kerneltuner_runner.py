@@ -2,6 +2,7 @@ from builtins import str
 import ast
 import json
 import pandas as pd
+import numpy
 import copy
 from collections import OrderedDict
 import traceback
@@ -36,8 +37,6 @@ class KernelBackend:
         block_size_names = list(n for n in kernel_spec["LocalSize"].values() if not n.isdigit())
 
         observers = None
-        #while len(block_size_names) < 3:
-            #    block_size_names.append("")
 
         # check for forbidden names in tune parameters
         util.check_tune_params_list(tune_params, observers)
@@ -48,29 +47,40 @@ class KernelBackend:
         # ensure there is always at least three names
         util.append_default_block_size_names(block_size_names)
 
-        problemsize = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
-        #lang = None
-        lang = "CUPY"
+        if kernel_spec.get("ProblemSize"):
+            problem_size = kernel_spec["ProblemSize"]
+            grid_div_x = kernel_spec["GridDivX"]
+            grid_div_y = kernel_spec["GridDivY"]
+        else:
+            problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
+            grid_div_x = None
+            grid_div_y = None
 
+        lang = "CUPY"
+        args, cmem_args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
+
+        debug = False
         self.opts = {
             "kernel_name": kernel_spec["KernelName"],
             "kernel_source": self.get_kernel_string(),
-            "problem_size": problemsize,
-            "arguments": self.manager.arg_handler.populate_args(kernel_spec["Arguments"]),
+            "problem_size": problem_size,
+            "arguments": args,
             "lang": lang,
             "tune_params": tune_params,
             "atol": 1e-6,
             "iterations": iterations,
-            "verbose": False,
+            "verbose": debug,
             "objective":"time",
             "device": 0,
             "platform": 0,
+            "grid_div_x": grid_div_x ,
+            "grid_div_y": grid_div_y,
             #"smem_args": None,
-            #"cmem_args": None,
+            "cmem_args": cmem_args if cmem_args else None,
             #"texmem_args": None,
             "compiler_options": kernel_spec["CompilerOptions"],
             "block_size_names": block_size_names,
-            "quiet": True,
+            "quiet": not debug,
         }
 
         # create KernelSource
@@ -82,6 +92,9 @@ class KernelBackend:
         self.device_options = Options([(k, self.opts.get(k, None)) for k in _device_options.keys()])
 
         self.tuning_options.cachefile = None
+
+        self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
+        self.runner.warmed_up = True # disable warm up for this test
 
 
     def get_kernel_string(self) -> str:
@@ -141,26 +154,16 @@ class KernelBackend:
         self.tuning_config = tuning_config
         searchspace = [ tuning_config.values() ]
 
-        #try:
-         # create runner
-        self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
-        self.runner.warmed_up = True # disable warm up for this test
         results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
         kt_result = results[0]
-        if kt_result["time"] == ErrorConfig:
+        if isinstance(kt_result["time"], ErrorConfig):
             return self.invalid_result(result, "Compile exception")
         result.runtimes = [t/1000 for t in kt_result["times"]]
         result.objective = kt_result["time"]/1000
         result.compile_time = kt_result["compile_time"]/1000
         #result.time = kt_result["verification_time"]
         #result.time = kt_result["benchmark_time"]
-        result.algorithm_time = kt_result["strategy_time"]/1000
+        #result.algorithm_time = kt_result["strategy_time"]/1000
         result.framework_time = kt_result["framework_time"]/1000
-        print(self.tuning_config)
-        #except Exception as e:
-        #    traceback.print_exc()
-        #    print(e)
-        #    return self.invalid_result(result, "Compile exception", e)
-        #print(result)
         return result
 

@@ -75,6 +75,7 @@ class ArgHandler:
     def __init__(self, spec):
         self.spec = spec
         self.args = []
+        self.cmem_args = {}
 
     def handle_custom_data_type(self, arg_data, arg):
         t = custom_type_dict[arg["Type"]]
@@ -91,16 +92,22 @@ class ArgHandler:
             print("Unsupported vector fill type", arg["fillType"])
             return
         if t == "BinaryRaw":
-            with open(get_data_path(self.spec, arg["DataSource"]), 'r') as f:
-                arg_data = f.read().splitlines()
+            raise NotImplementedError
+            #with open(get_data_path(self.spec, arg["DataSource"]), 'r') as f:
+            #    arg_data = f.read().splitlines()
         if t == "Random":
-            arg_data = [random.random() for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
+            arg_data = np.random.randn(arg["Size"] * self.get_type_length(arg["Type"]))
+            #arg_data = [random.random() for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         if t == "Uninitialized":
-            arg_data = [0 for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
+            arg_data = np.zeros(arg["Size"] * self.get_type_length(arg["Type"]))
+            #arg_data = [0 for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         if t == "Constant":
-            arg_data = [eval(str(arg["FillValue"])) for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
+            c = eval(str(arg["FillValue"]))
+            arg_data = np.full(arg["Size"] * self.get_type_length(arg["Type"]), c)
+            #arg_data = [c for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         if t == "Generator":
-            arg_data = [eval(str(arg["DataSource"]), {"i": i}) for i in range(arg["Size"] * self.get_type_length(arg["Type"]))]
+            raise NotImplementedError
+            #arg_data = [eval(str(arg["DataSource"]), {"i": i}) for i in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         return self.type_conv_vec(arg_data, arg)
 
     def type_conv_scalar(self, arg_data, arg):
@@ -110,9 +117,18 @@ class ArgHandler:
             return (custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
 
     def populate_args(self, args):
-        if self.args == []:
-            self.args = [self.populate_data(arg) for arg in args]
-        return self.args
+        if self.args == [] and self.cmem_args == {}:
+            pop_args = []
+            pop_cmem_args = {}
+            for i, arg in enumerate(args):
+                print(f"Populating arg {i}", end="\r")
+                pop_arg = self.populate_data(arg)
+                if arg.get("MemType", "") == "Constant":
+                    pop_cmem_args[arg["Name"]] = pop_arg
+                pop_args.append(pop_arg)
+            self.args = pop_args
+            self.cmem_args = pop_cmem_args
+        return self.args, self.cmem_args
 
     def populate_data(self, arg):
         m = arg["MemoryType"]
@@ -125,9 +141,9 @@ class ArgHandler:
 
     def type_conv_vec(self, arg_data, arg):
         if arg["Type"] in type_conv_dict.keys():
-            return cp.asarray(arg_data, dtype=type_conv_dict[arg["Type"]])
+            return arg_data.astype(type_conv_dict[arg["Type"]])
         else:    # custom data type
-            return cp.asarray(arg_data, dtype=custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
+            return arg_data.astype(custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
 
     def handle_scalar_data(self, arg):
         if arg["Type"] == "cudaTextureObject_t":

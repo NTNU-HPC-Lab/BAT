@@ -18,7 +18,7 @@ class MinTuner:
     def exhaustive_search(self, args):
         t0 = time.time()
         i = 0
-        for l in self.manager.config_space.get_product():
+        for l in self.manager.config_space:
             if i >= self.manager.budget_trials:
                 break
             t1 = time.time()
@@ -31,7 +31,8 @@ class MinTuner:
     def random_search(self, args):
         from random import randint
         t0 = time.time()
-        for i in range(self.manager.budget_trials):
+        i = 0
+        while i < self.manager.budget_trials:
             config = {}
             for key, values in self.manager.config_space.get_parameters_pair():
                 config[key] = values[randint(0, len(values)-1)]
@@ -43,6 +44,7 @@ class MinTuner:
             result.algorithm_time = t1 - t0
             self.run(list(config.values()), result)
             t0 = time.time()
+            i += 1
 
     def main(self, args):
         self.manager = Manager(args)

@@ -36,14 +36,12 @@ class ConfigSpace:
 
     def make_constrained_iter(self):
         if len(self.constraints) == 0: return self.get_product()
-        return itertools.filterfalse(self.check_constraints, self.get_product())
+        return itertools.filterfalse(lambda x: not self.check_constraints(x), self.get_product())
 
     def check_constraints(self, config):
         tuning_config = dict(zip(self.parameters.keys(), config))
         for expr in self.constraints:
-            for name, value in tuning_config.items():
-                locals()[name] = value
-            if not eval(expr["Expression"]):
+            if not eval(expr["Expression"], tuning_config):
                 return False
         return True
 

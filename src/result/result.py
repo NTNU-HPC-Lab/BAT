@@ -26,7 +26,7 @@ class Result:
 
     def calculate_time(self):
         self.total_time = (datetime.datetime.now() - self.timestamp).total_seconds()
-        self.framework_time = self.total_time - self.compile_time - sum(self.runtimes) - self.algorithm_time
+        #self.framework_time = self.total_time - self.compile_time - sum(self.runtimes) - self.algorithm_time
 
     def serialize(self):
         d = {}
