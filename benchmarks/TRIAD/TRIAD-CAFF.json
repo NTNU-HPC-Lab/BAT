@@ -1,8 +1,8 @@
 {
-    "Budget": [{
+    "Budget": {
         "Type": "ConfigurationCount",
         "BudgetValue": 10
-    }],
+    },
     "ConfigurationSpace": {
         "TuningParameters": [
             {
@@ -36,7 +36,7 @@
         "TimeUnit": "Microseconds",
         "OutputFile": "TuningOutput",
         "OutputFormat": "JSON",
-        "FormatVersion": 1,
+        "FormatVersion": "1",
         "BenchmarksPath": "benchmarks",
         "BenchmarkName": "TRIAD"
     },
