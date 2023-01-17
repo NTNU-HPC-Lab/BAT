@@ -98,12 +98,12 @@ class ArgHandler:
         if t == "Random":
             arg_data = np.random.randn(arg["Size"] * self.get_type_length(arg["Type"]))
             #arg_data = [random.random() for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
-        if t == "Uninitialized":
-            arg_data = np.zeros(arg["Size"] * self.get_type_length(arg["Type"]))
-            #arg_data = [0 for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         if t == "Constant":
             c = eval(str(arg["FillValue"]))
-            arg_data = np.full(arg["Size"] * self.get_type_length(arg["Type"]), c)
+            if c == 0:
+                arg_data = np.zeros(arg["Size"] * self.get_type_length(arg["Type"]))
+            else:
+                arg_data = np.full(arg["Size"] * self.get_type_length(arg["Type"]), c)
             #arg_data = [c for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         if t == "Generator":
             raise NotImplementedError

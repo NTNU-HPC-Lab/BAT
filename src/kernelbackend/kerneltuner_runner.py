@@ -48,7 +48,11 @@ class KernelBackend:
         util.append_default_block_size_names(block_size_names)
 
         if kernel_spec.get("ProblemSize"):
-            problem_size = kernel_spec["ProblemSize"]
+            ps = kernel_spec["ProblemSize"]
+            if isinstance(ps, int):
+                problem_size = ps
+            else:
+                problem_size = tuple(kernel_spec["ProblemSize"])
             grid_div_x = kernel_spec["GridDivX"]
             grid_div_y = kernel_spec["GridDivY"]
         else:
@@ -60,6 +64,9 @@ class KernelBackend:
         args, cmem_args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
 
         debug = False
+        verbose = debug
+        quiet = not debug
+
         self.opts = {
             "kernel_name": kernel_spec["KernelName"],
             "kernel_source": self.get_kernel_string(),
@@ -69,7 +76,7 @@ class KernelBackend:
             "tune_params": tune_params,
             "atol": 1e-6,
             "iterations": iterations,
-            "verbose": debug,
+            "verbose": verbose,
             "objective":"time",
             "device": 0,
             "platform": 0,
@@ -80,7 +87,7 @@ class KernelBackend:
             #"texmem_args": None,
             "compiler_options": kernel_spec["CompilerOptions"],
             "block_size_names": block_size_names,
-            "quiet": not debug,
+            "quiet": quiet,
         }
 
         # create KernelSource
@@ -137,7 +144,6 @@ class KernelBackend:
         return lambda p: tuple(
             eval(ps, dict(p=p)) if isinstance(ps, str) else ps
             for ps in problemsizes)
-        return lam
 
 
     def invalid_result(self, result, msg, error=None):
