@@ -54,6 +54,14 @@ class KernelTuner:
             eval(ps, dict(p=p)) if isinstance(ps, str) else ps
             for ps in problemsizes)
 
+    def invalid_result(self, result, msg, error=None):
+        result.validity = msg
+        result.correctness = 0
+        result.runtimes = [0]
+        if error:
+            result.error = error
+        return result
+
 
     def convert_results(self, kt):
         cache = kt["cache"]
@@ -62,17 +70,27 @@ class KernelTuner:
         for conf in cache.values():
             new_conf = {}
             new_times = {}
+            invalid_conf = False
             for (key, value) in conf.items():
                 if key in time_names:
                     if key == "times":
                         new_times["runtimes"] = [v/1000 for v in value]
                     elif key == "time":
-                        new_times["runtime"] = value / 1000
+                        if isinstance(value, str):
+                            error_msg = value
+                            new_times["runtime"] = error_msg
+                            invalid_conf = True
+                        else:
+                            new_times["runtime"] = value / 1000
                     else:
                         new_times[key] = value / 1000
                 else:
                     new_conf[key] = value
-            results.append(Result(config=new_conf, times=new_times, objective=new_times["runtime"]))
+            if invalid_conf:
+                invalid_conf = False
+                results.append(self.invalid_result(Result(config=new_conf), new_times["runtime"]))
+            else:
+                results.append(Result(config=new_conf, times=new_times, objective=new_times["runtime"]))
         return results
 
 
@@ -94,8 +112,7 @@ class KernelTuner:
         kernel_string = self.manager.runner.get_kernel_string()
 
         # get arguments
-        args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
-        print(f"Len of args: {len(args)}")
+        args, cmem_args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
         iterations = eval(
             str(self.manager.spec["BenchmarkConfig"]["iterations"])
         )  # number of times each kernel configuration is ran
@@ -103,11 +120,19 @@ class KernelTuner:
         # precision = self.spec["benchmarkConfig"]["PRECISION"]    # whether to use single or double precision (encoded as 32 or 64)
 
         # get problem-, block-, thread-, and grid sizes
-        problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
+        if kernel_spec.get("ProblemSize"):
+            ps = kernel_spec["ProblemSize"]
+            problem_size = ps if isinstance(ps, int) else tuple(ps)
+
+            grid_div_x = kernel_spec["GridDivX"]
+            grid_div_y = kernel_spec["GridDivY"]
+        else:
+            problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
+            grid_div_x = []
+            grid_div_y = []
+
         block_size_names = list(n for n in kernel_spec["LocalSize"].values()
                                 if not n.isdigit())
-        grid_div_x = []
-        grid_div_y = []
 
         # add tune params
         tune_params = OrderedDict(self.manager.config_space.get_parameters())
@@ -121,6 +146,7 @@ class KernelTuner:
             problem_size,
             args,
             tune_params,
+            cmem_args=cmem_args,
             lang='cupy',
             block_size_names=block_size_names,
             restrictions=restrict,

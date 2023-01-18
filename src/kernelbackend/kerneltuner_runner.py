@@ -49,16 +49,14 @@ class KernelBackend:
 
         if kernel_spec.get("ProblemSize"):
             ps = kernel_spec["ProblemSize"]
-            if isinstance(ps, int):
-                problem_size = ps
-            else:
-                problem_size = tuple(kernel_spec["ProblemSize"])
+            problem_size = ps if isinstance(ps, int) else tuple(ps)
+
             grid_div_x = kernel_spec["GridDivX"]
             grid_div_y = kernel_spec["GridDivY"]
         else:
             problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
-            grid_div_x = None
-            grid_div_y = None
+            grid_div_x = []
+            grid_div_y = []
 
         lang = "CUPY"
         args, cmem_args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
