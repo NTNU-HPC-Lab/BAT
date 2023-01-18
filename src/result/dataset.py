@@ -240,9 +240,7 @@ class Dataset:
         #   self.cache_df.to_csv(self.output_results_path, mode='a', header=not os.path.exists(self.output_results_path))
         #elif self.ext == "HDF5":
         df = self.cache_df.reset_index()
-        #print(df)
         df = self.flatten_df(df)
-        #print(df)
 
         df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True, min_itemsize={"times.runtimes": 200})
         #else:

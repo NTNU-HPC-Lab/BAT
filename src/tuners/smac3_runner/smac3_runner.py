@@ -22,13 +22,15 @@ class SMAC3:
         hyperparams = []
         for (name, values) in self.manager.config_space.get_parameters_pair():
             hyperparams.append(Categorical(name, items=values))
-        print(hyperparams)
+
+        #print(hyperparams)
         cs.add_hyperparameters(hyperparams)
-        print(cs)
+        #print(cs)
 
         scenario = Scenario({
             "run_obj": "quality",  # Optimize quality (alternatively runtime)
             "runcount-limit": n_trials,  # Max number of function evaluations (the more the better)
+            #"n_restarts_optimizer": 2,
             "cs": cs,
         })
 

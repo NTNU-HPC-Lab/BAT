@@ -5,9 +5,10 @@ from src.manager import Manager
 
 def helper_setup(parser):
     args = parser.parse_args()
-    args.json = "./benchmarks/TRIAD/TRIAD-CAFF.json"
+    benchmark = "hotspot"
+    args.json = f"./benchmarks/{benchmark}/hotspot-CAFF.json"
     args.experiment_settings = "./experiment-settings.json"
-    args.benchmark = "TRIAD"
+    args.benchmark = benchmark
     args.cleanup = True
     return args
 
@@ -30,6 +31,7 @@ def test_full_kerneltuner():
     parser = argparse.ArgumentParser()
     parser = add_standard_arguments_to_parser(parser)
     parser.add_argument('--gpu_name', type=str, default='A4000', help='The CUDA GPU to run on')
+    parser.add_argument('--cache', type=str, default='', help='The cache to use')
     args = helper_setup(parser)
     from src.tuners.kerneltuner_runner import KernelTuner
     KernelTuner().main(args)

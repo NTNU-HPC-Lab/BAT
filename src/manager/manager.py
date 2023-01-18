@@ -162,6 +162,8 @@ class Manager:
         self.dataset.write_data()
 
     def run(self, tuning_config, result):
+        if list(tuning_config.values()) not in self.config_space:
+            return result
         result = self.runner.run(tuning_config, result)
         result.calculate_time()
         self.trial += 1

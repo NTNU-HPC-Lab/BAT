@@ -158,6 +158,7 @@ class KernelBackend:
     def run(self, tuning_config, result):
 
         self.tuning_config = tuning_config
+        result.config = tuning_config
         searchspace = [ tuning_config.values() ]
 
         results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)

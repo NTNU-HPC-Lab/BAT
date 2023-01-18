@@ -10,6 +10,7 @@ class Optuna:
     def objective(self, trial):
         self.result = Result(self.manager.spec)
         tuning_config = self.get_next_tuning_config(trial)
+
         self.result = self.manager.run(tuning_config, self.result)
         return self.result.objective
 

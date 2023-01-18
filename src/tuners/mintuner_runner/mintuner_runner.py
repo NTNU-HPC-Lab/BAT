@@ -11,7 +11,7 @@ class MinTuner:
         tuning_config = {}
         for i, key in enumerate(self.manager.config_space.get_parameters().keys()):
             tuning_config[key] = conf[i]
-        result.config = copy.deepcopy(tuning_config)
+        #result.config = copy.deepcopy(tuning_config)
         return self.manager.run(tuning_config, result)
 
 
@@ -37,8 +37,6 @@ class MinTuner:
             for key, values in self.manager.config_space.get_parameters_pair():
                 config[key] = values[randint(0, len(values)-1)]
 
-            if list(config.values()) not in self.manager.config_space:
-                continue
             t1 = time.time()
             result = Result()
             result.algorithm_time = t1 - t0
@@ -49,8 +47,8 @@ class MinTuner:
     def main(self, args):
         self.manager = Manager(args)
 
-        #self.exhaustive_search(args)
-        self.random_search(args)
+        self.exhaustive_search(args)
+        #self.random_search(args)
 
         self.manager.dataset.final_write_data()
         best = self.manager.dataset.get_best()
