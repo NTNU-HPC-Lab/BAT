@@ -90,7 +90,7 @@
         },
         "GridDivX": ["block_size_x", "tile_size_x"],
         "GridDivY": ["block_size_y", "tile_size_y"],
-        "ProblemSize": 16777216,
+        "ProblemSize": [4096, 4096],
         "SharedMemory": 0,
         "Stream": null,
         "Arguments": [
