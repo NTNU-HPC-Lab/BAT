@@ -106,8 +106,10 @@ class ArgHandler:
                 arg_data = np.full(arg["Size"] * self.get_type_length(arg["Type"]), c)
             #arg_data = [c for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         if t == "Generator":
-            raise NotImplementedError
-            #arg_data = [eval(str(arg["DataSource"]), {"i": i}) for i in range(arg["Size"] * self.get_type_length(arg["Type"]))]
+            f_vec = np.vectorize(lambda i: eval(str(arg["DataSource"]), {"i": i}))
+            arr = np.arange(0, arg["Size" * self.get_type_length(arg["Type"])])
+            return f_vec(arr)
+        #arg_data = [eval(str(arg["DataSource"]), {"i": i}) for i in range(arg["Size"] * self.get_type_length(arg["Type"]))]
         return self.type_conv_vec(arg_data, arg)
 
     def type_conv_scalar(self, arg_data, arg):
