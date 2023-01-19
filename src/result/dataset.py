@@ -116,6 +116,7 @@ class Dataset:
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["rx_util"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["tx_util"]
         del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
+        del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["device_current_link_gen"]
 
         json_hash_set = json.dumps(hash_set,
             ensure_ascii=False,
@@ -127,8 +128,8 @@ class Dataset:
 
 
         self.hash = hashlib.md5(json_hash_set.encode('utf-8')).hexdigest()
-        with open(f'test-{self.hash}.json', 'w') as f:
-            f.write(json_hash_set)
+        #with open(f'test-{self.hash}.json', 'w') as f:
+        #    f.write(json_hash_set)
         self.path = f"{self.root_path}/{self.hash}"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
@@ -248,7 +249,8 @@ class Dataset:
 
 
     def final_write_data(self, df=None):
-        #self.write_data()
+        if len(self.cache_df):
+            self.write_data()
         df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
         df_iter.reset_index(drop=True, inplace=True)
         print(df_iter)

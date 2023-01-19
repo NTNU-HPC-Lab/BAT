@@ -1,5 +1,6 @@
 import json
 import os
+import datetime
 
 from src.config_space import ConfigSpace
 from src.result.dataset import Dataset
@@ -139,6 +140,7 @@ class Manager:
             self.runner = SimulatedRunner(self.spec, self.config_space)
 
         self.testing = 0
+        self.timestamp = datetime.datetime.now()
 
 
     def validate_schema(self, spec):
@@ -163,8 +165,12 @@ class Manager:
 
     def run(self, tuning_config, result):
         if list(tuning_config.values()) not in self.config_space:
+            result.validity = "KnownConstraintsViolated"
             return result
+        if self.trial == self.budget_trials:
+            raise RuntimeError("Another run was requested after the budget was exceeded")
         result = self.runner.run(tuning_config, result)
+        result.timestamp = self.timestamp
         result.calculate_time()
         self.trial += 1
         self.total_time += result.total_time
@@ -172,6 +178,7 @@ class Manager:
 
         print(f"Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
         self.dataset.add_result(result)
+        self.timestamp = datetime.datetime.now()
         return result
 
     def get_last(self):

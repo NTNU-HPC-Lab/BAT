@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import argparse
 import sys
+import time
 from builtins import str
 
 import opentuner
@@ -17,20 +18,26 @@ class OpenTunerT(MeasurementInterface):
     result_list = []
 
     def __init__(self, *pargs, **kwargs):
+        pargs[0].no_dups = True
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
         self.manager = Manager(self.args)
         self.result = Result(self.manager.spec)
         self.n_trials = self.manager.budget_trials
         self.current_trial = 0
+        self.t0 = time.time()
 
     def run(self, desired_result, input, limit):
-        self.current_trial += 1
-        if self.current_trial > self.n_trials:
-            self.save_final_config(self.manager.dataset.get_best())
+        if self.current_trial == self.n_trials:
+            self.save_final_config(None)
+
         tuning_config = desired_result.configuration.data
         self.result = Result(self.manager.spec)
+        self.result.algorithm_time = time.time() - self.t0
         self.result.config = tuning_config
         self.result = self.manager.run(tuning_config, self.result)
+        if self.result.validity != "KnownConstraintsViolated":
+            self.current_trial += 1
+        self.t0 = time.time()
         return opentuner.resultsdb.models.Result(time=self.result.objective)
 
     def manipulator(self):
@@ -52,7 +59,7 @@ class OpenTunerT(MeasurementInterface):
         #if isinstance(configuration, pd.Dataframe):
         self.manager.dataset.final_write_data()
         self.manager.finished()
-        print("Best result:", configuration)
+        print(self.manager.dataset.get_best())
         # sys.exit(0)
         raise NotImplementedError()
         #else:
