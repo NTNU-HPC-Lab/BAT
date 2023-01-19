@@ -141,6 +141,7 @@ class Manager:
 
         self.testing = 0
         self.timestamp = datetime.datetime.now()
+        self.result_timestamp = datetime.datetime.now()
 
 
     def validate_schema(self, spec):
@@ -164,13 +165,18 @@ class Manager:
         self.dataset.write_data()
 
     def run(self, tuning_config, result):
+
+        dur = (datetime.datetime.now() - self.timestamp).total_seconds()
+        if dur > 600.0:
+            raise KeyboardInterrupt
         if list(tuning_config.values()) not in self.config_space:
             result.validity = "KnownConstraintsViolated"
             return result
         if self.trial == self.budget_trials:
-            raise RuntimeError("Another run was requested after the budget was exceeded")
+            raise KeyboardInterrupt
+            #raise ("Another run was requested after the budget was exceeded")
         result = self.runner.run(tuning_config, result)
-        result.timestamp = self.timestamp
+        result.timestamp = self.result_timestamp
         result.calculate_time()
         self.trial += 1
         self.total_time += result.total_time
@@ -178,7 +184,7 @@ class Manager:
 
         print(f"Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
         self.dataset.add_result(result)
-        self.timestamp = datetime.datetime.now()
+        self.result_timestamp = datetime.datetime.now()
         return result
 
     def get_last(self):
