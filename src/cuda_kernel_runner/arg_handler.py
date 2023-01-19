@@ -123,7 +123,8 @@ class ArgHandler:
             pop_args = []
             pop_cmem_args = {}
             for i, arg in enumerate(args):
-                print(f"Populating arg {i}", end="\r")
+                name = arg["Name"]
+                print(f"Populating arg {name}", end="\r")
                 pop_arg = self.populate_data(arg)
                 if arg.get("MemType", "") == "Constant":
                     pop_cmem_args[arg["Name"]] = pop_arg
