@@ -7,3 +7,6 @@
 [submodule "src/kernelbackend/kernel_tuner"]
 	path = src/kernelbackend/kernel_tuner
 	url = https://github.com/KernelTuner/kernel_tuner
+[submodule "src/tuners/opentuner_runner/opentuner"]
+	path = src/tuners/opentuner_runner/opentuner
+	url = https://github.com/odgaard/opentuner
