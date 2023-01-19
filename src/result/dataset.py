@@ -180,6 +180,24 @@ class Dataset:
         os.remove(requirements_path)
         return requirements_list
 
+
+    @staticmethod
+    def get_lshw():
+        try:
+            lshw_out = subprocess.run(["lshw", "-json", "-sanitize"], capture_output=True)
+            return json.loads(lshw_out.stdout)
+        except Exception:
+            return {}
+
+    @staticmethod
+    def get_lsblk():
+        try:
+            lsblk_out = subprocess.run(["lsblk", "-a"], capture_output=True)
+            return jc.parse('lsblk', lsblk_out.stdout.decode("utf-8"))
+        except Exception:
+            return {}
+
+
     @staticmethod
     def get_hardware_metadata():
         metadata = {}
@@ -187,14 +205,12 @@ class Dataset:
         o = xmltodict.parse(nvidia_smi_out.stdout)
         del o["nvidia_smi_log"]["gpu"]["processes"]
         metadata["nvidia_query"] = o
-        lshw_out = subprocess.run(["lshw", "-json", "-sanitize"], capture_output=True)
-        metadata["lshw"] = json.loads(lshw_out.stdout)
+        metadata["lshw"] = Dataset.get_lshw()
         lscpu_out = subprocess.run(["lscpu", "--json"], capture_output=True)
         metadata["lscpu"] = json.loads(lscpu_out.stdout)
         proc_out = subprocess.run(["cat", "/proc/meminfo"], capture_output=True)
         metadata["meminfo"] = jc.parse('proc_meminfo', proc_out.stdout.decode("utf-8"))
-        lsblk_out = subprocess.run(["lsblk", "-a"], capture_output=True)
-        metadata["lsblk"] = jc.parse('lsblk', lsblk_out.stdout.decode("utf-8"))
+        metadata["lsblk"] = Dataset.get_lsblk()
         return metadata
 
     @staticmethod

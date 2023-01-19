@@ -164,7 +164,6 @@ class KernelTuner:
             simulation_mode=simulation_mode)
 
 
-
     def tune(self,
              gpu_name,
              strategy="random_sample",
