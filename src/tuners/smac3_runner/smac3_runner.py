@@ -29,18 +29,20 @@ class SMAC3:
 
         scenario = Scenario({
             "run_obj": "quality",  # Optimize quality (alternatively runtime)
-            "runcount-limit": n_trials,  # Max number of function evaluations (the more the better)
+            "runcount-limit": 10000,  # Max number of function evaluations (the more the better)
             #"n_restarts_optimizer": 2,
             "cs": cs,
         })
 
         self.t0 = time.time()
         self.result = Result(self.manager.spec)
-        smac = SMAC4BB(scenario=scenario, tae_runner=self.objective)
-        smac.optimize()
-        self.manager.dataset.final_write_data()
-        best = self.manager.dataset.get_best()
-        self.manager.finished()
-        return best
+        try:
+            smac = SMAC4BB(scenario=scenario, tae_runner=self.objective)
+            smac.optimize()
+        finally:
+            self.manager.dataset.final_write_data()
+            best = self.manager.dataset.get_best()
+            self.manager.finished()
+            return best
 
 
