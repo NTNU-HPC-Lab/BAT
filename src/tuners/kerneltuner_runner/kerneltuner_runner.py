@@ -63,11 +63,10 @@ class KernelTuner:
         return result
 
 
-    def convert_results(self, kt):
-        cache = kt["cache"]
+    def convert_results(self, cache):
         results = []
         time_names = ("verification_time", "compile_time", "times", "time")
-        for conf in cache.values():
+        for conf in cache:
             new_conf = {}
             new_times = {}
             invalid_conf = False
@@ -97,7 +96,7 @@ class KernelTuner:
     def get_results(self, cache_path):
         with open(f"{cache_path}.json", 'r') as f:
             kt = json.loads(f.read())
-        return self.convert_results(kt)
+        return self.convert_results(kt["cache"])
 
 
     def run_tune(self, gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode):
@@ -140,7 +139,8 @@ class KernelTuner:
         # add restrictions
         constraints = self.manager.config_space.get_constraints()
         restrict = [c["Expression"] for c in constraints]
-        results, env = kernel_tuner.tune_kernel(
+
+        self.results, env = kernel_tuner.tune_kernel(
             kernel_name,
             kernel_string,
             problem_size,
@@ -175,18 +175,18 @@ class KernelTuner:
         if self.prog_args.cache:
             self.cache_path = self.prog_args.cache
         else:
-            self.cache_path = f"BAT_{self.manager.dataset.hash}"
+            self.cache_path = None
+            #self.cache_path = f"BAT_{self.manager.dataset.hash}"
             self.run_tune(gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode)
 
-        results = self.get_results(self.cache_path)
+
+        results = self.convert_results(self.results)
+
         self.manager.dataset.write_interval = len(results)
         for res in results:
             self.manager.dataset.add_result(res)
 
-        #self.manager.write()
-        #self.manager.dataset.copy_and_delete_file(filepath=f"{cache_path}.json", filename="KT_cache.json")
         self.manager.dataset.final_write_data()
-
 
         best = self.manager.dataset.get_best()
         self.manager.finished()

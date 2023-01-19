@@ -19,6 +19,11 @@ def add_standard_arguments_to_parser(parser):
     parser.add_argument('--cleanup', type=bool, default=False, help='Whether or not to delete produced files after running.')
     return parser
 
+def add_kerneltuner_arguments_to_parser(parser):
+    parser.add_argument('--gpu_name', type=str, default='A4000', help='The CUDA GPU to run on')
+    parser.add_argument('--cache', type=str, default='', help='The cache to use')
+    return parser
+
 def main():
     parser = argparse.ArgumentParser()
     parser = add_standard_arguments_to_parser(parser)
@@ -30,8 +35,7 @@ def main():
         parser = argparse.ArgumentParser(parents=opentuner.argparsers())
         parser = add_standard_arguments_to_parser(parser)
     if "kerneltuner" in tuners or (args_.tuner is not None and "kerneltuner" in args_.tuner):
-        parser.add_argument('--gpu_name', type=str, default='A4000', help='The CUDA GPU to run on')
-        parser.add_argument('--cache', type=str, default='', help='The cache to use')
+        parser = add_kerneltuner_arguments_to_parser(parser)
 
     args = parser.parse_args()
     ExperimentManager().start(args)
