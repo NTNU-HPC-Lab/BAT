@@ -167,17 +167,14 @@ class Manager:
     def run(self, tuning_config, result):
 
         dur = (datetime.datetime.now() - self.timestamp).total_seconds()
-        if dur > 600.0:
+        if dur > 600.0 or self.trial == self.budget_trials:
             raise KeyboardInterrupt
         if list(tuning_config.values()) not in self.config_space:
             result.validity = "KnownConstraintsViolated"
+            self.dataset.add_result(result)
             return result
-        if self.trial == self.budget_trials:
-            raise KeyboardInterrupt
-            #raise ("Another run was requested after the budget was exceeded")
         result = self.runner.run(tuning_config, result)
-        result.timestamp = self.result_timestamp
-        result.calculate_time()
+        result.total_time = (datetime.datetime.now() - self.result_timestamp).total_seconds()
         self.trial += 1
         self.total_time += result.total_time
         estimated_time = (self.budget_trials/self.trial) * self.total_time

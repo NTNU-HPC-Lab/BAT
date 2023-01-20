@@ -164,11 +164,12 @@ class KernelBackend:
         if isinstance(kt_result["time"], ErrorConfig):
             return self.invalid_result(result, "Compile exception")
         result.runtimes = [t/1000 for t in kt_result["times"]]
+        result.runtime = sum(result.runtimes)
         result.objective = kt_result["time"]/1000
         result.compile_time = kt_result["compile_time"]/1000
         #result.time = kt_result["verification_time"]
         #result.time = kt_result["benchmark_time"]
         #result.algorithm_time = kt_result["strategy_time"]/1000
-        result.framework_time = kt_result["framework_time"]/1000
+        #result.framework_time = kt_result["framework_time"]/1000
         return result
 

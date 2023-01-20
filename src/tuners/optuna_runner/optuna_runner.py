@@ -8,19 +8,18 @@ from src.result import Result
 class Optuna:
 
     def objective(self, trial):
-        self.result = Result(self.manager.spec)
         tuning_config = self.get_next_tuning_config(trial)
 
-        self.result = self.manager.run(tuning_config, self.result)
-        return self.result.objective
+        self.result.algorithm_time = time.time() - self.t0
+        prev_result = self.manager.run(tuning_config, self.result)
+        self.result = Result(self.manager.spec)
+        return prev_result.objective
 
     def get_next_tuning_config(self, trial):
         tuning_config = {}
-        t0 = time.time()
         for (name, values) in self.manager.config_space.get_parameters_pair():
             tuning_config[name] = trial.suggest_categorical(name, values)
 
-        self.result.algorithm_time = time.time() - t0
         return tuning_config
 
     def main(self, args):
@@ -34,6 +33,8 @@ class Optuna:
             search_space[name] = values
 
         study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space))
+        self.t0 = time.time()
+        self.result = Result(self.manager.spec)
         study.optimize(self.objective, n_trials=n_trials)
         self.manager.dataset.final_write_data()
         best = self.manager.dataset.get_best()

@@ -15,8 +15,8 @@ class Result:
         self.validity = "Correct"
         self.error = "no error"
         self.objective = objective
-        #self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
         self.timestamp = datetime.datetime.now()
+        #self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers. But that might still be the best option, with a wrapper.
 
     def isValid(self):
         return self.validity == "Correct" and self.objective > 0
@@ -24,8 +24,8 @@ class Result:
     def __str__(self):
         return f"Timestamp: {self.timestamp},\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}"
 
-    def calculate_time(self):
-        self.total_time = (datetime.datetime.now() - self.timestamp).total_seconds()
+    def calculate_time(self, timestamp):
+        self.total_time = (datetime.datetime.now() - timestamp).total_seconds()
         #self.framework_time = self.total_time - self.compile_time - sum(self.runtimes) - self.algorithm_time
 
     def serialize(self):

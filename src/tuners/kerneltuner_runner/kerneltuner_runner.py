@@ -5,6 +5,7 @@ import pandas as pd
 from collections import OrderedDict
 
 import kernel_tuner
+from kernel_tuner.util import (ErrorConfig)
 
 from src.manager import Manager
 from src.result import Result
@@ -65,31 +66,34 @@ class KernelTuner:
 
     def convert_results(self, cache):
         results = []
-        time_names = ("verification_time", "compile_time", "times", "time")
+        time_names = ("verification_time", "compile_time", "benchmark_time", "strategy_time", "framework_time", "times", "time")
         for conf in cache:
             new_conf = {}
             new_times = {}
-            invalid_conf = False
+            kt_result = conf
+            print(conf.items())
+
             for (key, value) in conf.items():
-                if key in time_names:
-                    if key == "times":
-                        new_times["runtimes"] = [v/1000 for v in value]
-                    elif key == "time":
-                        if isinstance(value, str):
-                            error_msg = value
-                            new_times["runtime"] = error_msg
-                            invalid_conf = True
-                        else:
-                            new_times["runtime"] = value / 1000
-                    else:
-                        new_times[key] = value / 1000
-                else:
+                if key not in time_names:
                     new_conf[key] = value
-            if invalid_conf:
-                invalid_conf = False
-                results.append(self.invalid_result(Result(config=new_conf), new_times["runtime"]))
-            else:
-                results.append(Result(config=new_conf, times=new_times, objective=new_times["runtime"]))
+
+            result = Result(config=new_conf)
+
+            if isinstance(kt_result["time"], ErrorConfig):
+                results.append(self.invalid_result(result, "Compile exception"))
+                continue
+
+            unit = 1000 # convert from ms to seconds
+
+            result.runtimes = [t/unit for t in kt_result["times"]]
+            result.runtime = sum(result.runtimes)
+            result.objective = kt_result["time"]/unit
+            result.compile_time = kt_result["compile_time"]/unit
+            result.framework_time = kt_result["framework_time"]/unit
+            result.algorithm_time = kt_result["strategy_time"]/unit
+            result.total_time = result.compile_time + result.framework_time + result.algorithm_time + result.runtime
+            results.append(result)
+
         return results
 
 
@@ -166,7 +170,7 @@ class KernelTuner:
 
     def tune(self,
              gpu_name,
-             strategy="random_sample",
+             strategy="mls",
              strategy_options=None,
              verbose=True,
              quiet=False,

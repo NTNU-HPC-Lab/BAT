@@ -57,7 +57,8 @@ class KTTRunner:
             res.algorithm_time = result["SearcherOverhead"] / 1000000
             # res.validation_time = result["ValidationOverhead"]
             res.total_time = ( result["TotalDuration"] + result["TotalOverhead"] ) / 1000000
-            res.framework_time = (result["TotalOverhead"] - res.arg_time - res.algorithm_time) / 1000000
+            res.compile_time = (result["TotalOverhead"] - res.arg_time - res.algorithm_time) / 1000000
+            res.framework_time = res.total_time - res.compile_time - objective
             result_list.append(res)
         return pd.DataFrame([result.serialize() for result in result_list])
 

@@ -27,18 +27,19 @@ class OpenTunerT(MeasurementInterface):
         self.t0 = time.time()
 
     def run(self, desired_result, input, limit):
+        self.result.algorithm_time = time.time() - self.t0
         if self.current_trial == self.n_trials:
             self.save_final_config(None)
 
         tuning_config = desired_result.configuration.data
-        self.result = Result(self.manager.spec)
-        self.result.algorithm_time = time.time() - self.t0
+        #self.result.framework_time = time.time() - self.t0
         self.result.config = tuning_config
-        self.result = self.manager.run(tuning_config, self.result)
-        if self.result.validity != "KnownConstraintsViolated":
+        prev_result = self.manager.run(tuning_config, self.result)
+        if prev_result.validity != "KnownConstraintsViolated":
             self.current_trial += 1
         self.t0 = time.time()
-        return opentuner.resultsdb.models.Result(time=self.result.objective)
+        self.result = Result(self.manager.spec)
+        return opentuner.resultsdb.models.Result(time=prev_result.objective)
 
     def manipulator(self):
         manipulator = ConfigurationManipulator()
