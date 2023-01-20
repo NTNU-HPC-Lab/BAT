@@ -235,10 +235,7 @@ class Dataset:
 
     def flatten_df(self, df):
         df_json = df.to_json(orient="records")
-        #print(df_json)
-        print(df)
         evaled_json = eval(df_json)
-        #print(evaled_json)
         df_flat = pd.json_normalize(evaled_json)
         #df_flat = df_flat.astype({"validity": "str"})
         df_flat = df_flat.astype({"times.runtimes": "str"})
