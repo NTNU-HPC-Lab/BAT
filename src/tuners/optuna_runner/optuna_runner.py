@@ -9,10 +9,11 @@ class Optuna:
 
     def objective(self, trial):
         tuning_config = self.get_next_tuning_config(trial)
+        self.result.config = tuning_config
 
         self.result.algorithm_time = time.time() - self.t0
         prev_result = self.manager.run(tuning_config, self.result)
-        self.result = Result(self.manager.spec)
+        self.result = Result()
         return prev_result.objective
 
     def get_next_tuning_config(self, trial):
@@ -34,7 +35,7 @@ class Optuna:
 
         study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space))
         self.t0 = time.time()
-        self.result = Result(self.manager.spec)
+        self.result = Result()
         study.optimize(self.objective, n_trials=n_trials)
         self.manager.dataset.final_write_data()
         best = self.manager.dataset.get_best()
@@ -53,6 +54,7 @@ def main():
 
 
     optuna_runner = Optuna()
+
 
     if not args.verbose:
         optuna.logging.set_verbosity(optuna.logging.WARNING)

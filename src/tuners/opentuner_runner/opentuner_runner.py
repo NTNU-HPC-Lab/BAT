@@ -21,7 +21,7 @@ class OpenTunerT(MeasurementInterface):
         pargs[0].no_dups = True
         super(OpenTunerT, self).__init__(*pargs, **kwargs)
         self.manager = Manager(self.args)
-        self.result = Result(self.manager.spec)
+        self.result = Result()
         self.n_trials = self.manager.budget_trials
         self.current_trial = 0
         self.t0 = time.time()

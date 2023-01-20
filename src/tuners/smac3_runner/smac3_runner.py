@@ -9,10 +9,11 @@ from smac.scenario.scenario import Scenario
 
 class SMAC3:
     def objective(self, config):
+        self.result.config = config
         self.result.algorithm_time = time.time() - self.t0
         prev_result = self.manager.run(config._values, self.result)
         self.t0 = time.time()
-        self.result = Result(self.manager.spec)
+        self.result = Result()
         return prev_result.objective
 
     def main(self, args):
@@ -35,7 +36,7 @@ class SMAC3:
         })
 
         self.t0 = time.time()
-        self.result = Result(self.manager.spec)
+        self.result = Result()
         try:
             smac = SMAC4BB(scenario=scenario, tae_runner=self.objective)
             smac.optimize()
