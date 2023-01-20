@@ -9,7 +9,7 @@ from smac.scenario.scenario import Scenario
 
 class SMAC3:
     def objective(self, config):
-        self.result.config = config
+        self.result.config = config._values
         self.result.algorithm_time = time.time() - self.t0
         prev_result = self.manager.run(config._values, self.result)
         self.t0 = time.time()
