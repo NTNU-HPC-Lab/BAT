@@ -11,7 +11,7 @@ class MinTuner:
         tuning_config = {}
         for i, key in enumerate(self.manager.config_space.get_parameters().keys()):
             tuning_config[key] = conf[i]
-        #result.config = copy.deepcopy(tuning_config)
+        result.config = tuning_config
         return self.manager.run(tuning_config, result)
 
 
@@ -23,8 +23,8 @@ class MinTuner:
             if i >= self.manager.budget_trials:
                 break
             result.algorithm_time = time.time() - t0
-            self.run(l, result)
-            if self.result.validity != "KnownConstraintsViolated":
+            result = self.run(l, result)
+            if result.validity != "KnownConstraintsViolated":
                 i += 1
             t0 = time.time()
             result = Result()
@@ -40,8 +40,8 @@ class MinTuner:
                 config[key] = values[randint(0, len(values)-1)]
 
             result.algorithm_time = time.time() - t0
-            self.run(list(config.values()), result)
-            if self.result.validity != "KnownConstraintsViolated":
+            result = self.run(list(config.values()), result)
+            if result.validity != "KnownConstraintsViolated":
                 i += 1
             t0 = time.time()
             result = Result()
