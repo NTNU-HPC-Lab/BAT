@@ -71,7 +71,6 @@ class KernelTuner:
             new_conf = {}
             new_times = {}
             kt_result = conf
-            print(conf.items())
 
             for (key, value) in conf.items():
                 if key not in time_names:
