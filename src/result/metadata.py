@@ -11,16 +11,16 @@ class Metadata:
     def get_metadata():
         metadata = {}
         metadata["zenodo"] = Zenodo.get_zenodo_metadata()
-        metadata["environment"] = Dataset.get_environment_metadata()
-        metadata["hardware"] = Dataset.get_hardware_metadata()
+        metadata["environment"] = Metadata.get_environment_metadata()
+        metadata["hardware"] = Metadata.get_hardware_metadata()
         return metadata
 
     @staticmethod
     def get_environment_metadata():
         env_metadata = {}
-        env_metadata["requirements"] = Dataset.save_requirements()
-        env_metadata["lsb_release"] = Dataset.get_lsb_release()
-        env_metadata["hostname"] = Dataset.get_hostname()
+        env_metadata["requirements"] = Metadata.save_requirements()
+        env_metadata["lsb_release"] = Metadata.get_lsb_release()
+        env_metadata["hostname"] = Metadata.get_hostname()
         return env_metadata
 
     @staticmethod
@@ -30,12 +30,12 @@ class Metadata:
         o = xmltodict.parse(nvidia_smi_out.stdout)
         del o["nvidia_smi_log"]["gpu"]["processes"]
         metadata["nvidia_query"] = o
-        metadata["lshw"] = Dataset.get_lshw()
+        metadata["lshw"] = Metadata.get_lshw()
         lscpu_out = subprocess.run(["lscpu", "--json"], capture_output=True)
         metadata["lscpu"] = json.loads(lscpu_out.stdout)
         proc_out = subprocess.run(["cat", "/proc/meminfo"], capture_output=True)
         metadata["meminfo"] = jc.parse('proc_meminfo', proc_out.stdout.decode("utf-8"))
-        metadata["lsblk"] = Dataset.get_lsblk()
+        metadata["lsblk"] = Metadata.get_lsblk()
         return metadata
 
     @staticmethod

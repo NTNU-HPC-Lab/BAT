@@ -1,11 +1,6 @@
 from builtins import str
 import ast
-import json
-import pandas as pd
-import numpy
-import copy
 from collections import OrderedDict
-import traceback
 
 import kernel_tuner
 from kernel_tuner.interface import Options, _kernel_options, _device_options, _tuning_options
@@ -13,10 +8,7 @@ from kernel_tuner.runners.sequential import SequentialRunner
 from kernel_tuner import util
 from kernel_tuner.util import (ErrorConfig)
 
-from src.manager import get_kernel_path
-from src.manager import Manager
-from src.result import Result
-
+from src.manager.util import get_kernel_path
 
 class KernelBackend:
     def __init__(self, args, manager):

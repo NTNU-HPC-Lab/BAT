@@ -1,13 +1,8 @@
 
 extern "C" {
 
-#if VECTOR_TYPE == 1
-    typedef float vector;
-#elif VECTOR_TYPE == 2
-    typedef float2 vector;
-#elif VECTOR_TYPE == 4
-    typedef float4 vector;
-#endif // VECTOR_TYPE
+#define VECTOR_TYPE 1
+typedef float vector;
 
 
 inline __device__ float2 make_float2(float s)
@@ -269,18 +264,19 @@ __device__ void fillBuffers(
 #if VECTOR_SIZE > 1
 __global__ __attribute__((vec_type_hint(vector)))
 #endif
-__global__ void nbody_kernel(float timeDelta,
-    float4* oldBodyInfo, // pos XYZ, mass
+__global__ void nbody_kernel(
+    float timeDelta,
+    float4* oldBodyInfo, 
     vector* oldPosX,
     vector* oldPosY,
     vector* oldPosZ,
     vector* mass,
 	float4* newBodyInfo,
-    float4* oldVel, // XYZ, W unused
+    float4* oldVel, 
     vector* oldVelX,
     vector* oldVelY,
     vector* oldVelZ,
-    float4* newVel, // XYZ, W set to 0.f
+    float4* newVel, 
     float damping,
     float softeningSqr,
     int n)
@@ -291,6 +287,7 @@ __global__ void nbody_kernel(float timeDelta,
     __shared__ vector bufferPosZ[BLOCK_SIZE];
     __shared__ vector bufferMass[BLOCK_SIZE];
 
+	int tid = (blockIdx.x*blockDim.x + threadIdx.x) * OUTER_UNROLL_FACTOR;
     // each thread holds a position/mass of the body it represents
     float bodyPos[OUTER_UNROLL_FACTOR][3];
     float bodyVel[OUTER_UNROLL_FACTOR][3];
@@ -310,6 +307,7 @@ __global__ void nbody_kernel(float timeDelta,
         bodyAcc[j][0] = bodyAcc[j][1] = bodyAcc[j][2] = make_float4(.0f);
 #endif
 	}
+
 
 	// load data
 	loadThreadData(oldBodyInfo, ( float*)oldPosX, ( float*)oldPosY, ( float*)oldPosZ, ( float*)mass,
@@ -343,6 +341,7 @@ __global__ void nbody_kernel(float timeDelta,
 						softeningSqr);
 
 				#else // LOCAL_MEM != 1
+
 					updateAccGM(bodyAcc[j], bodyPos[j],
 						oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
 						i * BLOCK_SIZE + index,

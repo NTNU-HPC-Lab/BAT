@@ -1,9 +1,13 @@
 import numpy as np
 import cupy as cp
-import random
+from enum import Enum
+from typing import List, Dict, Tuple
+import logging
 
-from src.manager import get_data_path
+# Define the logger
+logger = logging.getLogger(__name__)
 
+# Define Enum for FillType
 
 type_conv_dict = {
     "bool": np.bool_,
@@ -70,6 +74,18 @@ custom_type_dict = {
         "repr_type": np.float64
     },
 }
+
+class FillType(Enum):
+    BINARY_RAW = "BinaryRaw"
+    RANDOM = "Random"
+    UNINITIALIZED = "Uninitialized"
+    CONSTANT = "Constant"
+    GENERATOR = "Generator"
+
+
+class UnsupportedMemoryTypeError(Exception):
+    pass
+
 class ArgHandler:
 
     def __init__(self, spec):
@@ -86,31 +102,31 @@ class ArgHandler:
 
     def handle_vector_data(self, arg):
         # random.seed(10)
-        t = arg["FillType"]
-        arg_data = []
-        if t not in ("BinaryRaw", "Random", "Uninitialized", "Constant", "Generator"):
-            print("Unsupported vector fill type", arg["fillType"])
+        try:
+            t = FillType(arg["FillType"])
+        except ValueError as e:
+            logger.error("Unsupported vector fill type %s", arg["fillType"])
             return
-        if t == "BinaryRaw":
+        
+        size_length = arg["Size"] * self.get_type_length(arg["Type"])
+        arg_data = []
+
+
+        if t == FillType.BINARY_RAW:
             raise NotImplementedError
             #with open(get_data_path(self.spec, arg["DataSource"]), 'r') as f:
             #    arg_data = f.read().splitlines()
-        if t == "Random":
-            arg_data = np.random.randn(arg["Size"] * self.get_type_length(arg["Type"]))
-            #arg_data = [random.random() for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
-        if t == "Constant":
+        if t == FillType.RANDOM:
+            arg_data = np.random.randn(size_length)
+        if t == FillType.CONSTANT:
             c = eval(str(arg["FillValue"]))
-            if c == 0:
-                arg_data = np.zeros(arg["Size"] * self.get_type_length(arg["Type"]))
-            else:
-                arg_data = np.full(arg["Size"] * self.get_type_length(arg["Type"]), c)
-            #arg_data = [c for _ in range(arg["Size"] * self.get_type_length(arg["Type"]))]
-        if t == "Generator":
+            arg_data = np.zeros(size_length) if c == 0 else np.full(size_length, c)
+        if t == FillType.GENERATOR:
             f_vec = np.vectorize(lambda i: eval(str(arg["DataSource"]), {"i": i}))
-            arr = np.arange(0, arg["Size" * self.get_type_length(arg["Type"])])
+            arr = np.arange(0, size_length)
             return f_vec(arr)
-        #arg_data = [eval(str(arg["DataSource"]), {"i": i}) for i in range(arg["Size"] * self.get_type_length(arg["Type"]))]
-        return self.type_conv_vec(arg_data, arg)
+        
+        return cp.asarray(self.type_conv_vec(arg_data, arg))
 
     def type_conv_scalar(self, arg_data, arg):
         if arg["Type"] in type_conv_dict.keys():
@@ -118,7 +134,7 @@ class ArgHandler:
         else:    # custom data type
             return (custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
 
-    def populate_args(self, args):
+    def populate_args(self, args: List[Dict]) -> Tuple[List, Dict]:
         if self.args == [] and self.cmem_args == {}:
             pop_args = []
             pop_cmem_args = {}

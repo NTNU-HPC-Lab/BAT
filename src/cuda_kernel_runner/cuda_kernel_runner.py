@@ -3,11 +3,10 @@ import math
 import cupy as cp
 import copy
 
-from src.result import Result
 from src.config_space import ConfigSpace
 
 from .arg_handler import ArgHandler
-from src.manager import get_kernel_path
+from src.manager.util import get_kernel_path
 
 DEBUG = 0
 
@@ -156,7 +155,7 @@ class CudaKernelRunner:
             return self.invalid_result("Compile exception", e)
 
         t0 = time.time()
-        args_tuple = tuple(self.arg_handler.populate_args(self.kernel_spec["Arguments"]))
+        args_tuple, cmem_args = tuple(self.arg_handler.populate_args(self.kernel_spec["Arguments"]))
         self.result.arg_time = time.time() - t0
 
         try:

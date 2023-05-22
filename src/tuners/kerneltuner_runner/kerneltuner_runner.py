@@ -169,7 +169,7 @@ class KernelTuner:
 
     def tune(self,
              gpu_name,
-             strategy="mls",
+             strategy="brute_force",
              strategy_options=None,
              verbose=True,
              quiet=False,
@@ -177,8 +177,8 @@ class KernelTuner:
         if self.prog_args.cache:
             self.cache_path = self.prog_args.cache
         else:
-            self.cache_path = None
-            #self.cache_path = f"BAT_{self.manager.dataset.hash}"
+            #self.cache_path = None
+            self.cache_path = f"BAT_{self.manager.dataset.hash}"
             self.run_tune(gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode)
 
 
