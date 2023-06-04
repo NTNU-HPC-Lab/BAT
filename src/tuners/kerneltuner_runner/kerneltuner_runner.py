@@ -103,7 +103,7 @@ class KernelTuner:
 
 
     def run_tune(self, gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode):
-        kernel_spec = self.manager.spec["KernelSpecification"]
+        kernel_spec = self.manager.problem.spec["KernelSpecification"]
         kernel_name = kernel_spec["KernelName"]
         language = kernel_spec["Language"]
         if language != "CUDA":
@@ -111,12 +111,13 @@ class KernelTuner:
                 "Currently only CUDA kernels have been implemented")
 
         # read in kernel
-        kernel_string = self.manager.runner.get_kernel_string()
+        kernel_string = self.manager.problem.runner.get_kernel_string()
 
         # get arguments
-        args, cmem_args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
+        args, cmem_args = self.manager.problem.get_args()
+        cmem_args = cmem_args if cmem_args else None
         iterations = eval(
-            str(self.manager.spec["BenchmarkConfig"]["iterations"])
+            str(self.manager.problem.spec["BenchmarkConfig"]["iterations"])
         )  # number of times each kernel configuration is ran
         compiler_options = kernel_spec["CompilerOptions"]
         # precision = self.spec["benchmarkConfig"]["PRECISION"]    # whether to use single or double precision (encoded as 32 or 64)
@@ -150,7 +151,7 @@ class KernelTuner:
             args,
             tune_params,
             cmem_args=cmem_args,
-            lang='cupy',
+            lang=self.manager.problem.lang if self.manager.problem.lang else 'cupy',
             block_size_names=block_size_names,
             restrictions=restrict,
             verbose=verbose,

@@ -9,7 +9,8 @@ class Expdist(CUDAProblem):
         super().__init__("expdist", self.setup_spec())
         self.setup()
         self.run_settings = run_settings
-        self.runner = KernelBackend(self.spec, self.config_space, [self.function_args, []], "CUDA")
+        self.lang = "CUDA"
+        self.runner = KernelBackend(self.spec, self.config_space, [self.function_args, []], self.lang)
 
     def run(self, tuning_config, result):
         return self.runner.run(tuning_config, result)
@@ -69,11 +70,11 @@ class Expdist(CUDAProblem):
                               np.ceil(size / float(np.amin(self.config_space.get_parameters()["block_size_y"]))) )
         ndim = np.int32(2)
         A = np.random.randn(alloc_size*ndim).astype(np.float32)
-        B = A+0.00001*np.random.randn(alloc_size*ndim).astype(np.float32)
+        B = A + 0.00001*np.random.randn(alloc_size*ndim).astype(np.float32)
         scale_A = np.absolute(0.01*np.random.randn(alloc_size).astype(np.float32))
         scale_B = np.absolute(0.01*np.random.randn(alloc_size).astype(np.float32))
         cost = np.zeros((max_blocks)).astype(np.float32)
 
-        self.function_args = [A, B, size, size, scale_A, scale_B, cost]
+        self.function_args = [[A, B, size, size, scale_A, scale_B, cost], []]
         return self.function_args
 

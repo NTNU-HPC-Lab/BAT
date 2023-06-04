@@ -87,7 +87,7 @@ class Dedispersion(CUDAProblem):
 
         output_arr = np.zeros(nr_dms*nr_samples, dtype=np.float32)
         shifts = self._get_shifts()
-        self.function_args = [input_samples, output_arr, shifts]
+        self.function_args = [[input_samples, output_arr, shifts], []]
         return self.function_args
 
     def _get_shifts(self):

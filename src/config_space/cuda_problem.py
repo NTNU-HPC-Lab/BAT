@@ -16,6 +16,7 @@ class CUDAProblem(Problem):
         self._kernel_name = kernel_name
         self._program = CUDAProgram(kernel_name)
         self._language = "CUDA"
+        self.lang = 'cupy'
         if spec is not None:
             self.spec = spec
             self.spec["BenchmarkConfig"] = {}
