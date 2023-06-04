@@ -78,7 +78,7 @@ class ExperimentManager:
             experiment_settings["General"]["OutputFormat"] = args.output_format
         if args.benchmarks:
             if args.benchmarks[0].lower() == "all":
-                benchmarks = ["GEMM","nbody", "convolution", "dedisp", "expdist", "hotspot"]
+                benchmarks = ["GEMM","nbody", "convolution", "dedisp", "TRIAD", "hotspot", "MD5Hash", "expdist"]
             else:
                 benchmarks = args.benchmarks
             experiment_settings["BenchmarkConfig"]["Benchmarks"] = benchmarks

@@ -91,6 +91,7 @@ class ArgHandler:
     def __init__(self, spec):
         self.spec = spec
         self.args = []
+        self.spec_args = spec["KernelSpecification"]["Arguments"]
         self.cmem_args = {}
 
     def handle_custom_data_type(self, arg_data, arg):
@@ -134,11 +135,11 @@ class ArgHandler:
         else:    # custom data type
             return (custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
 
-    def populate_args(self, args: List[Dict]) -> Tuple[List, Dict]:
+    def populate_args(self) -> Tuple[List, Dict]:
         if self.args == [] and self.cmem_args == {}:
             pop_args = []
             pop_cmem_args = {}
-            for i, arg in enumerate(args):
+            for i, arg in enumerate(self.spec_args):
                 name = arg["Name"]
                 print(f"Populating arg {name}", end="\r")
                 pop_arg = self.populate_data(arg)

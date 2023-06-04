@@ -4,23 +4,28 @@ class ConfigSpace:
     parameters = {}
     constraints = []
 
-    def __init__(self, spec_config):
+    def __init__(self, spec_config={}):
+        if not spec_config.get("TuningParameters"):
+            return
         for param in spec_config["TuningParameters"]:
             self.add_enum(param["Name"], eval(str(param["Values"])))
         if spec_config.get("Conditions"):
             for expr in spec_config["Conditions"]:
-                self.add_constraint(expr)
+                self.add_constraint(expr["Expression"], expr["Parameters"])
         self.sort_parameters()
 
-    def sort_parameters(self):
+    def sort_parameters(self) -> 'ConfigSpace':
         self.parameters = dict(sorted(self.parameters.items()))
+        return self
 
-    def add_enum(self, key, enum):
+    def add_enum(self, key, enum) -> 'ConfigSpace':
         self.parameters[key] = enum
         self.sort_parameters()
+        return self
 
-    def add_constraint(self, expr):
-        self.constraints.append(expr)
+    def add_constraint(self, expr, params) -> 'ConfigSpace':
+        self.constraints.append({"Expression": expr, "Parameters": params})
+        return self
 
     def get_product(self):
         return itertools.product(*(self.parameters.values()))

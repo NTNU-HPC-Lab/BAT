@@ -11,20 +11,19 @@ from kernel_tuner.util import (ErrorConfig)
 from src.manager.util import get_kernel_path
 
 class KernelBackend:
-    def __init__(self, args, manager):
-        self.prog_args = args
-        self.manager = manager
-        self.spec = manager.spec
+    def __init__(self, spec, config_space, function_args, cuda_backend="Cupy"):
+        self.spec = spec
+        self.config_space = config_space
         self.kernel_spec = self.spec["KernelSpecification"]
         kernel_spec = self.kernel_spec
         if kernel_spec["Language"] != "CUDA":
             raise NotImplementedError(
                 "Currently only CUDA kernels have been implemented")
         # add tune params
-        tune_params = OrderedDict(self.manager.config_space.get_parameters())
+        tune_params = OrderedDict(self.config_space.get_parameters())
         # get arguments
         iterations = eval(
-            str(self.manager.spec["BenchmarkConfig"]["iterations"])
+            str(self.spec["BenchmarkConfig"]["iterations"])
         )  # number of times each kernel configuration is ran
         block_size_names = list(n for n in kernel_spec["LocalSize"].values() if not n.isdigit())
 
@@ -50,8 +49,8 @@ class KernelBackend:
             grid_div_x = []
             grid_div_y = []
 
-        lang = "CUPY"
-        args, cmem_args = self.manager.arg_handler.populate_args(kernel_spec["Arguments"])
+        lang = cuda_backend
+        args, cmem_args = function_args
 
         debug = False
         verbose = debug
@@ -150,7 +149,7 @@ class KernelBackend:
         self.tuning_config = tuning_config
         result.config = tuning_config
         searchspace = [ tuning_config.values() ]
-
+        #print(searchspace, self.kernel_options, self.tuning_options)
         results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
         kt_result = results[0]
         if isinstance(kt_result["time"], ErrorConfig):

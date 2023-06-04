@@ -18,25 +18,27 @@ from src.result.metadata import Metadata
 from src.result.result import Result
 
 class Dataset:
-    def __init__(self, spec):
+    def __init__(self, experiment_settings, benchmark_name):
         self.files = []
         self.cache_df = pd.DataFrame({})
+        self.writes = 0
         self.write_interval = 10
 
-        self.spec = spec
         self.root_path = "./results"
         self.input_zip = "input-data.zip"
         self.metadata_filename = "metadata.json"
         self.results_zip = "results.zip"
 
         self.metadata = Metadata.get_metadata()
-        self.metadata["spec"] = self.spec
+        #self.metadata["spec"] = self.spec
         self.validate_schema(self.metadata)
 
-        self.kernel_path = get_kernel_path(self.spec)
+        #self.kernel_path = get_kernel_path(self.spec)
 
-        self.output_format = self.spec["General"]["OutputFormat"].lower()
-        self.benchmark_name = self.spec["General"]["BenchmarkName"]
+        #self.output_format = self.spec["General"]["OutputFormat"].lower()
+        self.benchmark_name = benchmark_name
+        self.output_format = "csv"
+        #self.benchmark_name = self.spec["General"]["BenchmarkName"]
 
         if self.output_format not in ("json", "hdf5", "csv"):
             raise ValueError(f"Output format '{self.output_format}' is not recognized.")
@@ -51,7 +53,7 @@ class Dataset:
         self.source_zip = "source.zip"
         self.source_folder = self.dataset_folder / "source"
         self.source_folder.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(self.kernel_path, self.source_folder / "kernel.cu")
+        #shutil.copyfile(self.kernel_path, self.source_folder / "kernel.cu")
         self.files.append(self.source_zip)
 
     def create_results_folder(self):
@@ -60,7 +62,8 @@ class Dataset:
         self.results_path.mkdir(parents=True, exist_ok=True)
         self.result_id = sum([1 if element.is_file() else 0 for element in Path(self.results_path).iterdir()]) + 1
         self.results_filename = f"{self.result_id}.{self.output_format.lower()}"
-        self.cache_results_path = self.results_path / f"{self.result_id}.hdf"
+        #self.cache_results_path = self.results_path / f"{self.result_id}.hdf"
+        self.cache_results_path = self.results_path / f"{self.result_id}.csv"
         self.output_results_path = self.results_path / self.results_filename
         
         self.files.append(self.results_zip)
@@ -74,12 +77,14 @@ class Dataset:
         self.dataset_folder.mkdir(parents=True, exist_ok=True)
 
     def get_hash_set(self):
-        hash_set = copy.deepcopy(self.spec)
+        #hash_set = copy.deepcopy(self.spec)
+        hash_set = {}
         copy_metadata = copy.deepcopy(self.metadata)
         hash_set.update(copy_metadata)
-        del hash_set["General"]
-        del hash_set["zenodo"]
-        try: 
+        
+        try:
+            del hash_set["General"]
+            del hash_set["zenodo"] 
             del hash_set["hardware"]["lshw"]
             del hash_set["hardware"]["lscpu"]
             del hash_set["hardware"]["meminfo"]
@@ -135,7 +140,8 @@ class Dataset:
         shutil.rmtree(self.dataset_folder)
 
     def get_best(self):
-        df = pd.read_hdf(self.cache_results_path, "Results")
+        #df = pd.read_hdf(self.cache_results_path, "Results")
+        df = pd.read_csv(self.cache_results_path)
         df.reset_index(drop=True, inplace=True)
         min_index = df['objective'].idxmin()
         best_row = df.loc[min_index]
@@ -159,12 +165,18 @@ class Dataset:
     def write_data(self):
         df = self.cache_df.reset_index()
         df = self.flatten_df(df)
-        df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True, min_itemsize={"times.runtimes": 200})
+        df.to_csv(self.cache_results_path, 
+                  mode='a' if self.writes > 0 else 'w', 
+                  header=True if self.writes == 0 else False, 
+                  index=False)
+        self.writes += 1
+        #df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True, min_itemsize={"times.runtimes": 200})
 
     def final_write_data(self, df=None):
         if len(self.cache_df):
             self.write_data()
-        df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
+        #df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
+        df_iter = df if df is not None else pd.read_csv(self.cache_results_path)
         df_iter.reset_index(drop=True, inplace=True)
         print(df_iter)
         if self.output_format == "csv":

@@ -3,14 +3,20 @@ import os
 import datetime
 import jsonschema
 import logging
+from benchmarks.MD5Hash.MD5Hash import MD5Hash
+from benchmarks.TRIAD.TRIAD import TRIAD
+from benchmarks.convolution.convolution import Convolution
+from benchmarks.nbody.nbody import Nbody
+from benchmarks.pnpoly.pnpoly import PnPoly
 
-from src.config_space import ConfigSpace
 from src.result.dataset import Dataset
-from src.manager.util import get_spec, write_spec
-
-from src.cuda_kernel_runner import ArgHandler
-from src.kernelbackend import KernelBackend
 from src.result.zenodo import Zenodo
+from src.manager.util import get_spec
+
+from benchmarks.dedisp.dedispersion import Dedispersion
+from benchmarks.expdist.expdist import Expdist
+from benchmarks.GEMM.gemm import GEMM
+from benchmarks.hotspot.hotspot import Hotspot
 
 # Create a custom logger
 log = logging.getLogger(__name__)
@@ -23,31 +29,33 @@ def get_budget_trials(spec):
             return budget["BudgetValue"]
 
 
+benchmark_map = {
+    "dedisp": Dedispersion,
+    "expdist": Expdist,
+    "GEMM": GEMM,
+    "hotspot": Hotspot,
+    "pnpoly": PnPoly,
+    "convolution": Convolution,
+    "nbody": Nbody,
+    "TRIAD": TRIAD,
+    "MD5Hash": MD5Hash,
+}
+
+
 class Manager:
     def __init__(self, args):
         self.cleanup = args.cleanup
         self.root_results_path = "./results"
-        self.spec = get_spec(args.json)
-        self.spec.update(get_spec(args.experiment_settings))
-        self.spec["General"]["BenchmarkName"] = args.benchmark
-        self.validate_schema(self.spec)
-        # write_spec(self.spec, args.json)
-        self.budget_trials = get_budget_trials(self.spec)
+
+        experiment_settings = get_spec(args.experiment_settings)
+
+        self.problem = benchmark_map[args.benchmark](experiment_settings)
+        self.config_space = self.problem.config_space
+        experiment_settings = experiment_settings
+        self.budget_trials = experiment_settings["Budget"][0]["BudgetValue"]
+        self.dataset = Dataset(experiment_settings, args.benchmark)
         self.trial = 0
         self.total_time = 0
-
-        self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
-        self.dataset = Dataset(self.spec)
-        lang = self.spec["KernelSpecification"]["Language"]
-        if lang == "CUDA":
-            self.arg_handler = ArgHandler(self.spec)
-
-            #self.runner = CudaKernelRunner(self.spec, self.config_space)
-            self.runner = KernelBackend(args, self)
-        else:
-            raise NotImplementedError(f"Language {lang} not supported")
-            #self.arg_handler = ArgHandler(self.spec)
-            #self.runner = SimulatedRunner(self.spec, self.config_space)
 
         self.testing = 0
         self.timestamp = datetime.datetime.now()
@@ -73,14 +81,13 @@ class Manager:
         self.dataset.write_data()
 
     def run(self, tuning_config, result):
-
         dur = (datetime.datetime.now() - self.timestamp).total_seconds()
         if dur > 600.0 or self.trial == self.budget_trials:
             raise KeyboardInterrupt
-        if list(tuning_config.values()) not in self.config_space:
+        if list(tuning_config.values()) not in self.problem.config_space:
             result.validity = "KnownConstraintsViolated"
-        else:    
-            result = self.runner.run(tuning_config, result)
+        else:
+            result = self.problem.run(tuning_config, result)
             result.total_time = (datetime.datetime.now() - self.result_timestamp).total_seconds()
             self.trial += 1
             self.total_time += result.total_time
@@ -88,10 +95,10 @@ class Manager:
 
             print(f"Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
             self.result_timestamp = datetime.datetime.now()
-        
+
         self.dataset.add_result(result)
         return result
 
     def get_last(self):
-        return self.results[-1]
+        return self.dataset.get_last()
 

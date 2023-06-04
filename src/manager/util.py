@@ -14,6 +14,8 @@ def get_kernel_path(spec):
 def get_data_path(spec, local_data_path):
     return "{}/{}".format(get_benchmark_path(spec), local_data_path)
 
+def get_spec_by_name(name):
+    return get_spec(f"benchmarks/{name}/{name}-CAFF.json")
 
 def print_json(j):
     print(json.dumps(j, indent=4, sort_keys=True))

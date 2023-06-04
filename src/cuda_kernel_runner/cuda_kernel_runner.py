@@ -155,7 +155,7 @@ class CudaKernelRunner:
             return self.invalid_result("Compile exception", e)
 
         t0 = time.time()
-        args_tuple, cmem_args = tuple(self.arg_handler.populate_args(self.kernel_spec["Arguments"]))
+        args_tuple, cmem_args = tuple(self.arg_handler.populate_args())#self.kernel_spec["Arguments"]))
         self.result.arg_time = time.time() - t0
 
         try:
@@ -165,5 +165,5 @@ class CudaKernelRunner:
 
         if DEBUG:
             correctness = correctness_funcs[self.kernel_spec["KernelName"]]
-            correctness(tuple(args), args_tuple, tuning_config, launch_config)
+            correctness(args_tuple, tuning_config, launch_config)
         return self.result
