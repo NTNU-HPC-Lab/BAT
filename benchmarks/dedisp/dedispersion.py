@@ -24,7 +24,7 @@ class Dedispersion(CUDAProblem):
         super().__init__("dedispersion", self.setup_spec())
         self.setup()
         self.run_settings = run_settings
-        self.runner = KernelBackend(self.spec, self.config_space, [self.function_args, []])
+        self.runner = KernelBackend(self.spec, self.config_space, self.function_args)
 
     def run(self, tuning_config, result):
         return self.runner.run(tuning_config, result)

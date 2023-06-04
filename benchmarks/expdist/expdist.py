@@ -10,7 +10,7 @@ class Expdist(CUDAProblem):
         self.setup()
         self.run_settings = run_settings
         self.lang = "CUDA"
-        self.runner = KernelBackend(self.spec, self.config_space, [self.function_args, []], self.lang)
+        self.runner = KernelBackend(self.spec, self.config_space, self.function_args, self.lang)
 
     def run(self, tuning_config, result):
         return self.runner.run(tuning_config, result)
