@@ -1,6 +1,8 @@
 from builtins import str
 import ast
+import logging
 from collections import OrderedDict
+import re
 
 import kernel_tuner
 from kernel_tuner.interface import Options, _kernel_options, _device_options, _tuning_options
@@ -11,87 +13,105 @@ from kernel_tuner.util import (ErrorConfig)
 from src.manager.util import get_kernel_path
 
 class KernelBackend:
-    def __init__(self, spec, config_space, function_args, cuda_backend="Cupy"):
+    CUDA = "CUDA"
+    CUPY = "Cupy"
+    TIME = "time"
+    DEFAULT_ATOL = 1e-6
+    DEFAULT_DEVICE = 0
+    DEFAULT_PLATFORM = 0
+    DEFAULT_OBJECTIVE = TIME
+
+    def __init__(self, spec, config_space, function_args,
+                 cuda_backend="Cupy", metrics=None, objective=DEFAULT_OBJECTIVE):
         self.spec = spec
         self.config_space = config_space
         self.kernel_spec = self.spec["KernelSpecification"]
-        kernel_spec = self.kernel_spec
-        if kernel_spec["Language"] != "CUDA":
-            raise NotImplementedError(
-                "Currently only CUDA kernels have been implemented")
-        # add tune params
+        self.metrics = metrics
+        self.objective = objective
+
+        self.validate_kernel_spec()
         tune_params = OrderedDict(self.config_space.get_parameters())
-        # get arguments
-        iterations = eval(
-            str(self.spec["BenchmarkConfig"]["iterations"])
-        )  # number of times each kernel configuration is ran
-        block_size_names = list(n for n in kernel_spec["LocalSize"].values() if not n.isdigit())
+        block_size_names = self.get_block_size_names()
+        self.validate_params(tune_params, block_size_names)
+        self.extend_block_size_names(block_size_names)
 
-        observers = None
-
-        # check for forbidden names in tune parameters
-        util.check_tune_params_list(tune_params, observers)
-
-        # check whether block_size_names are used as expected
-        util.check_block_size_params_names_list(block_size_names, tune_params)
-
-        # ensure there is always at least three names
-        util.append_default_block_size_names(block_size_names)
-
-        if kernel_spec.get("ProblemSize"):
-            ps = kernel_spec["ProblemSize"]
-            problem_size = ps if isinstance(ps, int) else tuple(ps)
-
-            grid_div_x = kernel_spec["GridDivX"]
-            grid_div_y = kernel_spec["GridDivY"]
-        else:
-            problem_size = self.problemsize_from_gridsizes(kernel_spec["GlobalSize"])
-            grid_div_x = []
-            grid_div_y = []
-
-        lang = cuda_backend
+        problem_size, grid_div_x, grid_div_y = self.get_problem_size_and_grid_div()
         args, cmem_args = function_args
 
-        debug = False
-        verbose = debug
-        quiet = not debug
+        self.opts = self.create_opts(args, tune_params, block_size_names, cmem_args, problem_size, grid_div_x, grid_div_y, cuda_backend)
+        self.create_kernelsource(cuda_backend)
+        self.create_option_bags()
+        self.setup_sequential_runner()
 
-        self.opts = {
-            "kernel_name": kernel_spec["KernelName"],
+    def validate_kernel_spec(self) -> None:
+        """Validate the kernel specification language."""
+        if self.kernel_spec["Language"] != self.CUDA:
+            raise NotImplementedError(
+                "Currently only CUDA kernels have been implemented")
+
+    def get_block_size_names(self):
+        return [n for n in self.kernel_spec["LocalSize"].values() if not n.isdigit()]
+
+    def validate_params(self, tune_params, block_size_names):
+        observers = None
+        util.check_tune_params_list(tune_params, observers)
+        util.check_block_size_params_names_list(block_size_names, tune_params)
+
+    def extend_block_size_names(self, block_size_names):
+        util.append_default_block_size_names(block_size_names)
+
+    def get_problem_size_and_grid_div(self):
+        if self.kernel_spec.get("ProblemSize"):
+            problem_size = self.kernel_spec["ProblemSize"]
+            problem_size = problem_size if isinstance(problem_size, int) else tuple(problem_size)
+            grid_div_x = self.kernel_spec["GridDivX"]
+            grid_div_y = self.kernel_spec["GridDivY"]
+        else:
+            problem_size = self.problemsize_from_gridsizes(self.kernel_spec["GlobalSize"])
+            grid_div_x = []
+            grid_div_y = []
+        return problem_size, grid_div_x, grid_div_y
+
+    def create_opts(self, args, tune_params, block_size_names, cmem_args, problem_size, grid_div_x, grid_div_y, cuda_backend):
+        return {
+            "kernel_name": self.kernel_spec["KernelName"],
             "kernel_source": self.get_kernel_string(),
             "problem_size": problem_size,
             "arguments": args,
-            "lang": lang,
+            "lang": cuda_backend,
             "tune_params": tune_params,
-            "atol": 1e-6,
-            "iterations": iterations,
-            "verbose": verbose,
-            "objective":"time",
-            "device": 0,
-            "platform": 0,
-            "grid_div_x": grid_div_x ,
+            "atol": self.DEFAULT_ATOL,
+            "iterations": eval(str(self.spec["BenchmarkConfig"]["iterations"])),
+            "verbose": False,
+            "objective": self.objective,
+            "device": self.DEFAULT_DEVICE,
+            "platform": self.DEFAULT_PLATFORM,
+            "grid_div_x": grid_div_x,
             "grid_div_y": grid_div_y,
-            #"smem_args": None,
             "cmem_args": cmem_args if cmem_args else None,
-            #"texmem_args": None,
-            "compiler_options": kernel_spec["CompilerOptions"],
+            "compiler_options": self.kernel_spec["CompilerOptions"],
             "block_size_names": block_size_names,
-            "quiet": quiet,
+            "quiet": True,
+            "metrics": self.metrics,
         }
 
-        # create KernelSource
-        self.kernelsource = kernel_tuner.core.KernelSource(self.opts["kernel_name"], self.opts["kernel_source"], lang=lang, defines=None)
+    def create_kernelsource(self, cuda_backend):
+        self.kernelsource = kernel_tuner.core.KernelSource(self.opts["kernel_name"], self.opts["kernel_source"], lang=cuda_backend, defines=None)
 
-        # create option bags
-        self.kernel_options = Options([(k, self.opts.get(k, None)) for k in _kernel_options.keys()])
-        self.tuning_options = Options([(k, self.opts.get(k, None)) for k in _tuning_options.keys()])
-        self.device_options = Options([(k, self.opts.get(k, None)) for k in _device_options.keys()])
-
+    def create_option_bags(self):
+        """Create options for kernel, tuning and device."""
+        self.kernel_options = self.create_options(self.opts, _kernel_options)
+        self.tuning_options = self.create_options(self.opts, _tuning_options)
+        self.device_options = self.create_options(self.opts, _device_options)
         self.tuning_options.cachefile = None
 
-        self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
-        self.runner.warmed_up = True # disable warm up for this test
+    def create_options(self, opts, opt_keys):
+        """Create an Options object from given opts and opt_keys."""
+        return Options([(k, opts.get(k, None)) for k in opt_keys.keys()])
 
+    def setup_sequential_runner(self):
+        self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
+        self.runner.warmed_up = True  # disable warm up for this test
 
     def get_kernel_string(self) -> str:
         """ Reads in the kernel as a string """
@@ -101,41 +121,38 @@ class KernelBackend:
         return kernel_string
 
     def problemsize_from_gridsizes(self, gridsizes: dict):
-        """ Takes the grid sizes and returns the problem size as a lambda function """
-        problemsizes = list()
-        dimensions = ['X', 'Y',
-                      'Z']  # order in which Kernel Tuner expects the tuple
+        problemsizes = []
+        dimensions = ['X', 'Y', 'Z']
         for dimension in dimensions:
             if dimension not in gridsizes:
                 break
-            gridsize = gridsizes[dimension]
-            # not an expression, so must be a scalar
-            if not isinstance(gridsize, str):
-                problemsizes.append(gridsize)
-                continue
-            # gridsize is expression, so find and wrap the variables
-            paramnames = [
-                node.id for node in ast.walk(ast.parse(gridsize))
-                if isinstance(node, ast.Name)
-            ]
-            for paramname in paramnames:
-                if not f"p['{paramname}']" in gridsize:  # prevent multiple occurances of the same parameter name in the same gridsize from applying this twice
-                    gridsize = gridsize.replace(paramname, f"p['{paramname}']")
-            problemsizes.append(gridsize)
-
-        # check if the strict use of X, Y, Z causes problems
-        if len(problemsizes) != len(gridsizes.keys()):
-            raise ValueError(
-                f"The problem size dimensions ({dimensions}) do not match the gridsizes specified ({gridsizes})"
-            )
-
-        # return the lambda function for future evaluation
+            problemsizes.append(self.evaluate_gridsize(gridsizes, dimension))
+        self.validate_problemsize_length(problemsizes, gridsizes)
         return lambda p: tuple(
             eval(ps, dict(p=p)) if isinstance(ps, str) else ps
             for ps in problemsizes)
 
+    def evaluate_gridsize(self, gridsizes, dimension):
+        gridsize = gridsizes[dimension]
+        if not isinstance(gridsize, str):
+            return gridsize
+        paramnames = self.extract_param_names(gridsize)
+        return self.wrap_variables_in_gridsize(gridsize, paramnames)
 
-    def invalid_result(self, result, msg, error=None):
+    def extract_param_names(self, gridsize):
+        return [node.id for node in ast.walk(ast.parse(gridsize)) if isinstance(node, ast.Name)]
+
+    def wrap_variables_in_gridsize(self, gridsize, paramnames):
+        for paramname in paramnames:
+            if not re.search(f"\b{paramname}\b", gridsize):  # prevents multiple occurrences and avoids matching substrings
+                gridsize = gridsize.replace(paramname, f"p['{paramname}']")
+        return gridsize
+
+    def validate_problemsize_length(self, problemsizes, gridsizes):
+        if len(problemsizes) != len(gridsizes.keys()):
+            raise ValueError(f"The problem size dimensions (X, Y, Z) do not match the gridsizes specified ({gridsizes})")
+
+    def update_invalid_result(self, result, msg, error=None):
         result.validity = msg
         result.correctness = 0
         result.runtimes = [0]
@@ -144,23 +161,27 @@ class KernelBackend:
         return result
 
 
-    def run(self, tuning_config, result):
-
-        self.tuning_config = tuning_config
-        result.config = tuning_config
-        searchspace = [ tuning_config.values() ]
-        #print(searchspace, self.kernel_options, self.tuning_options)
-        results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
-        kt_result = results[0]
-        if isinstance(kt_result["time"], ErrorConfig):
-            return self.invalid_result(result, "Compile exception")
+    def update_result(self, result, kt_result):
         result.runtimes = [t/1000 for t in kt_result["times"]]
         result.runtime = sum(result.runtimes)
-        result.objective = kt_result["time"]/1000
+        result.objective = kt_result[self.objective]/1000
         result.compile_time = kt_result["compile_time"]/1000
         #result.time = kt_result["verification_time"]
         #result.time = kt_result["benchmark_time"]
         #result.algorithm_time = kt_result["strategy_time"]/1000
         #result.framework_time = kt_result["framework_time"]/1000
+        
+
+    def run(self, tuning_config, result):
+        self.tuning_config = tuning_config
+        result.config = tuning_config
+        searchspace = [ tuning_config.values() ]
+        results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
+        kt_result = results[0]
+        print(kt_result)
+        if self.objective in kt_result and isinstance(kt_result[self.objective], ErrorConfig):
+            logging.error(f"Failed to run with tuning config: {tuning_config}. Error: {kt_result[self.objective]}")
+            return self.update_invalid_result(result, "Compile exception")
+        self.update_result(result, kt_result)
         return result
 

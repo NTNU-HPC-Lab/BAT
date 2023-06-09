@@ -69,11 +69,9 @@ class Zenodo:
     def get_user_depositions(self, deposition_id=None):
         if deposition_id is None:
             ret = requests.get('https://zenodo.org/api/deposit/depositions', params=self.params)
-            self.handle_return(ret)
         else:
             ret = requests.get(f'https://zenodo.org/api/deposit/depositions/{deposition_id}', params=self.params)
-            self.handle_return(ret)
-
+        self.handle_return(ret)
         return ret.json()
 
     def zip_folder(self, path):

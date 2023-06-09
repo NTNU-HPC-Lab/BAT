@@ -1,8 +1,10 @@
 import datetime
+from typing import Dict, List
 
 
 class Result:
-    def __init__(self, config=[0], objective=10000.0, compile_time=0, runtimes=[0], algorithm_time=0, framework_time=0, total_time=0, arg_time=0, times={}):
+    def __init__(self, config: List[int] = [0], objective: float = 10000.0, compile_time: float = 0, 
+                 runtimes: List[float] = [0], algorithm_time: float = 0, framework_time: float = 0, total_time: float = 0, arg_time: float = 0, times: Dict = {}):
         self.times = times
         self.config = config
         self.compile_time = compile_time
@@ -23,30 +25,30 @@ class Result:
 
     def __str__(self):
         return f"Timestamp: {self.timestamp},\nConfig: {self.config}\nValidity: {self.validity}\nObjective: {self.objective:.2E}"
+    
+    def __repr__(self) -> str:
+        return f"Result({self.config}, {self.objective}, {self.compile_time}, {self.runtimes}, {self.algorithm_time}, {self.arg_time}, {self.times})"
+
 
     def calculate_time(self, timestamp):
         self.total_time = (datetime.datetime.now() - timestamp).total_seconds()
         #self.framework_time = self.total_time - self.compile_time - sum(self.runtimes) - self.algorithm_time
 
-    def serialize(self):
-        d = {}
-        d["timestamp"] = str(self.timestamp)
-        d["config"] = self.config
-        d["correctness"] = self.correctness
-        d["validity"] = self.validity
-        d["objective"] = self.objective
-        if self.error:
-            d["error"] = str(self.error)
-        if (len(self.times)):
-            d["times"] = self.times
-        else:
-            d["times"] = {}
-            d["times"]["total_time"] = self.total_time
-            d["times"]["compile_time"] = self.compile_time
-            d["times"]["arg_time"] = self.arg_time
-            #d["times"]["runtimes"] = mean(self.runtimes) if len(self.runtimes) else 0
-            d["times"]["runtimes"] = self.runtimes
-            d["times"]["algorithm_time"] = self.algorithm_time
-            d["times"]["framework_time"] = self.framework_time
-        return d
+    def serialize(self) -> Dict:
+        return {
+            "timestamp": str(self.timestamp),
+            "config": self.config,
+            "correctness": self.correctness,
+            "validity": self.validity,
+            "objective": self.objective,
+            "error": str(self.error) if self.error else None,
+            "times": self.times if len(self.times) else {
+                "total_time": self.total_time,
+                "compile_time": self.compile_time,
+                "arg_time": self.arg_time,
+                "runtimes": self.runtimes,
+                "algorithm_time": self.algorithm_time,
+                "framework_time": self.framework_time
+            }
+        }
 

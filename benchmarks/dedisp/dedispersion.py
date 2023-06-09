@@ -79,7 +79,6 @@ class Dedispersion(CUDAProblem):
             #.add_constraint("loop_unroll_factor_x <= tile_size_x and tile_size_x % loop_unroll_factor_x == 0")
             #.add_constraint("loop_unroll_factor_y <= tile_size_y and tile_size_y % loop_unroll_factor_y == 0")
             #.add_constraint(f"loop_unroll_factor_channel <= {nr_channels} and loop_unroll_factor_channel and {nr_channels} % loop_unroll_factor_channel == 0")
-            .sort_parameters()
         )
 
     def setup_args(self):

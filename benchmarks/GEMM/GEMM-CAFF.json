@@ -127,6 +127,11 @@
             }
         ]
     },
+    "Budget": 
+        {
+            "BudgetValue": 200,
+            "Type": "ConfigurationCount"
+        },
     "KernelSpecification": {
         "Language": "CUDA",
         "CompilerOptions": ["-std=c++11"],

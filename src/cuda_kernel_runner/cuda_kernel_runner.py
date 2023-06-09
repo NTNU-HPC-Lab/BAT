@@ -2,13 +2,13 @@ import time
 import math
 import cupy as cp
 import copy
+import logging
 
 from src.config_space import ConfigSpace
 
 from .arg_handler import ArgHandler
 from src.manager.util import get_kernel_path
 
-DEBUG = 0
 
 class CudaKernelRunner:
     def __init__(self, spec, config_space):
@@ -31,6 +31,7 @@ class CudaKernelRunner:
         self.result = None
         self.tuning_config = {}
         self.context = {}
+        self.debug = False
 
     def run(self, tuning_config, result):
         self.reset_context()
@@ -46,12 +47,13 @@ class CudaKernelRunner:
     def generate_compiler_options(self, tuning_config):
         benchmark_config = self.spec.get("BenchmarkConfig", {})
         compiler_options = self.kernel_spec.get("CompilerOptions", [])
-        for (key, val) in tuning_config.items():
-            compiler_options.append(f"-D{key}={val}")
-        for (key, val) in benchmark_config.items():
-            compiler_options.append(f"-D{key}={val}")
-        for (key, val) in self.result.launch.items():
-            compiler_options.append(f"-D{key}={val}")
+
+        options_sources = [tuning_config, benchmark_config, self.result.launch]
+        
+        for source in options_sources:
+            for (key, val) in source.items():
+                compiler_options.append(f"-D{key}={val}")
+        
         return compiler_options
 
     def reset_context(self):
@@ -139,6 +141,7 @@ class CudaKernelRunner:
         self.result.correctness = 0
         self.result.runtimes = []
         if error:
+            logging.exception("Exception occurred", exc_info=True)
             self.result.error = error
         return self.result
 
@@ -163,7 +166,7 @@ class CudaKernelRunner:
         except Exception as e:
             return self.invalid_result("Launch exception", e)
 
-        if DEBUG:
+        if self.debug:
             correctness = correctness_funcs[self.kernel_spec["KernelName"]]
             correctness(args_tuple, tuning_config, launch_config)
         return self.result

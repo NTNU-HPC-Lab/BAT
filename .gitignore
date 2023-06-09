@@ -181,35 +181,11 @@ dmypy.json
 
 # Extra
 *.db
-final_config.json
-src/tuning_examples/opentuner/bfs/BFS
-src/tuning_examples/opentuner/scan/scan
-src/tuning_examples/opentuner/spmv/spmv
-src/tuning_examples/opentuner/md5hash/md5hash
-src/tuning_examples/opentuner/triad/triad
-src/tuning_examples/opentuner/reduction/reduction
-src/tuning_examples/opentuner/stencil2d/Stencil2D
-src/tuning_examples/opentuner/md/md
-src/tuning_examples/opentuner/sort/sort
-src/tuning_examples/ktt/sort/sort
-src/tuning_examples/ktt/triad/triad
-src/tuning_examples/ktt/md/md
-src/tuning_examples/ktt/reduction/reduction
-src/tuning_examples/ktt/bfs/bfs
-src/tuning_examples/ktt/md5hash/md5hash
-src/tuning_examples/ktt/spmv/spmv
-src/tuning_examples/ktt/scan/scan
-src/tuning_examples/cltune/sort/sort
-src/tuning_examples/cltune/triad/triad
-src/tuning_examples/cltune/bfs/bfs
-src/tuning_examples/cltune/spmv/spmv
-src/tuning_examples/cltune/md5hash/md5hash
-src/tuning_examples/cltune/md/md
-src/tuning_examples/cltune/reduction/reduction
-results.csv
-*results.json
-*results.csv
 temp_*
+BAT_*
+src/tuners/KTT_runner/TuningOutput.json
+input_ref.npy
+shifts_ref.npy
 
 # Ignore directory with results from benchmarks
 /results

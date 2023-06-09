@@ -86,6 +86,7 @@ class FillType(Enum):
 class UnsupportedMemoryTypeError(Exception):
     pass
 
+
 class ArgHandler:
 
     def __init__(self, spec):
@@ -103,15 +104,13 @@ class ArgHandler:
 
     def handle_vector_data(self, arg):
         # random.seed(10)
-        try:
-            t = FillType(arg["FillType"])
-        except ValueError as e:
-            logger.error("Unsupported vector fill type %s", arg["fillType"])
+        if arg["FillType"] not in FillType._value2member_map_:
+            logger.error("Unsupported vector fill type %s", arg["FillType"])
             return
         
+        t = FillType(arg["FillType"])
         size_length = arg["Size"] * self.get_type_length(arg["Type"])
         arg_data = []
-
 
         if t == FillType.BINARY_RAW:
             raise NotImplementedError
@@ -136,7 +135,7 @@ class ArgHandler:
             return (custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
 
     def populate_args(self) -> Tuple[List, Dict]:
-        if self.args == [] and self.cmem_args == {}:
+        if not self.args and not self.cmem_args:
             pop_args = []
             pop_cmem_args = {}
             for i, arg in enumerate(self.spec_args):
@@ -157,7 +156,7 @@ class ArgHandler:
         if m == "Scalar":
             return self.handle_scalar_data(arg)
         else:
-            print("Unsupported memory type", arg["MemoryType"])
+            raise UnsupportedMemoryTypeError(f"Unsupported memory type {arg['MemoryType']}")
 
     def type_conv_vec(self, arg_data, arg):
         if arg["Type"] in type_conv_dict.keys():

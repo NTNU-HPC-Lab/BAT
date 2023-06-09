@@ -86,6 +86,7 @@ class Manager:
             raise KeyboardInterrupt
         if list(tuning_config.values()) not in self.problem.config_space:
             result.validity = "KnownConstraintsViolated"
+            result.correctness = 0.0
         else:
             result = self.problem.run(tuning_config, result)
             result.total_time = (datetime.datetime.now() - self.result_timestamp).total_seconds()

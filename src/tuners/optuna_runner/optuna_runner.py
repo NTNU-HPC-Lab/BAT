@@ -26,8 +26,8 @@ class Optuna:
     def main(self, args):
         self.manager = Manager(args)
         n_trials = self.manager.budget_trials
-        if self.manager.spec["General"]["LoggingLevel"] != "Debug":
-            optuna.logging.set_verbosity(optuna.logging.WARNING)
+        #if self.manager.problem.spec["General"]["LoggingLevel"] != "Debug":
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
 
         search_space = {}
         for (name, values) in self.manager.config_space.get_parameters_pair():

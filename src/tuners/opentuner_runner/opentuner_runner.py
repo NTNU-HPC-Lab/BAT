@@ -38,7 +38,7 @@ class OpenTunerT(MeasurementInterface):
         if prev_result.validity != "KnownConstraintsViolated":
             self.current_trial += 1
         self.t0 = time.time()
-        self.result = Result(self.manager.spec)
+        self.result = Result(self.manager.problem.spec)
         return opentuner.resultsdb.models.Result(time=prev_result.objective)
 
     def manipulator(self):
@@ -48,24 +48,19 @@ class OpenTunerT(MeasurementInterface):
         return manipulator
 
     def program_name(self):
-        return self.manager.spec["KernelSpecification"]["KernelName"]
+        return self.manager.problem.spec["KernelSpecification"]["KernelName"]
 
     def program_version(self):
-        return self.manager.spec["General"]["FormatVersion"]
+        return 1.0
 
     def save_final_config(self, configuration):
         """
         called at the end of autotuning with the best resultsdb.models.Configuration
         """
-        #if isinstance(configuration, pd.Dataframe):
         self.manager.dataset.final_write_data()
         self.manager.finished()
         print(self.manager.dataset.get_best())
-        # sys.exit(0)
         raise NotImplementedError()
-        #else:
-            #print("Final configuration", configuration.data)
-
 
 def main():
     openparser = argparse.ArgumentParser(parents=opentuner.argparsers())
