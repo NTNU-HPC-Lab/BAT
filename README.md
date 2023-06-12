@@ -7,14 +7,6 @@
 	<br>
 </h1>
 
-## Overview of benchmark compatibility with tuners
-|           | GEMM | Nbody | DeDisp | ExpDist | PnPoly | Convolution | Hotspot | MD5Hash | TRIAD |
-|:---------:|:----:|:-----:|:------:|:-------:|:------:|:-----------:|:-------:|:-------:|:-----:|
-| Opentuner |  ✅  |   ✅  |   ✅   |   ❌   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
-| Kerneltuner | ✅  |   ❌  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
-| Mintuner  |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
-| Optuna    |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
-
 
 > A GPU benchmark suite for autotuners
 
@@ -24,34 +16,51 @@ This benchmark suite will be useful for you if you're making your own autotuner 
 
 ## Prerequisites
 - [Python 3](https://www.python.org/) 
+- CUDA
 - All the current tuners are python3-based tuners. C++ based tuners will be added soon.
 
-## Set up python dependencies
-The requirements can be installed with
+# Installation
+Barebones install with a simple tuner
 ```
-pip install -r requirements.txt
+pip3 install batbench 
 ```
 
-## Set up autotuners
-The following steps are required to download and install the autotuners:
+Full installation with all tuners
+```
+pip3 install batbench[all]
+```
+
+## Install specific autotuners
+The following steps are required to install the autotuners:
 ### Python-based Tuners
+- Mintuner
+    - Simple autotuner included in the package
 - [Optuna](https://github.com/optuna/optuna)
-    - Can be downloaded using `pip3 install -r bat/tuners/optuna_runner/requirements.txt`.
+    - Can be installed using `pip3 install batbench[optuna]`.
 - [OpenTuner](https://github.com/ingunnsund/opentuner)
-    - Can be downloaded using `pip3 install -r bat/tuners/opentuner_runner/requirements.txt`.
+    - Can be installed using `pip3 install batbench[opentuner]`.
 - [Kernel Tuner](https://github.com/benvanwerkhoven/kernel_tuner)
-    - Can be downloaded using `pip3 install -r bat/tuners/kerneltuner_runner/requirements.txt`.
+    - Can be installed using `pip3 install batbench[kerneltuner]`.
 - [SMAC3](https://github.com/automl/SMAC3)
-    - Can be downloaded using `pip3 install -r bat/tuners/smac3_runner/requirements.txt`.
+    - Can be installed using `pip3 install batbench[smac3]`.
+
 ### C++-based tuners
 Coming back soon.
 
-## Example run using the GEMM benchmark and Mintuner.
+### Benchmark compatibility with tuners
+|           | GEMM | Nbody | DeDisp | ExpDist | PnPoly | Convolution | Hotspot | MD5Hash | TRIAD |
+|:---------:|:----:|:-----:|:------:|:-------:|:------:|:-----------:|:-------:|:-------:|:-----:|
+| Opentuner |  ✅  |   ✅  |   ✅   |   ❌   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Kerneltuner | ✅  |   ❌  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Mintuner  |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Optuna    |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+
+# Usage
 ```
-python3 main.py --tuner mintuner --benchmark GEMM --trials 10
+python3 -m batbench --tuner TUNER --benchmark BENCHMARK
 ```
 
-## Citation
+# Citation
 Use the following citation when publishing work using BAT.
 ```
 @article{sund_bat_2021,
