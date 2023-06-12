@@ -1,7 +1,7 @@
 <h1 align="center">
 	<br>
 	<br>
-	<img width="360" bat="./media/BAT-logo.svg" alt="BAT">
+	<img width="360" src="./media/BAT-logo.svg" alt="BAT">
 	<br>
 	<br>
 	<br>
