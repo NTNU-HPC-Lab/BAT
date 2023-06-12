@@ -1,0 +1,523 @@
+{
+  "Metadata": {
+    "ComputeApi": "CUDA",
+    "Device": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "GlobalSizeType": "CUDA",
+    "KttVersion": "2.1.0",
+    "Platform": "NVIDIA CUDA",
+    "TimeUnit": "Microseconds",
+    "Timestamp": "2023-01-07 01:42:13 UTC"
+  },
+  "Results": [
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 12
+          },
+          "Duration": 16.384,
+          "GlobalSize": {
+            "X": 129,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 72273.43
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 293.524,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 11.717,
+      "Status": "Ok",
+      "TotalDuration": 16.384,
+      "TotalOverhead": 72581.52,
+      "ValidationOverhead": 2.849
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 10.24,
+          "GlobalSize": {
+            "X": 65,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 68704.824
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 2,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 95.045,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 4.795,
+      "Status": "Ok",
+      "TotalDuration": 10.24,
+      "TotalOverhead": 68806.966,
+      "ValidationOverhead": 2.302
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 11.104,
+          "GlobalSize": {
+            "X": 43,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 69494.227
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 3,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 90.755,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 5.137,
+      "Status": "Ok",
+      "TotalDuration": 11.104,
+      "TotalOverhead": 69592.11,
+      "ValidationOverhead": 1.991
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 11.136,
+          "GlobalSize": {
+            "X": 33,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 70006.628
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 4,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 90.482,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 4.531,
+      "Status": "Ok",
+      "TotalDuration": 11.136,
+      "TotalOverhead": 70103.573,
+      "ValidationOverhead": 1.932
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 33.792,
+          "GlobalSize": {
+            "X": 26,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 70202.595
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 5,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 72.732,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 5.297,
+      "Status": "Ok",
+      "TotalDuration": 33.792,
+      "TotalOverhead": 70282.877,
+      "ValidationOverhead": 2.253
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 35.84,
+          "GlobalSize": {
+            "X": 22,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 70816.883
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 6,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 64.215,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 5.208,
+      "Status": "Ok",
+      "TotalDuration": 35.84,
+      "TotalOverhead": 70888.236,
+      "ValidationOverhead": 1.93
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 35.744,
+          "GlobalSize": {
+            "X": 19,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 70768.858
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 7,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 64.843,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 5.271,
+      "Status": "Ok",
+      "TotalDuration": 35.744,
+      "TotalOverhead": 70841.266,
+      "ValidationOverhead": 2.294
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 33.792,
+          "GlobalSize": {
+            "X": 17,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 71253.949
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 8,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 67.229,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 4.978,
+      "Status": "Ok",
+      "TotalDuration": 33.792,
+      "TotalOverhead": 71327.858,
+      "ValidationOverhead": 1.702
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 35.808,
+          "GlobalSize": {
+            "X": 15,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 71129.834
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 9,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 71.08,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 5.475,
+      "Status": "Ok",
+      "TotalDuration": 35.808,
+      "TotalOverhead": 71208.0,
+      "ValidationOverhead": 1.611
+    },
+    {
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 16
+          },
+          "Duration": 12.192,
+          "GlobalSize": {
+            "X": 13,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "triad",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 70782.406
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "LOOP_UNROLL_TRIAD",
+          "Value": 1,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "WORK_PER_THREAD",
+          "Value": 10,
+          "ValueType": "Int"
+        },
+        {
+          "Name": "BLOCK_SIZE",
+          "Value": 32,
+          "ValueType": "Int"
+        }
+      ],
+      "DataMovementOverhead": 66.104,
+      "ExtraDuration": 0.0,
+      "KernelName": "triad_kernel",
+      "SearcherOverhead": 5.412,
+      "Status": "Ok",
+      "TotalDuration": 12.192,
+      "TotalOverhead": 70855.946,
+      "ValidationOverhead": 2.024
+    }
+  ]
+}

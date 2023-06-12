@@ -183,7 +183,9 @@ dmypy.json
 *.db
 temp_*
 BAT_*
-bat/tuners/KTT_runner/TuningOutput.json
+batbench/tuners/KTT_runner/TuningOutput.json
+smac3*
+opentuner.*
 input_ref.npy
 shifts_ref.npy
 
