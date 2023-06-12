@@ -183,7 +183,7 @@ dmypy.json
 *.db
 temp_*
 BAT_*
-src/tuners/KTT_runner/TuningOutput.json
+bat/tuners/KTT_runner/TuningOutput.json
 input_ref.npy
 shifts_ref.npy
 

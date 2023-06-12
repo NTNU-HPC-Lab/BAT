@@ -1,12 +1,12 @@
-[submodule "schemas/TuningSchema"]
-	path = schemas/TuningSchema
+[submodule "bat/schemas/TuningSchema"]
+	path = bat/schemas/TuningSchema
 	url = https://github.com/odgaard/TuningSchema
-[submodule "src/tuners/KTT_runner/KTT"]
-	path = src/tuners/KTT_runner/KTT
+[submodule "bat/tuners/KTT_runner/KTT"]
+	path = bat/tuners/KTT_runner/KTT
 	url = https://github.com/HiPerCoRe/KTT
-[submodule "src/kernelbackend/kernel_tuner"]
-	path = src/kernelbackend/kernel_tuner
+[submodule "bat/kernelbackend/kernel_tuner"]
+	path = bat/kernelbackend/kernel_tuner
 	url = https://github.com/KernelTuner/kernel_tuner
-[submodule "src/tuners/opentuner_runner/opentuner"]
-	path = src/tuners/opentuner_runner/opentuner
+[submodule "bat/tuners/opentuner_runner/opentuner"]
+	path = bat/tuners/opentuner_runner/opentuner
 	url = https://github.com/odgaard/opentuner
