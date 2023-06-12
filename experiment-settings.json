@@ -1,0 +1,27 @@
+{
+    "BenchmarkConfig": {
+        "Benchmarks": [
+            "GEMM"
+        ],
+        "dataSize": 16384,
+        "iterations": 10
+    },
+    "Budget": [
+        {
+            "BudgetValue": 10,
+            "Type": "ConfigurationCount"
+        }
+    ],
+    "General": {
+        "FormatVersion": 1,
+        "LoggingLevel": "Warning",
+        "OutputFile": "TuningOutput",
+        "OutputFormat": "JSON",
+        "TimeUnit": "Microseconds"
+    },
+    "SearchSettings": {
+        "TunerName": [
+            "kerneltuner"
+        ]
+    }
+}
