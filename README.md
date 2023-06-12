@@ -1,71 +1,55 @@
 <h1 align="center">
 	<br>
 	<br>
-	<img width="360" src="./media/BAT-logo.svg" alt="BAT">
+	<img width="360" bat="./media/BAT-logo.svg" alt="BAT">
 	<br>
 	<br>
 	<br>
 </h1>
 
-> A standardized benchmark suite for autotuners
+## Overview of benchmark compatibility with tuners
+|           | GEMM | Nbody | DeDisp | ExpDist | PnPoly | Convolution | Hotspot | MD5Hash | TRIAD |
+|:---------:|:----:|:-----:|:------:|:-------:|:------:|:-----------:|:-------:|:-------:|:-----:|
+| Opentuner |  ✅  |   ✅  |   ✅   |   ❌   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Kerneltuner | ✅  |   ❌  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Mintuner  |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Optuna    |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
 
-BAT is a standardized benchmark suite for autotuners that is based on benchmarks from [SHOC](https://github.com/knutkirkhorn/shoc) and contains benchmarks for [CUDA](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html) programs. The benchmarks are for both whole programs and kernel-code. BAT will save all your `JSON` and `CSV` results to an own results directory after autotuning is completed. Then it will parse specified files and print out the best parameters found by the autotuner. The parameters and other benchmarking information will be printed out prettified in the terminal.
+
+> A GPU benchmark suite for autotuners
+
+BAT is a standardized benchmark suite for autotuners that is based on benchmarks from [SHOC](https://github.com/vetter/shoc), Rodinia, [KTT](https://github.com/HiPerCoRe/KTT) and benchmarks from the Netherlands eScience Center. BAT will save all your `json` results after autotuning is completed. Then it will print out the best parameters found by the autotuner.
 
 This benchmark suite will be useful for you if you're making your own autotuner and want to use the benchmarks for testing or would like to compare your autotuner to other known autotuners. BAT can also be used to check how a parameter's value changes for different architectures.
-
-## Parameters
-Parameters and search space for the algorithms can be seen in the `src` directory [here](./src).
 
 ## Prerequisites
 - [Python 3](https://www.python.org/) 
 - All the current tuners are python3-based tuners. C++ based tuners will be added soon.
 
-## Set up readers
-The Python-based T1-format reader requires the python library cupy to execute CUDA kernels from python.
-This can be installed with
+## Set up python dependencies
+The requirements can be installed with
 ```
-pip install -r src/readers/python/requirements.txt
+pip install -r requirements.txt
 ```
-The Python-based tuners that do not have native T1-support use this library to execute their configurations.
-
 
 ## Set up autotuners
-Without using Docker, the following steps are required to download and install the autotuners:
+The following steps are required to download and install the autotuners:
 ### Python-based Tuners
 - [Optuna](https://github.com/optuna/optuna)
-    - Can be downloaded using `pip3 install -r src/tuners/optuna/requirements.txt`.
+    - Can be downloaded using `pip3 install -r bat/tuners/optuna_runner/requirements.txt`.
 - [OpenTuner](https://github.com/ingunnsund/opentuner)
-    - Can be downloaded using `pip3 install -r src/tuners/opentuner/requirements.txt`.
+    - Can be downloaded using `pip3 install -r bat/tuners/opentuner_runner/requirements.txt`.
 - [Kernel Tuner](https://github.com/benvanwerkhoven/kernel_tuner)
-    - Can be downloaded using `pip3 install -r src/tuners/kerneltuner/requirements.txt`.
+    - Can be downloaded using `pip3 install -r bat/tuners/kerneltuner_runner/requirements.txt`.
 - [SMAC3](https://github.com/automl/SMAC3)
-    - Can be downloaded using `pip3 install -r src/tuners/SMAC3/requirements.txt`.
-- [HyperOpt](https://github.com/hyperopt/hyperopt)
-    - Can be downloaded using `pip3 install -r src/tuners/hyperopt/requirements.txt`.
+    - Can be downloaded using `pip3 install -r bat/tuners/smac3_runner/requirements.txt`.
 ### C++-based tuners
-- [CLTune](https://github.com/ingunnsund/CLTune)
-    - Need to set the environment variable `KTT_PATH=/path/to/KTT` for using the benchmarks.
-- [KTT](https://github.com/Fillo7/KTT)
-    - Need to set the environment variable `CLTUNE_PATH=/path/to/CLTune` for using the benchmarks.
-- [ATF](https://gitlab.com/mdh-project/atf)
-    - Need to set the environment variable `ATF_PATH=/path/to/ATF` for using the benchmarks.
+Coming back soon.
 
-## Example run using the builtin_vectors benchmark and the Optuna tuner.
+## Example run using the GEMM benchmark and Mintuner.
 ```
-python3 main.py --tuner="optuna" --json=./src/benchmarks/builtin_vectors/builtin_vectors.json --trials=10
+python3 main.py --tuner mintuner --benchmark GEMM --trials 10
 ```
-
-## Command-line arguments
-### `--json [path]`, `-b [path]`
-Default: `none`
-
-Path to json for the benchmark to run. Example: `./src/benchmarks/builtin_vectors/builtin_vectors-CAFF.json`.
-
-### `--tuner [name]`, `-a [name]`
-Default: `none`
-
-Tuner to run benchmarks for. Example: `optuna`.
-
 
 ## Citation
 Use the following citation when publishing work using BAT.

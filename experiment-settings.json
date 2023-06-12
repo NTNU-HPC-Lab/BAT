@@ -1,8 +1,7 @@
 {
     "BenchmarkConfig": {
         "Benchmarks": [
-            "GEMM",
-            "nbody"
+            "GEMM"
         ],
         "dataSize": 16384,
         "iterations": 10
@@ -22,7 +21,7 @@
     },
     "SearchSettings": {
         "TunerName": [
-            "mintuner"
+            "kerneltuner"
         ]
     }
 }

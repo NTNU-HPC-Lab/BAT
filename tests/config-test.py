@@ -1,9 +1,10 @@
-from src.readers.python.config_space import ConfigSpace
-from src.readers.python.cuda.cupy_reader import get_spec
+from batbench.readers.python.config_space import ConfigSpace
+from batbench.readers.python.cuda.cupy_reader import get_spec
+from batbench.util import benchmark_root_path
 
 
 def main():
-    spec = get_spec("./src/benchmarks/builtin_vectors/builtin_vectors-CAFF.json")
+    spec = get_spec(f"./{benchmark_root_path}/builtin_vectors/builtin_vectors-CAFF.json")
     cs = ConfigSpace(spec["configurationSpace"])
     cs.add_enum("Loop", [1, 2, 4])
     cs.add_enum("Block", [32, 64, 128])
