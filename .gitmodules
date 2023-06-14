@@ -1,9 +1,7 @@
 [submodule "batbench/schemas/TuningSchema"]
 	path = batbench/schemas/TuningSchema
-	url = https://github.com/odgaard/TuningSchema
-[submodule "batbench/backends/kernelbackend/kernel_tuner"]
-	path = batbench/backends/kernelbackend/kernel_tuner
-	url = https://github.com/KernelTuner/kernel_tuner
+    url = https://github.com/odgaard/TuningSchema
+    branch = T4
 [submodule "batbench/tuners/KTT_runner/KTT"]
 	path = batbench/tuners/KTT_runner/KTT
 	url = https://github.com/HiPerCoRe/KTT
