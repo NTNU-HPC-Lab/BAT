@@ -172,8 +172,8 @@ class KernelTuner:
              gpu_name,
              strategy="random_sample",
              strategy_options=None,
-             verbose=True,
-             quiet=False,
+             verbose=False,
+             quiet=True,
              simulation_mode=False):
         if self.prog_args.cache:
             self.cache_path = self.prog_args.cache
