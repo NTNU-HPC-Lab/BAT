@@ -15,21 +15,19 @@ class CUDAProgram:
 
 
 class CUDAProblem(Problem):
-    def __init__(self, kernel_name: str, spec: Dict[str, Any] = None, run_settings: Dict[str, Any] = {}) -> None:
+    def __init__(self, kernel_name: str, spec: Dict[str, Any] = {}, run_settings: Dict[str, Any] = {}) -> None:
         super().__init__()
         self._kernel_name = kernel_name
         self._program = CUDAProgram(kernel_name)
         self._language = "CUDA"
         self.lang = 'cupy'
-        self._config_space = None
         self.function_args = None
-        self.runner = None
 
         if spec is not None:
             self.spec = spec
             self.spec["BenchmarkConfig"] = { "iterations": 10 }
             if "ConfigurationSpace" in spec:
-                self.config_space = ConfigSpace(self.spec["ConfigurationSpace"])
+                self._config_space = ConfigSpace(self.spec["ConfigurationSpace"])
                 self.function_args = ArgHandler(self.spec).populate_args()
                 self.runner = KernelBackend(self.spec, self.config_space, self.function_args)
 
