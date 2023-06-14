@@ -40,11 +40,9 @@ class Metadata:
 
     @staticmethod
     def save_requirements():
-        requirements_path = f"requirements-temp.txt"
-        subprocess.call(['sh', './update-dependencies.sh', requirements_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        requirements_path = f"requirements.txt"
         with open(requirements_path, 'r') as f:
             requirements_list = [line.strip() for line in f.readlines()]
-        os.remove(requirements_path)
         return requirements_list
 
     @staticmethod
