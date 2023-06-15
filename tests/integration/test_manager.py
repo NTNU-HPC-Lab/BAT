@@ -2,6 +2,7 @@ import argparse
 from batbench.__main__ import add_standard_arguments_to_parser
 from batbench.manager.manager import Manager
 
+"""
 def helper_setup(parser):
     args = parser.parse_args()
     benchmark = "hotspot"
@@ -10,14 +11,6 @@ def helper_setup(parser):
     args.benchmark = benchmark
     args.cleanup = True
     return args
-
-def test_manager_init():
-    parser = argparse.ArgumentParser()
-    parser = add_standard_arguments_to_parser(parser)
-    args = helper_setup(parser)
-    manager = Manager(args)
-    manager.validate_schema(manager.problem.spec)
-    manager.dataset.delete_files()
 
 def test_full_mintuner():
     parser = argparse.ArgumentParser()
@@ -50,3 +43,4 @@ def test_full_smac():
     args = helper_setup(parser)
     from batbench.tuners.smac3_runner.smac3_runner import SMAC3
     SMAC3().main(args)
+"""

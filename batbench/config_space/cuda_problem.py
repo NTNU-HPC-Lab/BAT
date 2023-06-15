@@ -39,7 +39,7 @@ class CUDAProblem(Problem):
         self._kernel_name = kernel_name
         self._program = CUDAProgram(kernel_name)
         self._language = "CUDA"
-        self.lang = 'cupy'
+        self.cuda_backend = 'cupy'
         self.function_args = None
 
         self.spec = spec if spec is not None else {}

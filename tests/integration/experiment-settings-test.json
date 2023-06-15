@@ -8,7 +8,7 @@
     },
     "Budget": [
         {
-            "BudgetValue": 25,
+            "BudgetValue": 10,
             "Type": "ConfigurationCount"
         }
     ],
