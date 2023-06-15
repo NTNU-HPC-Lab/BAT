@@ -124,7 +124,8 @@ class CudaKernelRunner:
         self.result.runtimes = []
         for _ in range(launch_config.get("iterations", 10)):
             self.start_timer()
-            self.kernel(grid=self.grid_dim, block=self.block_dim, args=args_tuple, shared_mem=self.shared_mem_size)
+            self.kernel(grid=self.grid_dim, block=self.block_dim,
+                        args=args_tuple, shared_mem=self.shared_mem_size)
             self.result.runtimes.append(self.get_duration())
 
         self.result.objective = self.get_duration("runtime_start", "runtime_end")
@@ -132,8 +133,8 @@ class CudaKernelRunner:
     def get_kernel_string(self) -> str:
         """ Reads in the kernel as a string """
         kernel_string = ""
-        with open(get_kernel_path(self.spec), 'r') as f:
-            kernel_string += f.read()
+        with open(get_kernel_path(self.spec), 'r', encoding='utf-8') as file:
+            kernel_string += file.read()
         return kernel_string
 
     def invalid_result(self, msg, error=None):
@@ -153,18 +154,23 @@ class CudaKernelRunner:
             return self.invalid_result("Config invalid")
         try:
             self.compile_kernel(tuning_config)
-        except Exception as e:
-            print(e)
-            return self.invalid_result("Compile exception", e)
+        except cp.cuda.compiler.CompileException as err:
+            print(err)
+            return self.invalid_result("Compile exception", err)
 
-        t0 = time.time()
-        args_tuple, cmem_args = tuple(self.arg_handler.populate_args())#self.kernel_spec["Arguments"]))
-        self.result.arg_time = time.time() - t0
+        time_0 = time.time()
+
+        try:
+            args_tuple, cmem_args = tuple(self.arg_handler.populate_args())
+        except ValueError as err:
+            return self.invalid_result("Value error in argument population", err)
+
+        self.result.arg_time = time.time() - time_0
 
         try:
             self.launch_kernel(args_tuple, launch_config)
-        except Exception as e:
-            return self.invalid_result("Launch exception", e)
+        except RuntimeError as err:
+            return self.invalid_result("Launch exception", err)
 
         if self.debug:
             correctness = correctness_funcs[self.kernel_spec["KernelName"]]

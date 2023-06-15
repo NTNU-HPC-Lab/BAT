@@ -1,8 +1,6 @@
 import logging
 import os
 
-import batbench.tuners as tuners
-
 from ..util import get_spec, write_spec
 
 
@@ -20,34 +18,39 @@ class ExperimentManager:
             "opentuner": self.run_opentuner,
             "optuna": self.run_optuna,
             "kerneltuner": self.run_kerneltuner,
-            "smac": self.run_smac,
-            "smac3": self.run_smac,
+            "smac": self.run_smac3,
+            "smac3": self.run_smac3,
             "mintuner": self.run_mintuner,
             "ktt": self.run_ktt
         }
 
     @staticmethod
     def run_opentuner(args):
+        from batbench.tuners.opentuner_runner import OpenTunerT
         try:
-            print(tuners.OpenTunerT.main(args))
+            print(OpenTunerT.main(args))
         except NotImplementedError:
             log.error("Terminated due to NotImplementedError in OpenTunerT.main")
 
     @staticmethod
-    def run_mintuner(args):
-        print(tuners.MinTuner().main(args))
+    def run_kerneltuner(args):
+        from batbench.tuners.kerneltuner_runner import KernelTuner
+        print(KernelTuner().main(args))
 
     @staticmethod
-    def run_smac(args):
-        print(tuners.SMAC3().main(args))
+    def run_mintuner(args):
+        from batbench.tuners.mintuner_runner import MinTuner
+        print(MinTuner().main(args))
 
     @staticmethod
     def run_optuna(args):
-        print(tuners.Optuna().main(args))
+        from batbench.tuners.optuna_runner import OptunaTuner
+        print(OptunaTuner().main(args))
 
     @staticmethod
-    def run_kerneltuner(args):
-        print(tuners.KernelTuner().main(args))
+    def run_smac3(args):
+        from batbench.tuners.smac3_runner import SMAC3Tuner
+        print(SMAC3Tuner().main(args))
 
     @staticmethod
     def run_ktt(args):
