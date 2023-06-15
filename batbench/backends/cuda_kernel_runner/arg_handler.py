@@ -99,14 +99,15 @@ class ArgHandler:
         t = custom_type_dict[arg["Type"]]
         return np.dtype({
             'names': t["names"],
-            'formats': t["types"]
+            'formats': t["types"],
+            'aligned': True
         })
 
     def handle_vector_data(self, arg):
         # random.seed(10)
         if arg["FillType"] not in FillType._value2member_map_:
             logger.error("Unsupported vector fill type %s", arg["FillType"])
-            return
+            raise ValueError(f"Unsupported fill type: {arg['FillType']}")
         
         t = FillType(arg["FillType"])
         size_length = arg["Size"] * self.get_type_length(arg["Type"])
@@ -125,14 +126,15 @@ class ArgHandler:
             f_vec = np.vectorize(lambda i: eval(str(arg["DataSource"]), {"i": i}))
             arr = np.arange(0, size_length)
             return f_vec(arr)
-        
+            
+
         return cp.asarray(self.type_conv_vec(arg_data, arg))
 
     def type_conv_scalar(self, arg_data, arg):
         if arg["Type"] in type_conv_dict.keys():
             return type_conv_dict[arg["Type"]](arg_data)
         else:    # custom data type
-            return (custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))(arg_data)
+            return np.array(arg_data, custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
 
     def populate_args(self) -> Tuple[List, Dict]:
         if not self.args and not self.cmem_args:

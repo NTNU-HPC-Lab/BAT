@@ -10,9 +10,10 @@ class Expdist(CUDAProblem):
         super().__init__("expdist", self.setup_spec())
         self.run_settings = run_settings
         self.setup()
+        self.cuda_backend = 'CUDA'
         self.runner = KernelBackend(
-            self.spec, self.config_space, 
-            self.function_args, cuda_backend="CUDA", 
+            self.spec, self.config_space,
+            self.function_args, cuda_backend=self.cuda_backend,
             metrics=self.metrics,
             objective=self.objective
         )

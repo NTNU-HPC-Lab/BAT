@@ -1,8 +1,8 @@
 import json
 import os
 import datetime
-import jsonschema
 import logging
+import jsonschema
 
 import batbench.benchmarks as benchmarks
 
@@ -36,6 +36,12 @@ benchmark_map = {
 
 
 class Manager:
+    """
+    The Manager class is responsible for managing the benchmarking process. 
+    It initializes the benchmark problem, runs the tuning process, and manages the results. 
+    It also handles the validation of the tuning configuration schema and 
+    the uploading of the results to Zenodo.
+    """
     def __init__(self, args):
         self.cleanup = args.cleanup
         self.root_results_path = "./results"
@@ -44,7 +50,6 @@ class Manager:
 
         self.problem = benchmark_map[args.benchmark](experiment_settings)
         self.config_space = self.problem.config_space
-        experiment_settings = experiment_settings
         self.budget_trials = experiment_settings["Budget"][0]["BudgetValue"]
         self.dataset = Dataset(experiment_settings, args.benchmark)
         self.trial = 0
@@ -56,15 +61,14 @@ class Manager:
 
 
     def validate_schema(self, spec):
-        with open(f'{schema_path}/TuningSchema.json', 'r') as f:
-            schema = json.load(f)
+        with open(f'{schema_path}/TuningSchema.json', 'r', encoding='utf-8') as file:
+            schema = json.load(file)
         jsonschema.validate(instance=spec, schema=schema)
 
     @staticmethod
     def upload(root_results_path):
         datasets = os.listdir(root_results_path)
-        z = Zenodo(datasets)
-        z.upload()
+        Zenodo(datasets).upload()
 
     def finished(self):
         if self.cleanup:
@@ -86,13 +90,8 @@ class Manager:
             self.trial += 1
             self.total_time += result.total_time
             estimated_time = (self.budget_trials/self.trial) * self.total_time
-
-            print(f"Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s", end="\r")
+            print(  f"""Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s""", end="\r")
             self.result_timestamp = datetime.datetime.now()
 
         self.dataset.add_result(result)
         return result
-
-    def get_last(self):
-        return self.dataset.get_last()
-

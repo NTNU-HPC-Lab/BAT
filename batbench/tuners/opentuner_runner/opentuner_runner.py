@@ -38,7 +38,7 @@ class OpenTunerT(MeasurementInterface):
             self.current_trial += 1
         self.t0 = time.time()
         self.result = Result(self.manager.problem.spec)
-        return opentuner.resultsdb.models.Result(time=prev_result.objective)
+        return opentuner.resultsdb.models.Result(time=prev_result.objective) # type: ignore
 
     def manipulator(self):
         manipulator = ConfigurationManipulator()

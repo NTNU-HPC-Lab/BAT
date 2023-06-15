@@ -151,7 +151,7 @@ class KernelTuner:
             args,
             tune_params,
             cmem_args=cmem_args,
-            lang=self.manager.problem.lang if self.manager.problem.lang else 'cupy',
+            lang=self.manager.problem.cuda_backend if self.manager.problem.cuda_backend else 'cupy',
             block_size_names=block_size_names,
             restrictions=restrict,
             verbose=verbose,
@@ -179,7 +179,7 @@ class KernelTuner:
             self.cache_path = self.prog_args.cache
         else:
             #self.cache_path = None
-            self.cache_path = f"BAT_{self.manager.dataset.hash}"
+            self.cache_path = f"{self.manager.dataset.dataset_folder}/BAT_{self.manager.dataset.hash}"
             self.run_tune(gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode)
 
 
