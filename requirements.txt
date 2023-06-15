@@ -1,5 +1,4 @@
 ConfigSpace==0.6.1
-cupy==12.1.0
 jc==1.23.2
 jsonschema==4.17.3
 numpy==1.23.5

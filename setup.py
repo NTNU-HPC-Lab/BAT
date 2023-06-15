@@ -1,10 +1,13 @@
-from setuptools import setup, find_packages
-from typing import Dict, List, Tuple
-from os import listdir
 from pathlib import Path
+from typing import Dict, List
 import re
+from setuptools import setup, find_packages
 
 EXTRAS_ALL = "all"
+EXTRAS_TUNER = "tuners"
+EXTRAS_BACKEND = "backends"
+
+BACKENDS_PATH = "batbench/backends"
 TUNERS_PATH = "batbench/tuners"
 README_PATH = "README.md"
 REQ_FILE = "requirements.txt"
@@ -12,21 +15,21 @@ REQ_FILE = "requirements.txt"
 def read_requirements(file_path: Path) -> List[str]:
     return file_path.read_text().splitlines()
 
-def add_tuner_requirements(tuners_path: str) -> Tuple[List[str], Dict[str, List[str]]]:
+def add_requirements(path: str, extras_type: str, extra_requirements: Dict[str, List[str]], 
+                     name_extract_func=lambda name: name) -> List[str]:
     extras_all = []
-    extra_requirements: Dict[str, List[str]] = {}
-    tuners_dir = Path(tuners_path)
-    for tuner_path in tuners_dir.iterdir():
-        if tuner_path.name.startswith("__"):
+    dir_path = Path(path)
+    for item_path in dir_path.iterdir():
+        if item_path.name.startswith("__"):
             continue
-        tuner_requirements_file = tuner_path / REQ_FILE
-        if tuner_requirements_file.exists():
-            extra = tuner_path.name.split("_")[0]
-            extra_requirements[extra] = read_requirements(tuner_requirements_file)
+        requirements_file = item_path / REQ_FILE
+        if requirements_file.exists():
+            extra = name_extract_func(item_path.name)
+            extra_requirements[extra] = read_requirements(requirements_file)
             extras_all += extra_requirements[extra]
         else:
-            print(f"File {REQ_FILE} not found for tuner {tuner_path.name}")
-    return extras_all, extra_requirements
+            print(f"File {REQ_FILE} not found for {extras_type} {item_path.name}")
+    return extras_all
 
 def get_version(init_file_path: str) -> str:
     init_str = Path(init_file_path).read_text()
@@ -36,8 +39,15 @@ def get_version(init_file_path: str) -> str:
     else:
         raise ValueError("Could not find version in bat/__init__.py")
 
-extras_all, extra_requirements = add_tuner_requirements(TUNERS_PATH)
-extra_requirements[EXTRAS_ALL] = extras_all
+
+def get_extra_requirements():
+    extra_requirements: Dict[str, List[str]] = {}
+    extra_requirements[EXTRAS_TUNER] = add_requirements(
+        TUNERS_PATH, EXTRAS_TUNER, extra_requirements, lambda name: name.split("_")[0])
+    extra_requirements[EXTRAS_BACKEND] = add_requirements(
+        BACKENDS_PATH, EXTRAS_BACKEND, extra_requirements)
+    extra_requirements[EXTRAS_ALL] = extra_requirements[EXTRAS_BACKEND] + extra_requirements[EXTRAS_TUNER]
+    return extra_requirements
 
 long_description = Path(README_PATH).read_text()
 version = get_version("batbench/__init__.py")
@@ -54,9 +64,9 @@ setup(
     long_description_content_type='text/markdown',
     author='Jacob Odgård Tørring',
     author_email='jacob.torring@ntnu.no',
-    url='https://github.com/NTNU-HPC-Lab/BAT', # add the url of your github repo
-    install_requires=requirements, # add any dependencies your project would need
-    extras_require=extra_requirements,
+    url='https://github.com/NTNU-HPC-Lab/BAT',
+    install_requires=requirements,
+    extras_require=get_extra_requirements(),
     classifiers=[
         'Development Status :: 3 - Alpha', 
         'License :: OSI Approved :: MIT License',
