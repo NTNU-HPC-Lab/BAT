@@ -14,43 +14,50 @@
       {
         "Name": "BLOCK_SIZE",
         "Type": "uint",
-        "Values": "[64, 128, 256, 512]"
+        "Values": "[64, 128, 256, 512]",
+        "Default": 256
       },
       {
         "Name": "OUTER_UNROLL_FACTOR",
         "Type": "uint",
-        "Values": "[1, 2, 4, 8]"
+        "Values": "[1, 2, 4, 8]",
+        "Default": 1
       },
       {
         "Name": "INNER_UNROLL_FACTOR1",
         "Type": "uint",
-        "Values": "[0, 1, 2, 4, 8, 16, 32]"
+        "Values": "[0, 1, 2, 4, 8, 16, 32]",
+        "Default": 1
       },
       {
         "Name": "INNER_UNROLL_FACTOR2",
         "Type": "uint",
-        "Values": "[0, 1, 2, 4, 8, 16, 32]"
+        "Values": "[0, 1, 2, 4, 8, 16, 32]",
+        "Default": 1
       },
       {
         "Name": "USE_SOA",
         "Type": "uint",
-        "Values": "[0, 1]"
+        "Values": "[0, 1]",
+        "Default": 0
       },
       {
         "Name": "LOCAL_MEM",
         "Type": "uint",
-        "Values": "[0, 1]"
+        "Values": "[0, 1]",
+        "Default": 0
       },
       {
         "Name": "USE_CONSTANT_MEMORY",
         "Type": "uint",
-        "Values": "[0]"
+        "Values": "[0]",
+        "Default": 0
       },
       {
         "Name": "VECTOR_TYPE",
         "Type": "uint",
-        "Values": "[1]"
-
+        "Values": "[1]",
+        "Default": 1
       }
     ],
     "Conditions": [

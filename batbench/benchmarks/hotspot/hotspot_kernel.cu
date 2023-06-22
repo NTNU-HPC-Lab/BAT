@@ -43,7 +43,7 @@ __global__ void calculate_temp(float *power,   //power input
 {
     //offset input pointers to make the code testable with different temporal tiling factors
 
-    float* power_bat = power+(MAX_TFACTOR-TEMPORAL_TILING_FACTOR)*input_width+MAX_TFACTOR-TEMPORAL_TILING_FACTOR;
+    float* power_src = power+(MAX_TFACTOR-TEMPORAL_TILING_FACTOR)*input_width+MAX_TFACTOR-TEMPORAL_TILING_FACTOR;
     float* temp_src = temp+(MAX_TFACTOR-TEMPORAL_TILING_FACTOR)*input_width+MAX_TFACTOR-TEMPORAL_TILING_FACTOR;
 
     int tx = threadIdx.x;

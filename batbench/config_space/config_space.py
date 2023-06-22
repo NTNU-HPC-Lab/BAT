@@ -9,13 +9,16 @@ class ConfigSpace:
     """
     parameters = {}
     constraints = []
+    default_config = {}
 
     def __init__(self, spec_config: Dict[str, Any] = None) -> None:
+
         if spec_config is None:
             spec_config = {}
         if "TuningParameters" in spec_config:
             for param in spec_config["TuningParameters"]:
                 self.add_enum(param["Name"], eval(str(param["Values"])))
+                self.default_config[param["Name"]] = param["Default"]
         if "Conditions" in spec_config:
             for expr in spec_config["Conditions"]:
                 self.add_constraint(expr["Expression"], expr["Parameters"])
@@ -99,6 +102,9 @@ class ConfigSpace:
         if not self.constraints:
             return self.get_product()
         return filter(self.check_constraints, self.get_product())
+
+    def get_default_config(self) -> Dict:
+        return self.default_config
 
     def check_constraints(self, config: Tuple[Any, ...]) -> bool:
         """

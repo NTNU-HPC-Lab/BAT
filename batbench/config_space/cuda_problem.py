@@ -1,4 +1,5 @@
 from typing import Dict, Any, Optional
+from batbench.backends.cuda_kernel_runner.cuda_kernel_runner import CudaKernelRunner
 
 from batbench.backends.kernelbackend.kerneltuner_runner import KernelBackend
 from batbench.backends.cuda_kernel_runner.arg_handler import ArgHandler
@@ -34,21 +35,22 @@ class CUDAProblem(Problem):
         function_args (Any): The arguments for the CUDA kernel function.
     """
     def __init__(self, kernel_name: str, spec: Optional[Dict[str, Any]] = None,
-                 run_settings: Optional[Dict[str, Any]] = None) -> None:
+                 run_settings: Optional[Dict[str, Any]] = None, cuda_backend="Cupy", runner="KT") -> None:
         super().__init__()
         self._kernel_name = kernel_name
         self._program = CUDAProgram(kernel_name)
         self._language = "CUDA"
-        self.cuda_backend = 'cupy'
-        self.function_args = None
+        self.cuda_backend = cuda_backend
 
         self.spec = spec if spec is not None else {}
         self.spec["BenchmarkConfig"] = { "iterations": 10 }
         if "ConfigurationSpace" in self.spec:
             self._config_space = ConfigSpace(self.spec["ConfigurationSpace"])
-            self.function_args = ArgHandler(self.spec).populate_args()
-            self.runner = KernelBackend(self.spec, self.config_space, self.function_args)
-
+            self.args = ArgHandler(self.spec).populate_args()
+            if runner == "KT":
+                self.runner = KernelBackend(self.spec, self.config_space, self.args, cuda_backend=self.cuda_backend)
+            else:
+                self.runner = CudaKernelRunner(self.spec, self.config_space)
         self.run_settings = run_settings if run_settings is not None else {}
 
     @property
@@ -98,7 +100,7 @@ class CUDAProblem(Problem):
         Returns:
             Any: The arguments for the CUDA kernel function.
         """
-        return self.function_args
+        return self.args
 
     def run(self, tuning_config: Dict[str, Any], result: Result) -> Result:
         """

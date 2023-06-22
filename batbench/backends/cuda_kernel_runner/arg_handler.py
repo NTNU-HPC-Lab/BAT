@@ -1,8 +1,9 @@
+import logging
+from enum import Enum
 import numpy as np
 import cupy as cp
-from enum import Enum
-from typing import List, Dict, Tuple
-import logging
+
+from batbench.config_space.arguments import Arguments
 
 # Define the logger
 logger = logging.getLogger(__name__)
@@ -91,7 +92,8 @@ class ArgHandler:
 
     def __init__(self, spec):
         self.spec = spec
-        self.args = []
+        self.args = Arguments(spec["KernelSpecification"]["KernelName"])
+        self.args.set_backend("CUDA")
         self.spec_args = spec["KernelSpecification"]["Arguments"]
         self.cmem_args = {}
 
@@ -108,7 +110,7 @@ class ArgHandler:
         if arg["FillType"] not in FillType._value2member_map_:
             logger.error("Unsupported vector fill type %s", arg["FillType"])
             raise ValueError(f"Unsupported fill type: {arg['FillType']}")
-        
+ 
         t = FillType(arg["FillType"])
         size_length = arg["Size"] * self.get_type_length(arg["Type"])
         arg_data = []
@@ -125,8 +127,7 @@ class ArgHandler:
         if t == FillType.GENERATOR:
             f_vec = np.vectorize(lambda i: eval(str(arg["DataSource"]), {"i": i}))
             arr = np.arange(0, size_length)
-            return f_vec(arr)
-            
+            return f_vec(arr)   
 
         return cp.asarray(self.type_conv_vec(arg_data, arg))
 
@@ -136,20 +137,17 @@ class ArgHandler:
         else:    # custom data type
             return np.array(arg_data, custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
 
-    def populate_args(self) -> Tuple[List, Dict]:
-        if not self.args and not self.cmem_args:
-            pop_args = []
-            pop_cmem_args = {}
+    def populate_args(self) -> Arguments:
+        if self.args.empty():
             for i, arg in enumerate(self.spec_args):
                 name = arg["Name"]
                 print(f"Populating arg {name}", end="\r")
                 pop_arg = self.populate_data(arg)
-                if arg.get("MemType", "") == "Constant":
-                    pop_cmem_args[arg["Name"]] = pop_arg
-                pop_args.append(pop_arg)
-            self.args = pop_args
-            self.cmem_args = pop_cmem_args
-        return self.args, self.cmem_args
+                self.args.add(key=name, value=pop_arg, 
+                              cmem=arg.get("MemType", "") == "Constant",
+                              output=arg.get("Output",0) == 1)
+        return self.args
+
 
     def populate_data(self, arg):
         m = arg["MemoryType"]
@@ -174,4 +172,3 @@ class ArgHandler:
 
     def get_type_length(self, t):
         return custom_type_dict.get(t, { "TypeSize": 1 })["TypeSize"]
-

@@ -141,7 +141,8 @@
             "Size": 1,
             "AccessType": "ReadWrite",
             "FillType": "Constant",
-            "FillValue": 0
+            "FillValue": 0,
+            "Output": 1
         },
         {
             "Name": "foundKey",
@@ -150,7 +151,8 @@
             "MemoryType": "Vector",
             "AccessType": "ReadWrite",
             "FillType": "Constant",
-            "FillValue": 0
+            "FillValue": 0,
+            "Output": 1
         },
         {
             "Name": "foundDigest",
@@ -159,7 +161,8 @@
             "MemoryType": "Vector",
             "AccessType": "ReadWrite",
             "FillType": "Constant",
-            "FillValue": 0
+            "FillValue": 0,
+            "Output": 1
         }
       ]
     }

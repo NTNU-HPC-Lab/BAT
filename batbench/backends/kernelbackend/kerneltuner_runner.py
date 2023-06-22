@@ -3,12 +3,15 @@ import ast
 import logging
 from collections import OrderedDict
 import re
+from typing import List
 
 import kernel_tuner
-from kernel_tuner.interface import Options, _kernel_options, _device_options, _tuning_options
+from kernel_tuner.interface import run_kernel, Options, _kernel_options, _device_options, _tuning_options
 from kernel_tuner.runners.sequential import SequentialRunner
 from kernel_tuner import util
 from kernel_tuner.util import (ErrorConfig)
+from batbench.config_space.arguments import Arguments
+from batbench.result.result import Result
 
 from batbench.util import get_kernel_path
 
@@ -21,14 +24,16 @@ class KernelBackend:
     DEFAULT_PLATFORM = 0
     DEFAULT_OBJECTIVE = TIME
 
-    def __init__(self, spec, config_space, function_args,
+    def __init__(self, spec, config_space, args: Arguments,
                  cuda_backend="Cupy", metrics=None, objective=DEFAULT_OBJECTIVE):
         self.spec = spec
         self.config_space = config_space
         self.kernel_spec = self.spec["KernelSpecification"]
         self.metrics = metrics
         self.objective = objective
-
+        self.args = args
+        self.function_args = self.args.get_function_args()
+        
         self.validate_kernel_spec()
         tune_params = OrderedDict(self.config_space.get_parameters())
         block_size_names = self.get_block_size_names()
@@ -36,9 +41,9 @@ class KernelBackend:
         self.extend_block_size_names(block_size_names)
 
         problem_size, grid_div_x, grid_div_y = self.get_problem_size_and_grid_div()
-        args, cmem_args = function_args
+        data_args, cmem_args = self.function_args
 
-        self.opts = self.create_opts(args, tune_params, block_size_names, cmem_args, problem_size, grid_div_x, grid_div_y, cuda_backend)
+        self.opts = self.create_opts(data_args, tune_params, block_size_names, cmem_args, problem_size, grid_div_x, grid_div_y, cuda_backend)
         self.create_kernelsource(cuda_backend)
         self.create_option_bags()
         self.setup_sequential_runner()
@@ -79,8 +84,8 @@ class KernelBackend:
             "problem_size": problem_size,
             "arguments": args,
             "lang": cuda_backend,
-            "tune_params": tune_params,
             "atol": self.DEFAULT_ATOL,
+            "tune_params": tune_params,
             "iterations": eval(str(self.spec["BenchmarkConfig"]["iterations"])),
             "verbose": False,
             "objective": self.objective,
@@ -170,17 +175,38 @@ class KernelBackend:
         #result.time = kt_result["benchmark_time"]
         #result.algorithm_time = kt_result["strategy_time"]/1000
         #result.framework_time = kt_result["framework_time"]/1000
-        
 
-    def run(self, tuning_config, result):
+    def run_reference(self, tuning_config):
+        res = run_kernel(self.opts["kernel_name"],
+                   self.opts["kernel_source"], self.opts["problem_size"],
+                   self.opts["arguments"], tuning_config,
+                   self.opts["grid_div_x"], self.opts["grid_div_y"], None,
+                   self.opts["lang"], self.opts["device"], self.opts["platform"],
+                   None, self.opts["cmem_args"], None, None,
+                   self.opts["compiler_options"], None, self.opts["block_size_names"],
+                   self.opts["quiet"], None)
+        answer_list = [None] * len(res)
+        for key in self.args.output_args:
+            idx = self.args.args[key]["index"]
+            self.args.add_reference_value(key, res[idx])
+            answer_list[idx] = res[idx]
+        self.opts["answer"] = answer_list
+        self.create_option_bags()
+        print("Finished reference run", answer_list)
+        return res
+
+    def run(self, tuning_config, result: Result) -> Result:
         self.tuning_config = tuning_config
         result.config = tuning_config
         searchspace = [ tuning_config.values() ]
-        results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
+        try:
+            results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
+        except RuntimeError as err:
+            return self.update_invalid_result(result, "RuntimeError")
         kt_result = results[0]
         if self.objective in kt_result and isinstance(kt_result[self.objective], ErrorConfig):
-            logging.error(f"Failed to run with tuning config: {tuning_config}. Error: {kt_result[self.objective]}")
+            logging.error("Failed to run with tuning config: %s. Error: %s", 
+                          tuning_config, kt_result[self.objective])
             return self.update_invalid_result(result, "Compile exception")
         self.update_result(result, kt_result)
         return result
-

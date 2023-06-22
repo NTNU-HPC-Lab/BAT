@@ -58,7 +58,7 @@ class OpenTunerT(MeasurementInterface):
         """
         self.manager.dataset.final_write_data()
         self.manager.finished()
-        print(self.manager.dataset.get_best())
+        #print(self.manager.dataset.get_best())
         raise NotImplementedError()
 
 def main():

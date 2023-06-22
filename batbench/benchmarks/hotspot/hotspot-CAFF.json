@@ -51,7 +51,7 @@
                 "Name": "LOOP_UNROLL_FACTOR_T",
                 "Type": "int",
                 "Values": "[i for i in range(1, 10+1)]",
-                "Default": 1
+                "Default": 2
             },
             {
                 "Name": "SH_POWER",
@@ -165,7 +165,8 @@
           "MemoryType": "Vector",
           "AccessType": "ReadWrite",
           "FillType": "Constant",
-          "FillValue": 0.0
+          "FillValue": 0.0,
+          "Output": 1
         },
         {
           "Name": "Rx_1",

@@ -5,6 +5,7 @@ import copy
 import logging
 
 from batbench.config_space import ConfigSpace
+from batbench.config_space.arguments import Arguments
 
 from .arg_handler import ArgHandler
 from batbench.util import get_kernel_path
@@ -161,7 +162,7 @@ class CudaKernelRunner:
         time_0 = time.time()
 
         try:
-            args_tuple, cmem_args = tuple(self.arg_handler.populate_args())
+            args_tuple, cmem_args = self.arg_handler.populate_args().get_function_args()
         except ValueError as err:
             return self.invalid_result("Value error in argument population", err)
 

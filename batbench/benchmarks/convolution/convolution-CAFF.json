@@ -33,19 +33,19 @@
                 "Name": "tile_size_x",
                 "Type": "int",
                 "Values": "list(range(1, 9))",
-                "Default": 4
+                "Default": 1
             },
             {
                 "Name": "tile_size_y",
                 "Type": "int",
                 "Values": "list(range(1, 9))",
-                "Default": 4
+                "Default": 1
             },
             {
                 "Name": "use_padding",
                 "Type": "int",
                 "Values": "[0, 1]",
-                "Default": 0
+                "Default": 1
             },
             {
                 "Name": "read_only",
@@ -97,10 +97,11 @@
             "Name": "output_image",
             "Type": "float",
             "MemoryType": "Vector",
-            "AccessType": "ReadOnly",
+            "AccessType": "WriteOnly",
             "FillType": "Constant",
             "Size": 16777216,
-            "FillValue": 0.0 
+            "FillValue": 0.0,
+            "Output": 1
         },
         {
             "Name": "input_image",

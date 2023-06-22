@@ -87,7 +87,8 @@
                 "AccessType": "ReadWrite",
                 "MemoryType": "Vector",
                 "FillType": "Constant",
-                "FillValue": 0.0
+                "FillValue": 0.0,
+                "Output": 1
             },
             {
                 "Name": "s",

@@ -44,13 +44,13 @@ class ExperimentManager:
 
     @staticmethod
     def run_optuna(args):
-        from batbench.tuners.optuna_runner import OptunaTuner
-        print(OptunaTuner().main(args))
+        from batbench.tuners.optuna_runner import Optuna
+        print(Optuna().main(args))
 
     @staticmethod
     def run_smac3(args):
-        from batbench.tuners.smac3_runner import SMAC3Tuner
-        print(SMAC3Tuner().main(args))
+        from batbench.tuners.smac3_runner import SMAC3
+        print(SMAC3().main(args))
 
     @staticmethod
     def run_ktt(args):

@@ -1,9 +1,10 @@
 from collections import OrderedDict
+import numpy as np
+
+from batbench.config_space.arguments import Arguments
 from batbench.config_space.cuda_problem import CUDAProblem
 from batbench.backends.kernelbackend.kerneltuner_runner import KernelBackend
 from batbench.config_space import ConfigSpace
-import numpy as np
-import os
 
 class Expdist(CUDAProblem):
     def __init__(self, run_settings) -> None:
@@ -13,10 +14,11 @@ class Expdist(CUDAProblem):
         self.cuda_backend = 'CUDA'
         self.runner = KernelBackend(
             self.spec, self.config_space,
-            self.function_args, cuda_backend=self.cuda_backend,
+            self.args, cuda_backend=self.cuda_backend,
             metrics=self.metrics,
             objective=self.objective
         )
+        #self.runner.run_reference(self.default_config)
 
     def run(self, tuning_config, result):
         return self.runner.run(tuning_config, result)
@@ -25,6 +27,17 @@ class Expdist(CUDAProblem):
         self.setup_config_space()
         self.setup_args()
         self.setup_objective_and_metrics()
+        self.default_config = {
+            "block_size_x": 32,
+            "block_size_y": 32,
+            "tile_size_x": 4,
+            "tile_size_y": 4,
+            "use_shared_mem": 1,
+            "loop_unroll_factor_x": 1,
+            "loop_unroll_factor_y": 1,
+            "use_column": 0,
+            "n_y_blocks": 1
+        }
 
     def setup_objective_and_metrics(self):
         self.objective = "GFLOPs"
@@ -83,17 +96,24 @@ class Expdist(CUDAProblem):
         )
 
     def setup_args(self):
+        float_type = np.float64
+        int_type = np.int32
+        args = Arguments(self)
         alloc_size = self.size
-        size = np.int32(self.size)
-        max_blocks = np.int32( np.ceil(size / float(np.amin(self.config_space.get_parameters()["block_size_x"]))) *
+        size = int_type(self.size)
+        max_blocks = int_type( np.ceil(size / float(np.amin(self.config_space.get_parameters()["block_size_x"]))) *
                               np.ceil(size / float(np.amin(self.config_space.get_parameters()["block_size_y"]))) )
-        ndim = np.int32(2)
-        A = np.random.randn(alloc_size*ndim).astype(np.float32)
-        B = A + 0.00001*np.random.randn(alloc_size*ndim).astype(np.float32)
-        scale_A = np.absolute(0.01*np.random.randn(alloc_size).astype(np.float32))
-        scale_B = np.absolute(0.01*np.random.randn(alloc_size).astype(np.float32))
-        cost = np.zeros((max_blocks)).astype(np.float32)
-
-        self.function_args = [[A, B, size, size, scale_A, scale_B, cost], []]
-        return self.function_args
-
+        ndim = int_type(2)
+        A = np.random.randn(alloc_size*ndim).astype(float_type)
+        B = A + 0.00001*np.random.randn(alloc_size*ndim).astype(float_type)
+        scale_A = np.absolute(0.01*np.random.randn(alloc_size).astype(float_type))
+        scale_B = np.absolute(0.01*np.random.randn(alloc_size).astype(float_type))
+        cost = np.zeros((max_blocks)).astype(float_type)
+        args.add("A", A)
+        args.add("B", B)
+        args.add("size", size)
+        args.add("size2", size)
+        args.add("scale_A", scale_A)
+        args.add("scale_B", scale_B)
+        args.add("cost", cost, output=True)
+        self.args = args

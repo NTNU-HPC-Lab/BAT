@@ -114,7 +114,7 @@ class KernelTuner:
         kernel_string = self.manager.problem.runner.get_kernel_string()
 
         # get arguments
-        args, cmem_args = self.manager.problem.get_args()
+        args, cmem_args = self.manager.problem.get_args().get_function_args()
         cmem_args = cmem_args if cmem_args else None
         iterations = eval(
             str(self.manager.problem.spec["BenchmarkConfig"]["iterations"])

@@ -1,8 +1,10 @@
-from batbench.config_space.cuda_problem import CUDAProblem
+import os
+import numpy as np
+
 from batbench.backends.kernelbackend.kerneltuner_runner import KernelBackend
 from batbench.config_space import ConfigSpace
-import numpy as np
-import os
+from batbench.config_space.arguments import Arguments
+from batbench.config_space.cuda_problem import CUDAProblem
 
 nr_dms = 2048
 nr_samples = 25000
@@ -24,7 +26,8 @@ class Dedispersion(CUDAProblem):
         super().__init__("dedispersion", self.setup_spec())
         self.setup()
         self.run_settings = run_settings
-        self.runner = KernelBackend(self.spec, self.config_space, self.function_args)
+        self.runner = KernelBackend(self.spec, self.config_space, self.args)
+        self.runner.run_reference(self.default_config)
 
     def run(self, tuning_config, result):
         return self.runner.run(tuning_config, result)
@@ -33,6 +36,17 @@ class Dedispersion(CUDAProblem):
         self._create_reference()
         self.setup_config_space()
         self.setup_args()
+        self.default_config = {
+            "block_size_x": 32,
+            "block_size_y": 32,
+            "block_size_z": 1,
+            "tile_size_x": 1,
+            "tile_size_y": 1,
+            "tile_stride_x": 1,
+            "tile_stride_y": 1,
+            "loop_unroll_factor_channel": 0,
+            "blocks_per_sm": 1,
+        }
 
     def setup_spec(self):
         spec = {}
@@ -65,12 +79,12 @@ class Dedispersion(CUDAProblem):
             .add_enum("block_size_x", [1, 2, 4, 8] + [16*i for i in range(1,33)])
             .add_enum("block_size_y", [4*i for i in range(1,33)])
             .add_enum("block_size_z", [1])
-            .add_enum("tile_size_x", [i for i in range(1,17)])
-            .add_enum("tile_size_y", [i for i in range(1,17)])
+            .add_enum("tile_size_x", list(range(1,17)))
+            .add_enum("tile_size_y", list(range(1,17)))
             .add_enum("tile_stride_x", [0, 1])
             .add_enum("tile_stride_y", [0, 1])
             .add_enum("loop_unroll_factor_channel", [0] + [i for i in range(1,nr_channels+1) if nr_channels % i == 0])
-            .add_enum("blocks_per_sm", [i for i in range(5)])
+            .add_enum("blocks_per_sm", list(range(5)))
 
             .add_constraint("32 <= block_size_x * block_size_y <= 1024", ["block_size_x", "block_size_y"])
             .add_constraint("tile_size_x > 1 or tile_stride_x == 0", ["tile_size_x", "tile_stride_x"])
@@ -82,12 +96,13 @@ class Dedispersion(CUDAProblem):
         )
 
     def setup_args(self):
+        args = Arguments(self)
         input_samples = np.random.randn(nr_samples_per_channel*nr_channels).astype(np.uint8)
-
-        output_arr = np.zeros(nr_dms*nr_samples, dtype=np.float32)
-        shifts = self._get_shifts()
-        self.function_args = [[input_samples, output_arr, shifts], []]
-        return self.function_args
+        args.add("input_samples", input_samples)
+        args.add("output_arr", np.zeros(nr_dms*nr_samples, dtype=np.float32), output=True)
+        args.add("shifts", self._get_shifts())
+        self.args = args
+        return self.args
 
     def _get_shifts(self):
         max_freq = min_freq + ((nr_channels - 1) * channel_bandwidth)
