@@ -32,12 +32,12 @@ def add_requirements(path: str, extras_type: str, extra_requirements: Dict[str, 
     return extras_all
 
 def get_version(init_file_path: str) -> str:
-    init_str = Path(init_file_path).read_text()
+    with open(init_file_path, 'r', encoding='utf-8') as file:
+        init_str = file.read()
     match = re.search(r"^__version__ = ['\"](?P<version>[\w\.]+?)['\"]$", init_str, re.MULTILINE)
     if match:
         return match.group("version")
-    else:
-        raise ValueError("Could not find version in bat/__init__.py")
+    raise ValueError("Could not find version in bat/__init__.py")
 
 
 def get_extra_requirements():
@@ -49,7 +49,7 @@ def get_extra_requirements():
     extra_requirements[EXTRAS_ALL] = extra_requirements[EXTRAS_BACKEND] + extra_requirements[EXTRAS_TUNER]
     return extra_requirements
 
-long_description = Path(README_PATH).read_text()
+long_description = Path(README_PATH).read_text(encoding='utf-8')
 version = get_version("batbench/__init__.py")
 
 requirements = read_requirements(Path(REQ_FILE))

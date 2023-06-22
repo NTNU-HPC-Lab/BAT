@@ -1,7 +1,6 @@
 import argparse
 from batbench.__main__ import add_standard_arguments_to_parser
 from batbench.manager.experiment_manager import ExperimentManager
-from batbench.tuners.kerneltuner_runner import KernelTuner
 
 def benchmark_setup(benchmark):
     parser = argparse.ArgumentParser()

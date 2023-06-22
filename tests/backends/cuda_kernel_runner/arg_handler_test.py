@@ -20,7 +20,7 @@ def test_arg_handler_scalar_type_conversion():
     })
 
     expected_arg_value = np.int32(5)
-    args, _ = arg_handler.populate_args()
+    args, _ = arg_handler.populate_args().get_function_args()
 
     assert args[0] == expected_arg_value
 
@@ -41,7 +41,7 @@ def test_arg_handler_vector_type_conversion():
     })
 
     expected_arg_value = cp.array([7, 7, 7], dtype=np.int32)
-    args, _ = arg_handler.populate_args()
+    args, _ = arg_handler.populate_args().get_function_args()
 
     cp.testing.assert_array_equal(args[0], expected_arg_value)
 
@@ -60,7 +60,7 @@ def test_arg_handler_custom_type():
     })
 
     expected_arg_value = np.array([(1.0, 2.0)], dtype=[('x', 'f4'), ('y', 'f4')])
-    args, _ = arg_handler.populate_args()
+    args, _ = arg_handler.populate_args().get_function_args()
 
     assert np.array_equal(args[0], expected_arg_value)
 
@@ -99,7 +99,7 @@ def test_constant_memory_args():
     })
 
     expected_cmem_arg_value = cp.array([7, 7, 7], dtype=np.int32)
-    _, cmem_args = arg_handler.populate_args()
+    _, cmem_args = arg_handler.populate_args().get_function_args()
 
     cp.testing.assert_array_equal(cmem_args["x"], expected_cmem_arg_value)
 
