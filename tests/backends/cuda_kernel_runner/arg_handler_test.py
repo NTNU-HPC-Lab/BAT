@@ -8,6 +8,7 @@ from batbench.backends.cuda_kernel_runner.arg_handler import ArgHandler, Unsuppo
 def test_arg_handler_scalar_type_conversion():
     arg_handler = ArgHandler({
         "KernelSpecification": {
+            "KernelName": "GEMM",
             "Arguments": [
                 {
                     "Name": "x",
@@ -27,6 +28,7 @@ def test_arg_handler_scalar_type_conversion():
 def test_arg_handler_vector_type_conversion():
     arg_handler = ArgHandler({
         "KernelSpecification": {
+            "KernelName": "GEMM",
             "Arguments": [
                 {
                     "Name": "x",
@@ -48,6 +50,7 @@ def test_arg_handler_vector_type_conversion():
 def test_arg_handler_custom_type():
     arg_handler = ArgHandler({
         "KernelSpecification": {
+            "KernelName": "GEMM",
             "Arguments": [
                 {
                     "Name": "x",
@@ -67,6 +70,7 @@ def test_arg_handler_custom_type():
 def test_unsupported_memory_type_error():
     arg_handler = ArgHandler({
         "KernelSpecification": {
+            "KernelName": "GEMM",
             "Arguments": [
                 {
                     "Name": "x",
@@ -84,6 +88,7 @@ def test_unsupported_memory_type_error():
 def test_constant_memory_args():
     arg_handler = ArgHandler({
         "KernelSpecification": {
+            "KernelName": "GEMM",
             "Arguments": [
                 {
                     "Name": "x",
@@ -106,6 +111,7 @@ def test_constant_memory_args():
 def test_unsupported_fill_type_error():
     arg_handler = ArgHandler({
         "KernelSpecification": {
+            "KernelName": "GEMM",
             "Arguments": [
                 {
                     "Name": "x",

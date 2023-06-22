@@ -92,8 +92,8 @@ class KernelTuner:
             result.compile_time = kt_result["compile_time"]/unit
             result.framework_time = kt_result["framework_time"]/unit
             result.algorithm_time = kt_result["strategy_time"]/unit
-            result.total_time = sum(result.compile_time, result.framework_time,
-                                    result.algorithm_time, result.runtime)
+            result.total_time = sum([result.compile_time, result.framework_time,
+                                    result.algorithm_time, result.runtime])
             results.append(result)
 
         return results
