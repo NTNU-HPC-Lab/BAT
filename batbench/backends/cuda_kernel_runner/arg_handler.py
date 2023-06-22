@@ -98,10 +98,10 @@ class ArgHandler:
         self.cmem_args = {}
 
     def handle_custom_data_type(self, arg_data, arg):
-        t = custom_type_dict[arg["Type"]]
+        arg_type = custom_type_dict[arg["Type"]]
         return np.dtype({
-            'names': t["names"],
-            'formats': t["types"],
+            'names': arg_type["names"],
+            'formats': arg_type["types"],
             'aligned': True
         })
 
@@ -110,65 +110,66 @@ class ArgHandler:
         if arg["FillType"] not in FillType._value2member_map_:
             logger.error("Unsupported vector fill type %s", arg["FillType"])
             raise ValueError(f"Unsupported fill type: {arg['FillType']}")
- 
-        t = FillType(arg["FillType"])
+
+        fill = FillType(arg["FillType"])
         size_length = arg["Size"] * self.get_type_length(arg["Type"])
         arg_data = []
 
-        if t == FillType.BINARY_RAW:
+        if fill == FillType.BINARY_RAW:
             raise NotImplementedError
             #with open(get_data_path(self.spec, arg["DataSource"]), 'r') as f:
             #    arg_data = f.read().splitlines()
-        if t == FillType.RANDOM:
+        if fill == FillType.RANDOM:
             arg_data = np.random.randn(size_length)
-        if t == FillType.CONSTANT:
-            c = eval(str(arg["FillValue"]))
-            arg_data = np.zeros(size_length) if c == 0 else np.full(size_length, c)
-        if t == FillType.GENERATOR:
+        if fill == FillType.CONSTANT:
+            fill_value = eval(str(arg["FillValue"]))
+            arg_data = np.zeros(size_length) if fill_value == 0 else np.full(
+                size_length, fill_value)
+        if fill == FillType.GENERATOR:
             f_vec = np.vectorize(lambda i: eval(str(arg["DataSource"]), {"i": i}))
             arr = np.arange(0, size_length)
-            return f_vec(arr)   
+            return f_vec(arr)
 
         return cp.asarray(self.type_conv_vec(arg_data, arg))
 
     def type_conv_scalar(self, arg_data, arg):
-        if arg["Type"] in type_conv_dict.keys():
+        if arg["Type"] in type_conv_dict:
             return type_conv_dict[arg["Type"]](arg_data)
-        else:    # custom data type
-            return np.array(arg_data, custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
+        # custom data type
+        return np.array(arg_data, custom_type_dict[arg["Type"]]["repr_type"]).view(
+            self.handle_custom_data_type(arg_data, arg))
 
     def populate_args(self) -> Arguments:
         if self.args.empty():
-            for i, arg in enumerate(self.spec_args):
+            for _, arg in enumerate(self.spec_args):
                 name = arg["Name"]
                 print(f"Populating arg {name}", end="\r")
                 pop_arg = self.populate_data(arg)
-                self.args.add(key=name, value=pop_arg, 
+                self.args.add(key=name, value=pop_arg,
                               cmem=arg.get("MemType", "") == "Constant",
                               output=arg.get("Output",0) == 1)
         return self.args
 
 
     def populate_data(self, arg):
-        m = arg["MemoryType"]
-        if m == "Vector":
+        mem_type = arg["MemoryType"]
+        if mem_type == "Vector":
             return self.handle_vector_data(arg)
-        if m == "Scalar":
+        if mem_type == "Scalar":
             return self.handle_scalar_data(arg)
-        else:
-            raise UnsupportedMemoryTypeError(f"Unsupported memory type {arg['MemoryType']}")
+        raise UnsupportedMemoryTypeError(f"Unsupported memory type {arg['MemoryType']}")
 
     def type_conv_vec(self, arg_data, arg):
-        if arg["Type"] in type_conv_dict.keys():
+        if arg["Type"] in type_conv_dict:
             return arg_data.astype(type_conv_dict[arg["Type"]])
-        else:    # custom data type
-            return arg_data.astype(custom_type_dict[arg["Type"]]["repr_type"]).view(self.handle_custom_data_type(arg_data, arg))
+        # custom data type
+        return arg_data.astype(custom_type_dict[arg["Type"]]["repr_type"]).view(
+            self.handle_custom_data_type(arg_data, arg))
 
     def handle_scalar_data(self, arg):
         if arg["Type"] == "cudaTextureObject_t":
             raise NotImplementedError
-        else:
-            return self.type_conv_scalar(arg["FillValue"], arg)
+        return self.type_conv_scalar(arg["FillValue"], arg)
 
-    def get_type_length(self, t):
-        return custom_type_dict.get(t, { "TypeSize": 1 })["TypeSize"]
+    def get_type_length(self, custom_type):
+        return custom_type_dict.get(custom_type, { "TypeSize": 1 })["TypeSize"]

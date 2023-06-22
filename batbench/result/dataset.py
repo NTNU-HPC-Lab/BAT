@@ -1,21 +1,23 @@
 import os
 import copy
-from pathlib import Path
-
-import pandas as pd
 import json
 import hashlib
 import shutil
+from pathlib import Path
 
 import warnings
+import pandas as pd
+
+from jsonschema import validate
 from tables import NaturalNameWarning
 
-# PyTables doesn't like that the field times.runtimes has a dot in it's name. This warning only occured when adding it to the min_itemsize dictionary.
+from batbench.util import SCHEMA_PATH
+from batbench.result.metadata import Metadata
+
+# PyTables doesn't like that the field times.runtimes has a dot in it's name.
+# This warning only occured when adding it to the min_itemsize dictionary.
 warnings.filterwarnings('ignore', category=NaturalNameWarning)
 
-from batbench.util import get_spec, get_kernel_path, schema_path
-from batbench.result.metadata import Metadata
-from batbench.result.result import Result
 
 class Dataset:
     def __init__(self, experiment_settings, benchmark_name):
@@ -47,8 +49,7 @@ class Dataset:
         self.create_source_folder()
         self.create_results_folder()
         self.write_metadata()
-    
-    
+
     def create_source_folder(self):
         self.source_zip = "source.zip"
         self.source_folder = self.dataset_folder / "source"
@@ -60,12 +61,14 @@ class Dataset:
         # Generate name and paths for output files
         self.results_path = self.dataset_folder / "results"
         self.results_path.mkdir(parents=True, exist_ok=True)
-        self.result_id = sum([1 if element.is_file() else 0 for element in Path(self.results_path).iterdir()]) + 1
+        self.result_id = sum(1 for element in Path(self.results_path).iterdir()
+                             if element.is_file()) + 1
+
         self.results_filename = f"{self.result_id}.{self.output_format.lower()}"
         #self.cache_results_path = self.results_path / f"{self.result_id}.hdf"
         self.cache_results_path = self.results_path / f"{self.result_id}.csv"
         self.output_results_path = self.results_path / self.results_filename
-        
+
         self.files.append(self.results_zip)
 
     def create_dataset_folder(self):
@@ -81,32 +84,37 @@ class Dataset:
         hash_set = {}
         copy_metadata = copy.deepcopy(self.metadata)
         hash_set.update(copy_metadata)
-        
+
         try:
             del hash_set["General"]
-            del hash_set["zenodo"] 
+            del hash_set["zenodo"]
             del hash_set["hardware"]["lshw"]
             del hash_set["hardware"]["lscpu"]
             del hash_set["hardware"]["meminfo"]
             del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fan_speed"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks_throttle_reasons"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["performance_state"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["fb_memory_usage"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["bar1_memory_usage"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["utilization"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["temperature"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["power_readings"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["clocks"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["applications_clocks"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["default_applications_clocks"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["voltage"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["rx_util"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["tx_util"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
-            del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]["pci"]["pci_gpu_link_info"]["pcie_gen"]["device_current_link_gen"]
-        except:
+        except KeyError:
             pass
+        gpu_log = hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]
+        try:
+            del gpu_log["fan_speed"]
+            del gpu_log["clocks_throttle_reasons"]
+            del gpu_log["performance_state"]
+            del gpu_log["fb_memory_usage"]
+            del gpu_log["bar1_memory_usage"]
+            del gpu_log["utilization"]
+            del gpu_log["temperature"]
+            del gpu_log["power_readings"]
+            del gpu_log["clocks"]
+            del gpu_log["applications_clocks"]
+            del gpu_log["default_applications_clocks"]
+            del gpu_log["voltage"]
+            del gpu_log["pci"]["rx_util"]
+            del gpu_log["pci"]["tx_util"]
+            del gpu_log["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
+            del gpu_log["pci"]["pci_gpu_link_info"]["pcie_gen"]["device_current_link_gen"]
+        except KeyError:
+            pass
+        return hash_set
 
     def calculate_hash(self, hash_set: dict) -> str:
         json_hash_set = json.dumps(hash_set,
@@ -121,8 +129,8 @@ class Dataset:
 
     def zip_folders(self, files):
         # Zipping of folders
-        for f in files:
-            f_split = f.split(".")
+        for file in files:
+            f_split = file.split(".")
             if f_split[-1] == 'zip':
                 name = ''.join(f_split[:-1])
                 sub_folder = self.dataset_folder / name
@@ -158,19 +166,21 @@ class Dataset:
             self.cache_df = pd.DataFrame({})
 
     def write_metadata(self):
-        with open(self.results_path / self.metadata_filename, 'w') as f:
-            f.write(json.dumps(self.metadata, indent=4))
+        with open(self.results_path / self.metadata_filename, 'w',
+                  encoding='utf-8') as file:
+            file.write(json.dumps(self.metadata, indent=4))
         self.files.append(self.metadata_filename)
 
     def write_data(self):
         df = self.cache_df.reset_index()
         df = self.flatten_df(df)
-        df.to_csv(self.cache_results_path, 
-                  mode='a' if self.writes > 0 else 'w', 
-                  header=True if self.writes == 0 else False, 
+        df.to_csv(self.cache_results_path,
+                  mode='a' if self.writes > 0 else 'w',
+                  header=self.writes == 0,
                   index=False)
         self.writes += 1
-        #df.to_hdf(self.cache_results_path, key="Results", mode="a", complevel=9, append=True, min_itemsize={"times.runtimes": 200})
+        #df.to_hdf(self.cache_results_path, key="Results", mode="a",
+        # complevel=9, append=True, min_itemsize={"times.runtimes": 200})
 
     def final_write_data(self, df=None):
         if len(self.cache_df):
@@ -192,9 +202,9 @@ class Dataset:
 
     @staticmethod
     def validate_schema(metadata):
-        from jsonschema import validate
-        with open(f'{schema_path}/metadata-schema.json', 'r') as f:
-            schema = json.loads(f.read())
+        with open(f'{SCHEMA_PATH}/metadata-schema.json', 'r',
+                  encoding='utf-8') as file:
+            schema = json.loads(file.read())
         validate(instance=metadata, schema=schema)
 
 
@@ -209,24 +219,37 @@ class Dataset:
     @staticmethod
     def set_for_keys(my_dict, key_arr, val):
         """
-        Set val at path in my_dict defined by the string (or serializable object) array key_arr
+        Given a dictionary (my_dict), a list of keys (key_arr), and a value (val), 
+        this method sets the value at the path in the dictionary defined by the keys. 
+        The keys in the list define a path in the dictionary where each key 
+        (except the last one) corresponds to a nested dictionary. 
+        The last key corresponds to the key where the value should be set.
+
+        For example, given my_dict={}, key_arr=['a', 'b', 'c'], and val=10,
+        the method modifies my_dict to be {'a': {'b': {'c': 10}}}.
         """
+        # Start with the input dictionary
         current = my_dict
-        for i in range(len(key_arr)):
-            key = key_arr[i]
+        # Enumerate through each key in the list
+        for i, key in enumerate(key_arr):
+            # Check if current key is not present in the current dictionary
             if key not in current:
-                if i==len(key_arr)-1:
-                    current[key] = val
-                else:
-                    current[key] = {}
+                # If this is the last key in the list, set the value
+                # Otherwise, create a new dictionary for this key
+                current[key] = val if i==len(key_arr)-1 else {}
             else:
-                if type(current[key]) is not dict:
+                # If the key is present but not associated with a dictionary,
+                # raise an error as we can't add a sub-key to it
+                if not isinstance(current.get(key), dict):
                     print("Given dictionary is not compatible with key structure requested")
                     raise ValueError("Dictionary key already occupied")
 
+            # Move on to the next level of the dictionary
             current = current[key]
 
+        # Return the modified input dictionary
         return my_dict
+
 
     @staticmethod
     def to_formatted_json(df, sep="."):
@@ -243,4 +266,3 @@ class Dataset:
     @staticmethod
     def to_formatted_df(df):
         return pd.DataFrame(Dataset.to_formatted_json(df))
-

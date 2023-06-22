@@ -1,56 +1,56 @@
 import time
+from random import randint
 
 from batbench.manager.manager import Manager
 from batbench.result.result import Result
 
 class MinTuner:
 
-    def run(self, conf, result):
+    def run(self, conf, result, config_space, run):
         tuning_config = {}
-        for i, key in enumerate(self.manager.config_space.get_parameters().keys()):
+        for i, key in enumerate(config_space.get_parameters().keys()):
             tuning_config[key] = conf[i]
         result.config = tuning_config
-        return self.manager.run(tuning_config, result)
+        return run(tuning_config, result)
 
 
-    def exhaustive_search(self, args):
-        t0 = time.time()
+    def exhaustive_search(self, budget_trials, config_space, run):
+        time_0 = time.time()
         i = 0
         result = Result()
-        for l in self.manager.config_space:
-            if i >= self.manager.budget_trials:
+        for config in config_space:
+            if i >= budget_trials:
                 break
-            result.algorithm_time = time.time() - t0
-            result = self.run(l, result)
+            result.algorithm_time = time.time() - time_0
+            result = self.run(config, result, config_space, run)
             if result.validity != "KnownConstraintsViolated":
                 i += 1
-            t0 = time.time()
+            time_0 = time.time()
             result = Result()
 
-    def random_search(self, args):
-        from random import randint
-        t0 = time.time()
+    def random_search(self, budget_trials, config_space, run):
+        time_0 = time.time()
         i = 0
         result = Result()
-        while i < self.manager.budget_trials:
+        while i < budget_trials:
             config = {}
-            for key, values in self.manager.config_space.get_parameters_pair():
+            for key, values in config_space.get_parameters_pair():
                 config[key] = values[randint(0, len(values)-1)]
 
-            result.algorithm_time = time.time() - t0
-            result = self.run(list(config.values()), result)
+            result.algorithm_time = time.time() - time_0
+            result = self.run(list(config.values()), result, config_space, run)
             if result.validity != "KnownConstraintsViolated":
                 i += 1
-            t0 = time.time()
+            time_0 = time.time()
             result = Result()
 
     def main(self, args):
-        self.manager = Manager(args)
+        manager = Manager(args)
 
-        #self.exhaustive_search(args)
-        self.random_search(args)
+        #self.exhaustive_search(self.manager.budget_trials, self.manager.config_space)
+        self.random_search(manager.budget_trials, manager.config_space, manager.run)
 
-        self.manager.dataset.final_write_data()
-        best = self.manager.dataset.get_best()
-        self.manager.finished()
+        manager.dataset.final_write_data()
+        best = manager.dataset.get_best()
+        manager.finished()
         return best

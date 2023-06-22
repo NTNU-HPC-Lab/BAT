@@ -1,8 +1,8 @@
 from builtins import str
+
+from collections import OrderedDict
 import ast
 import json
-import pandas as pd
-from collections import OrderedDict
 
 import kernel_tuner
 from kernel_tuner.util import (ErrorConfig)
@@ -17,12 +17,12 @@ class KernelTuner:
         self.prog_args = args
         self.manager = Manager(args)
         self.f_evals = self.manager.budget_trials
-        strategy_options = dict(max_fevals=self.f_evals)
+        strategy_options = {"max_fevals": self.f_evals}
         return self.tune(args.gpu_name, strategy_options=strategy_options)
 
     def problemsize_from_gridsizes(self, gridsizes: dict):
         """ Takes the grid sizes and returns the problem size as a lambda function """
-        problemsizes = list()
+        problemsizes = []
         dimensions = ['X', 'Y',
                       'Z']  # order in which Kernel Tuner expects the tuple
         for dimension in dimensions:
@@ -39,7 +39,9 @@ class KernelTuner:
                 if isinstance(node, ast.Name)
             ]
             for paramname in paramnames:
-                if not f"p['{paramname}']" in gridsize:  # prevent multiple occurances of the same parameter name in the same gridsize from applying this twice
+                # prevent multiple occurances of the same parameter name in the same gridsize
+                # from applying this twice
+                if not f"p['{paramname}']" in gridsize:
                     gridsize = gridsize.replace(paramname, f"p['{paramname}']")
             problemsizes.append(gridsize)
 
@@ -66,10 +68,10 @@ class KernelTuner:
 
     def convert_results(self, cache):
         results = []
-        time_names = ("verification_time", "compile_time", "benchmark_time", "strategy_time", "framework_time", "times", "time")
+        time_names = ("verification_time", "compile_time", "benchmark_time",
+                      "strategy_time", "framework_time", "times", "time")
         for conf in cache:
             new_conf = {}
-            new_times = {}
             kt_result = conf
 
             for (key, value) in conf.items():
@@ -90,16 +92,17 @@ class KernelTuner:
             result.compile_time = kt_result["compile_time"]/unit
             result.framework_time = kt_result["framework_time"]/unit
             result.algorithm_time = kt_result["strategy_time"]/unit
-            result.total_time = result.compile_time + result.framework_time + result.algorithm_time + result.runtime
+            result.total_time = sum(result.compile_time, result.framework_time,
+                                    result.algorithm_time, result.runtime)
             results.append(result)
 
         return results
 
 
     def get_results(self, cache_path):
-        with open(f"{cache_path}.json", 'r') as f:
-            kt = json.loads(f.read())
-        return self.convert_results(kt["cache"])
+        with open(f"{cache_path}.json", 'r', encoding='utf-8') as file:
+            kt_cache = json.loads(file.read())
+        return self.convert_results(kt_cache["cache"])
 
 
     def run_tune(self, gpu_name, strategy, strategy_options, verbose, quiet, simulation_mode):
@@ -120,12 +123,17 @@ class KernelTuner:
             str(self.manager.problem.spec["BenchmarkConfig"]["iterations"])
         )  # number of times each kernel configuration is ran
         compiler_options = kernel_spec["CompilerOptions"]
-        # precision = self.spec["benchmarkConfig"]["PRECISION"]    # whether to use single or double precision (encoded as 32 or 64)
+
+        # whether to use single or double precision (encoded as 32 or 64)
+        # precision = self.spec["benchmarkConfig"]["PRECISION"]
 
         # get problem-, block-, thread-, and grid sizes
         if kernel_spec.get("ProblemSize"):
-            ps = kernel_spec["ProblemSize"]
-            problem_size = ps if isinstance(ps, int) else tuple(ps)
+            problem_size_spec = kernel_spec["ProblemSize"]
+            if isinstance(problem_size_spec, int):
+                problem_size = problem_size_spec
+            else:
+                problem_size = tuple(problem_size_spec)
 
             grid_div_x = kernel_spec["GridDivX"]
             grid_div_y = kernel_spec["GridDivY"]

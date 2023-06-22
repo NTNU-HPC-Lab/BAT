@@ -17,8 +17,15 @@ class CUDAProgram:
     Attributes:
         kernel_name (str): The name of the kernel function.
     """
-    def __init__(self, kernel_name: str) -> None:
+    def __init__(self, kernel_name: str, source: str = "") -> None:
         self._kernel_name = kernel_name
+        self._source = source
+
+    def get_kernel_name(self) -> str:
+        return self._kernel_name
+
+    def get_source(self) -> str:
+        return self._source
 
 
 class CUDAProblem(Problem):
@@ -35,7 +42,8 @@ class CUDAProblem(Problem):
         function_args (Any): The arguments for the CUDA kernel function.
     """
     def __init__(self, kernel_name: str, spec: Optional[Dict[str, Any]] = None,
-                 run_settings: Optional[Dict[str, Any]] = None, cuda_backend="Cupy", runner="KT") -> None:
+                 run_settings: Optional[Dict[str, Any]] = None,
+                 cuda_backend="Cupy", runner="KT") -> None:
         super().__init__()
         self._kernel_name = kernel_name
         self._program = CUDAProgram(kernel_name)
@@ -48,7 +56,8 @@ class CUDAProblem(Problem):
             self._config_space = ConfigSpace(self.spec["ConfigurationSpace"])
             self.args = ArgHandler(self.spec).populate_args()
             if runner == "KT":
-                self.runner = KernelBackend(self.spec, self.config_space, self.args, cuda_backend=self.cuda_backend)
+                self.runner = KernelBackend(self.spec, self.config_space, 
+                                            self.args, cuda_backend=self.cuda_backend)
             else:
                 self.runner = CudaKernelRunner(self.spec, self.config_space)
         self.run_settings = run_settings if run_settings is not None else {}

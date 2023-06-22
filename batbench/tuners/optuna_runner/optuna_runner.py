@@ -1,6 +1,7 @@
 import argparse
-import optuna
 import time
+
+import optuna
 
 from batbench.manager.manager import Manager
 from batbench.result.result import Result
@@ -48,7 +49,8 @@ def main():
     optunaparser = argparse.ArgumentParser()
     optunaparser.add_argument('--json', type=str, default="./benchmarks/MD5Hash-CAFF.json",
                               help='location of T1 json file')
-    optunaparser.add_argument('--testing', type=str, default=False, help='If the execution is a test or not')
+    optunaparser.add_argument('--testing', type=str, default=False,
+                              help='If the execution is a test or not')
 
     args = optunaparser.parse_args()
 

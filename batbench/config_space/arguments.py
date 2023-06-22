@@ -12,10 +12,13 @@ class Arguments():
         self.args = args
         self.reference_path = f"./references/{kernel_name}"
         os.makedirs(self.reference_path, exist_ok=True)
-        self.reference_values = {} # The value of the output variables after the reference kernel is run
+
         self.initial_values = {} # The value of the output variables before the kernel is run
         self.output_args = set() # The names of the output variables
         self.cmem_args = set() # The names of the constant memory variables
+        # The value of the output variables after the reference kernel is run
+        self.reference_values = {}
+
         for key, arg in self.args.items():
             self.add(key, arg["value"], arg["cmem"], arg["output"], arg["index"])
         self.index = 0

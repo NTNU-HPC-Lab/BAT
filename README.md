@@ -50,10 +50,11 @@ Coming back soon.
 ### Benchmark compatibility with tuners
 |           | GEMM | Nbody | DeDisp | ExpDist | PnPoly | Convolution | Hotspot | MD5Hash | TRIAD |
 |:---------:|:----:|:-----:|:------:|:-------:|:------:|:-----------:|:-------:|:-------:|:-----:|
-| Opentuner |  ✅  |   ✅  |   ✅   |   ❌   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| Opentuner |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
 | Kerneltuner | ✅  |   ❌  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
 | Mintuner  |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
 | Optuna    |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
+| SMAC3 |  ✅  |   ✅  |   ✅   |   ✅   |   ✅   |     ✅      |   ✅    |   ✅    |   ✅   |
 
 # Usage
 ```

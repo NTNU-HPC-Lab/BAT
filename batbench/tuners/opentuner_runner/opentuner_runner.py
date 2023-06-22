@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import argparse
 import time
-from builtins import str
 
 import opentuner
 from opentuner.measurement import MeasurementInterface
@@ -23,20 +22,20 @@ class OpenTunerT(MeasurementInterface):
         self.result = Result()
         self.n_trials = self.manager.budget_trials
         self.current_trial = 0
-        self.t0 = time.time()
+        self.time_0 = time.time()
 
     def run(self, desired_result, input, limit):
-        self.result.algorithm_time = time.time() - self.t0
+        self.result.algorithm_time = time.time() - self.time_0
         if self.current_trial == self.n_trials:
             self.save_final_config(None)
 
         tuning_config = desired_result.configuration.data
-        #self.result.framework_time = time.time() - self.t0
+        #self.result.framework_time = time.time() - self.time_0
         self.result.config = tuning_config
         prev_result = self.manager.run(tuning_config, self.result)
         if prev_result.validity != "KnownConstraintsViolated":
             self.current_trial += 1
-        self.t0 = time.time()
+        self.time_0 = time.time()
         self.result = Result(self.manager.problem.spec)
         return opentuner.resultsdb.models.Result(time=prev_result.objective) # type: ignore
 
@@ -52,7 +51,7 @@ class OpenTunerT(MeasurementInterface):
     def program_version(self):
         return 1.0
 
-    def save_final_config(self, configuration):
+    def save_final_config(self, config):
         """
         called at the end of autotuning with the best resultsdb.models.Configuration
         """
@@ -65,7 +64,8 @@ def main():
     openparser = argparse.ArgumentParser(parents=opentuner.argparsers())
     openparser.add_argument('--json', type=str, default="./benchmarks/MD5Hash-CAFF.json",
                             help='location of T1 json file')
-    openparser.add_argument('--testing', type=str, default=False, help='If the execution is a test or not')
+    openparser.add_argument('--testing', type=str, default=False,
+                            help='If the execution is a test or not')
 
     args = openparser.parse_args()
     OpenTunerT.main(args)

@@ -21,8 +21,8 @@ class Zenodo:
     @staticmethod
     def get_zenodo_metadata():
         metadata_zenodo_path = "metadata-zenodo.json"
-        with open(metadata_zenodo_path, 'r') as f:
-            return json.loads(f.read())
+        with open(metadata_zenodo_path, 'r', encoding='utf-8') as file:
+            return json.loads(file.read())
 
     def delete_all(self):
         ret = self.get_user_depositions()
@@ -32,25 +32,28 @@ class Zenodo:
 
 
     def delete(self, deposition_id):
-        r = requests.delete(f'{self.baseurl}/deposit/depositions/{deposition_id}', headers=self.headers, params=self.params)
-        self.handle_return(r)
+        response = requests.delete(f'{self.baseurl}/deposit/depositions/{deposition_id}',
+                                   headers=self.headers, params=self.params, timeout=10)
+        self.handle_return(response)
 
     def upload(self):
         print("Write the deposition id of a dataset to to update it, or enter nothing to create a new deposition")
-        a = input()
-        if a == "":
+        deposition_id = input()
+        if deposition_id == "":
             ret_json = self.new(self.zenodo_metadata)
         else:
-            ret_json = self.get_user_depositions(a)
+            ret_json = self.get_user_depositions(deposition_id)
 
         self.upload_datasets(self.datasets, ret_json)
+        deposition_id = ret_json['id']
 
-        print("Do you want to make the deposition permanently public (publish)? Write 'Yes I am sure'. You can always publish later from the website")
-        a = input()
-        if a.lower() == "yes i am sure":
-            self.publish()
+        print("""Do you want to make the deposition permanently public (publish)? Write 'Yes I am sure'.
+        You can always publish later from the website""")
+        user_confirm = input()
+        if user_confirm.lower() == "yes i am sure":
+            self.publish(deposition_id)
         else:
-            return self.exit_upload(ret_json)
+            self.exit_upload(ret_json)
 
     def exit_upload(self, ret_json):
         link = ret_json["links"]["html"]
@@ -58,19 +61,24 @@ class Zenodo:
 
     def new(self, metadata):
         ret = self.post_new_deposition(metadata)
-        print("Created a new deposition: {ret.json()['id']}")
-        return ret.json()
+        ret_json = ret.json()
+        print(f"Created a new deposition: {ret_json['id']}")
+        return ret_json
 
     def post_new_deposition(self, metadata):
-        ret = requests.post(f"{self.baseurl}/deposit/depositions", headers=self.headers, params=self.params, data=json.dumps(metadata))
+        ret = requests.post(f"{self.baseurl}/deposit/depositions",
+                            headers=self.headers, params=self.params,
+                            data=json.dumps(metadata), timeout=10)
         self.handle_return(ret)
         return ret
 
     def get_user_depositions(self, deposition_id=None):
         if deposition_id is None:
-            ret = requests.get('https://zenodo.org/api/deposit/depositions', params=self.params)
+            ret = requests.get('https://zenodo.org/api/deposit/depositions',
+                               params=self.params, timeout=10)
         else:
-            ret = requests.get(f'https://zenodo.org/api/deposit/depositions/{deposition_id}', params=self.params)
+            ret = requests.get(f'https://zenodo.org/api/deposit/depositions/{deposition_id}',
+                               params=self.params, timeout=10)
         self.handle_return(ret)
         return ret.json()
 
@@ -107,8 +115,9 @@ class Zenodo:
             self.zip_folder(dataset_path)
 
             # Uploading datset
-            with open(f"{dataset_path}.zip", "rb") as f:
-                ret = requests.put(f"{bucket_url}/{dataset}.zip", data=f, params=self.params)
+            with open(f"{dataset_path}.zip", "rb") as file:
+                ret = requests.put(f"{bucket_url}/{dataset}.zip",
+                                   data=file, params=self.params, timeout=10)
             self.handle_return(ret)
 
             # Upload was successful
@@ -118,10 +127,10 @@ class Zenodo:
 
         print("Upload succesful")
 
-    def publish(self):
-        deposition_id = self.id
-        ret = requests.post(f'https://zenodo.org/api/deposit/depositions/{deposition_id}/actions/publish', params=self.params )
+    def publish(self, deposition_id):
+        ret = requests.post(
+            f'https://zenodo.org/api/deposit/depositions/{deposition_id}/actions/publish',
+            params=self.params, timeout=10)
         self.handle_return(ret)
         print("Successfully published")
         return ret
-

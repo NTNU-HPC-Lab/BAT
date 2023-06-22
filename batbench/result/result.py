@@ -38,8 +38,9 @@ class Result:
         self.error = "no error"
         self.objective = objective
         self.timestamp = datetime.datetime.now()
-        #self.objective = 10000 #TODO: Find a better value. float("inf") was not allowed by JSON parsers.
-                                # But that might still be the best option, with a wrapper.
+        #self.objective = 10000
+        # TODO: Find a better value. float("inf") was not allowed by JSON parsers.
+        # But that might still be the best option, with a wrapper.
 
     def is_valid(self):
         return self.validity == "Correct" and self.objective > 0

@@ -1,14 +1,13 @@
 import time
 import math
-import cupy as cp
 import copy
 import logging
 
+import cupy as cp
 from batbench.config_space import ConfigSpace
-from batbench.config_space.arguments import Arguments
+from batbench.util import get_kernel_path
 
 from .arg_handler import ArgHandler
-from batbench.util import get_kernel_path
 
 
 class CudaKernelRunner:
@@ -50,11 +49,11 @@ class CudaKernelRunner:
         compiler_options = self.kernel_spec.get("CompilerOptions", [])
 
         options_sources = [tuning_config, benchmark_config, self.result.launch]
-        
+
         for source in options_sources:
             for (key, val) in source.items():
                 compiler_options.append(f"-D{key}={val}")
-        
+
         return compiler_options
 
     def reset_context(self):
@@ -83,34 +82,40 @@ class CudaKernelRunner:
 
         global_size_type = kernel_spec.get("GlobalSizeType", "CUDA")
         if global_size_type.lower() == "opencl":
-            launch_config["GRID_SIZE_X"] = math.ceil(launch_config["GRID_SIZE_X"]/launch_config["BLOCK_SIZE_X"])
-            launch_config["GRID_SIZE_Y"] = math.ceil(launch_config["GRID_SIZE_Y"]/launch_config["BLOCK_SIZE_Y"])
-            launch_config["GRID_SIZE_Z"] = math.ceil(launch_config["GRID_SIZE_Z"]/launch_config["BLOCK_SIZE_Z"])
+            launch_config["GRID_SIZE_X"] = math.ceil(
+                launch_config["GRID_SIZE_X"]/launch_config["BLOCK_SIZE_X"])
+            launch_config["GRID_SIZE_Y"] = math.ceil(
+                launch_config["GRID_SIZE_Y"]/launch_config["BLOCK_SIZE_Y"])
+            launch_config["GRID_SIZE_Z"] = math.ceil(
+                launch_config["GRID_SIZE_Z"]/launch_config["BLOCK_SIZE_Z"])
 
         self.add_to_context(launch_config)
 
         if kernel_spec.get("SharedMemory"):
-            launch_config["SHARED_MEMORY_SIZE"] = eval(str(kernel_spec["SharedMemory"]), self.get_context())
+            launch_config["SHARED_MEMORY_SIZE"] = eval(
+                str(kernel_spec["SharedMemory"]), self.get_context())
 
-        self.grid_dim = (launch_config["GRID_SIZE_X"], launch_config["GRID_SIZE_Y"], launch_config["GRID_SIZE_Z"])
-        self.block_dim = (launch_config["BLOCK_SIZE_X"], launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
+        self.grid_dim = (launch_config["GRID_SIZE_X"],
+                         launch_config["GRID_SIZE_Y"], launch_config["GRID_SIZE_Z"])
+        self.block_dim = (launch_config["BLOCK_SIZE_X"],
+                          launch_config["BLOCK_SIZE_Y"], launch_config["BLOCK_SIZE_Z"])
         self.shared_mem_size = launch_config.get("SHARED_MEMORY_SIZE", 0)
         return launch_config
 
     def compile_kernel(self, tuning_config):
         jitify = self.spec["BenchmarkConfig"].get("jitify", False)
-        if jitify == False and self.kernel_spec.get("Misc", False):
+        if jitify is False and self.kernel_spec.get("Misc", False):
             jitify = self.kernel_spec["Misc"].get("jitify", False)
-        with open(get_kernel_path(self.spec), 'r') as f:
-            module = cp.RawModule(code=f.read(),
+        with open(get_kernel_path(self.spec), 'r', encoding='utf-8') as file:
+            module = cp.RawModule(code=file.read(),
                     backend=self.spec["BenchmarkConfig"].get("backend", "nvrtc"),
                     options=tuple(self.generate_compiler_options(tuning_config)),
                     jitify=jitify)
 
         self.start_timer()
         kernel = module.get_function(self.kernel_spec["KernelName"])
-        self.kernel = kernel
         self.result.compile_time = self.get_duration()
+        return kernel
 
     def start_timer(self, name="start"):
         self.timers[name].record(stream=self.stream)
@@ -120,12 +125,12 @@ class CudaKernelRunner:
         self.dev.synchronize()
         return cp.cuda.get_elapsed_time(self.timers[start_name], self.timers[end_name]) / 1000
 
-    def launch_kernel(self, args_tuple, launch_config):
+    def launch_kernel(self, kernel, args_tuple, launch_config):
         self.start_timer("runtime_start")
         self.result.runtimes = []
         for _ in range(launch_config.get("iterations", 10)):
             self.start_timer()
-            self.kernel(grid=self.grid_dim, block=self.block_dim,
+            kernel(grid=self.grid_dim, block=self.block_dim,
                         args=args_tuple, shared_mem=self.shared_mem_size)
             self.result.runtimes.append(self.get_duration())
 
@@ -154,7 +159,7 @@ class CudaKernelRunner:
         if tuple(tuning_config.values()) not in self.config_space:
             return self.invalid_result("Config invalid")
         try:
-            self.compile_kernel(tuning_config)
+            kernel = self.compile_kernel(tuning_config)
         except cp.cuda.compiler.CompileException as err:
             print(err)
             return self.invalid_result("Compile exception", err)
@@ -162,18 +167,14 @@ class CudaKernelRunner:
         time_0 = time.time()
 
         try:
-            args_tuple, cmem_args = self.arg_handler.populate_args().get_function_args()
+            args_tuple, _ = self.arg_handler.populate_args().get_function_args()
         except ValueError as err:
             return self.invalid_result("Value error in argument population", err)
 
         self.result.arg_time = time.time() - time_0
 
         try:
-            self.launch_kernel(args_tuple, launch_config)
+            self.launch_kernel(kernel, args_tuple, launch_config)
         except RuntimeError as err:
             return self.invalid_result("Launch exception", err)
-
-        if self.debug:
-            correctness = correctness_funcs[self.kernel_spec["KernelName"]]
-            correctness(args_tuple, tuning_config, launch_config)
         return self.result

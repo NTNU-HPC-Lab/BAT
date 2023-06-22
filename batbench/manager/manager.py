@@ -4,11 +4,10 @@ import datetime
 import logging
 import jsonschema
 
-import batbench.benchmarks as benchmarks
-
+from batbench import benchmarks
 from batbench.result.dataset import Dataset
 from batbench.result.zenodo import Zenodo
-from batbench.util import get_spec, schema_path
+from batbench.util import get_spec, SCHEMA_PATH
 
 
 # Create a custom logger
@@ -20,6 +19,7 @@ def get_budget_trials(spec):
     for budget in budgets:
         if budget["Type"] == "ConfigurationCount":
             return budget["BudgetValue"]
+    raise ValueError("No budget value found")
 
 
 benchmark_map = {
@@ -61,7 +61,7 @@ class Manager:
 
 
     def validate_schema(self, spec):
-        with open(f'{schema_path}/TuningSchema.json', 'r', encoding='utf-8') as file:
+        with open(f'{SCHEMA_PATH}/TuningSchema.json', 'r', encoding='utf-8') as file:
             schema = json.load(file)
         jsonschema.validate(instance=spec, schema=schema)
 
@@ -90,7 +90,8 @@ class Manager:
             self.trial += 1
             self.total_time += result.total_time
             estimated_time = (self.budget_trials/self.trial) * self.total_time
-            print(  f"""Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s""", end="\r")
+            print(f"Trials: {self.trial}/{self.budget_trials} | Total time: {self.total_time:.0f}s | Estimated Time: {estimated_time:.0f}s",
+                  end="\r")
             self.result_timestamp = datetime.datetime.now()
 
         self.dataset.add_result(result)

@@ -1,12 +1,11 @@
-from builtins import str
 import ast
 import logging
 from collections import OrderedDict
 import re
-from typing import List
 
 import kernel_tuner
-from kernel_tuner.interface import run_kernel, Options, _kernel_options, _device_options, _tuning_options
+from kernel_tuner.interface import run_kernel, Options
+from kernel_tuner.interface import _kernel_options, _device_options, _tuning_options
 from kernel_tuner.runners.sequential import SequentialRunner
 from kernel_tuner import util
 from kernel_tuner.util import (ErrorConfig)
@@ -33,7 +32,7 @@ class KernelBackend:
         self.objective = objective
         self.args = args
         self.function_args = self.args.get_function_args()
-        
+
         self.validate_kernel_spec()
         tune_params = OrderedDict(self.config_space.get_parameters())
         block_size_names = self.get_block_size_names()
@@ -77,7 +76,8 @@ class KernelBackend:
             grid_div_y = []
         return problem_size, grid_div_x, grid_div_y
 
-    def create_opts(self, args, tune_params, block_size_names, cmem_args, problem_size, grid_div_x, grid_div_y, cuda_backend):
+    def create_opts(self, args, tune_params, block_size_names, cmem_args,
+                    problem_size, grid_div_x, grid_div_y, cuda_backend):
         return {
             "kernel_name": self.kernel_spec["KernelName"],
             "kernel_source": self.get_kernel_string(),
@@ -101,7 +101,8 @@ class KernelBackend:
         }
 
     def create_kernelsource(self, cuda_backend):
-        self.kernelsource = kernel_tuner.core.KernelSource(self.opts["kernel_name"], self.opts["kernel_source"], lang=cuda_backend, defines=None)
+        self.kernelsource = kernel_tuner.core.KernelSource(
+            self.opts["kernel_name"], self.opts["kernel_source"], lang=cuda_backend, defines=None)
 
     def create_option_bags(self):
         """Create options for kernel, tuning and device."""
@@ -115,14 +116,14 @@ class KernelBackend:
         return Options([(k, opts.get(k, None)) for k in opt_keys.keys()])
 
     def setup_sequential_runner(self):
-        self.runner = SequentialRunner(self.kernelsource, self.kernel_options, self.device_options, self.opts["iterations"], None)
+        self.runner = SequentialRunner(self.kernelsource, self.kernel_options,
+                                       self.device_options, self.opts["iterations"], None)
         self.runner.warmed_up = True  # disable warm up for this test
 
     def get_kernel_string(self) -> str:
         """ Reads in the kernel as a string """
-        kernel_string = ""
-        with open(get_kernel_path(self.spec), 'r') as f:
-            kernel_string += f.read()
+        with open(get_kernel_path(self.spec), 'r', encoding='utf-8') as file:
+            kernel_string = file.read()
         return kernel_string
 
     def problemsize_from_gridsizes(self, gridsizes: dict):
@@ -149,13 +150,15 @@ class KernelBackend:
 
     def wrap_variables_in_gridsize(self, gridsize, paramnames):
         for paramname in paramnames:
-            if not re.search(f"\b{paramname}\b", gridsize):  # prevents multiple occurrences and avoids matching substrings
+            # prevents multiple occurrences and avoids matching substrings
+            if not re.search(f"\b{paramname}\b", gridsize):
                 gridsize = gridsize.replace(paramname, f"p['{paramname}']")
         return gridsize
 
     def validate_problemsize_length(self, problemsizes, gridsizes):
         if len(problemsizes) != len(gridsizes.keys()):
-            raise ValueError(f"The problem size dimensions (X, Y, Z) do not match the gridsizes specified ({gridsizes})")
+            raise ValueError(
+                f"The problem size dimensions (X, Y, Z) do not match the gridsizes specified ({gridsizes})")
 
     def update_invalid_result(self, result, msg, error=None):
         result.validity = msg
@@ -196,16 +199,15 @@ class KernelBackend:
         return res
 
     def run(self, tuning_config, result: Result) -> Result:
-        self.tuning_config = tuning_config
         result.config = tuning_config
         searchspace = [ tuning_config.values() ]
         try:
             results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
-        except RuntimeError as err:
+        except RuntimeError:
             return self.update_invalid_result(result, "RuntimeError")
         kt_result = results[0]
         if self.objective in kt_result and isinstance(kt_result[self.objective], ErrorConfig):
-            logging.error("Failed to run with tuning config: %s. Error: %s", 
+            logging.error("Failed to run with tuning config: %s. Error: %s",
                           tuning_config, kt_result[self.objective])
             return self.update_invalid_result(result, "Compile exception")
         self.update_result(result, kt_result)

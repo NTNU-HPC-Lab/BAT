@@ -123,8 +123,8 @@ class ConfigSpace:
 
     def __contains__(self, config: Tuple[Any, ...]) -> bool:
         params = list(self.parameters.values())
-        for i in range(len(config)):
-            if config[i] not in params[i]:
+        for val, param in zip(config, params):
+            if val not in param:
                 return False
 
         return self.check_constraints(config)

@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod, abstractproperty
-from .config_space import ConfigSpace
+from abc import ABC, abstractmethod
 
 
 class Problem(ABC):
@@ -9,7 +8,7 @@ class Problem(ABC):
     @abstractmethod
     def get_args(self):
         ...
-    
+
     @abstractmethod
     def run(self, tuning_config, result):
         ...
