@@ -4,7 +4,7 @@ import numpy as np
 from batbench.config_space.arguments import Arguments
 from batbench.config_space.cuda_problem import CUDAProblem
 from batbench.backends.kernelbackend.kerneltuner_runner import KernelBackend
-from batbench.config_space import ConfigSpace
+from batbench.config_space.config_space import ConfigSpace
 
 class Expdist(CUDAProblem):
     def __init__(self, run_settings) -> None:

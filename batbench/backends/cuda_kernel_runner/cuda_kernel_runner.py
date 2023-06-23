@@ -4,7 +4,7 @@ import copy
 import logging
 
 import cupy as cp
-from batbench.config_space import ConfigSpace
+from batbench.config_space.config_space import ConfigSpace
 from batbench.util import get_kernel_path
 
 from .arg_handler import ArgHandler
