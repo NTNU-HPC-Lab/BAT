@@ -35,4 +35,4 @@ jobs:
         pylint $(git ls-files '*.py') --fail-under=8.5
     - name: Test with pytest
       run: |
-        pytest -m "not backends"
+        pytest tests/general

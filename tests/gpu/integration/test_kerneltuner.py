@@ -11,7 +11,7 @@ def benchmark_setup(benchmark):
     parser.add_argument('--gpu_name', type=str, default='A4000', help='The CUDA GPU to run on')
     parser.add_argument('--cache', type=str, default='', help='The cache to use')
     args = parser.parse_args()
-    args.experiment_settings = "./tests/integration/experiment-settings-test.json"
+    args.experiment_settings = "./tests/gpu/integration/experiment-settings-test.json"
     args.benchmarks = [benchmark]
     args.cleanup = True
     args.tuner = ["kerneltuner"]
