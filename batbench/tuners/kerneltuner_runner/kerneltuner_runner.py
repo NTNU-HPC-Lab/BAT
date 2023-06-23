@@ -1,5 +1,3 @@
-from builtins import str
-
 from collections import OrderedDict
 import ast
 import json

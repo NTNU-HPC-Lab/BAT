@@ -4,6 +4,7 @@ import cupy as cp
 
 from batbench.backends.cuda_kernel_runner.arg_handler import ArgHandler, UnsupportedMemoryTypeError
 
+pytestmark = pytest.mark.backends
 
 def test_arg_handler_scalar_type_conversion():
     arg_handler = ArgHandler({

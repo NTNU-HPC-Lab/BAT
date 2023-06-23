@@ -1,6 +1,9 @@
 import argparse
+import pytest
 from batbench.__main__ import add_standard_arguments_to_parser
 from batbench.manager.experiment_manager import ExperimentManager
+
+pytestmark = pytest.mark.backends
 
 def benchmark_setup(benchmark):
     parser = argparse.ArgumentParser()
