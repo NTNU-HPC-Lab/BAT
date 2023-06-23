@@ -33,6 +33,8 @@ jobs:
       run: |
         # stop the build if there are Python syntax errors or undefined names
         pylint $(git ls-files '*.py') --fail-under=8.5
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
     - name: Test with pytest
       run: |
         pytest tests/general
