@@ -61,7 +61,7 @@ class Arguments():
     def get_constant_dict(self) -> Dict:
         temp_d = {}
         for key in self.cmem_args:
-            val: cp.ndarray = self.args[key]["value"]
+            val = self.args[key]["value"]
             if self.backend == "CUDA":
                 val: np.ndarray = cp.asnumpy(val)
             assert isinstance(val, np.ndarray)
