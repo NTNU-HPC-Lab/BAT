@@ -1,4 +1,9 @@
 from batbench.config_space.config_space import ConfigSpace
+from unittest.mock import Mock, patch
+
+with patch.dict('sys.modules', {'cupy': Mock()}):
+    from batbench.config_space.config_space import ConfigSpace
+
 
 def test_check_constraints():
     config_space = ConfigSpace()
