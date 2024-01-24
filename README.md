@@ -64,6 +64,22 @@ python3 -m batbench --tuner TUNER --benchmark BENCHMARK
 # Citation
 Use the following citation when publishing work using BAT.
 ```
+@inproceedings{torring_towards_2023,
+	title = {Towards a Benchmarking Suite for Kernel Tuners},
+	url = {https://ieeexplore.ieee.org/abstract/document/10196663},
+	doi = {10.1109/IPDPSW59300.2023.00124},
+	eventtitle = {2023 {IEEE} International Parallel and Distributed Processing Symposium Workshops ({IPDPSW})},
+	pages = {724--733},
+	booktitle = {2023 {IEEE} International Parallel and Distributed Processing Symposium Workshops ({IPDPSW})},
+	author = {Tørring, Jacob O. and van Werkhoven, Ben and Petrovč, Filip and Willemsen, Floris-Jan and Filipovič, Jiří and Elster, Anne C.},
+	urldate = {2024-01-24},
+	date = {2023-05},
+	keywords = {Computer architecture, Graphics processing units, Benchmark testing, Manuals, benchmarking, autotuning, Tuners, Codes, Distributed processing},
+}
+```
+
+Or this one if you are referring to or using the original version of BAT (1.0). 
+```
 @article{sund_bat_2021,
 	title = {{BAT}: A Benchmark suite for {AutoTuners}},
 	rights = {Copyright (c) 2021},
