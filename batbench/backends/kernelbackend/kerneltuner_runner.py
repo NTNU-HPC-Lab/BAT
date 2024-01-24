@@ -24,12 +24,13 @@ class KernelBackend:
     DEFAULT_OBJECTIVE = TIME
 
     def __init__(self, spec, config_space, args: Arguments,
-                 cuda_backend="Cupy", metrics=None, objective=DEFAULT_OBJECTIVE):
+                 cuda_backend="Cupy", metrics=None):
         self.spec = spec
         self.config_space = config_space
         self.kernel_spec = self.spec["KernelSpecification"]
+        self.objective = self.spec['General'].get('Objective', self.DEFAULT_OBJECTIVE)
+        self.minimize = self.spec['General'].get('Minimize', True)
         self.metrics = metrics
-        self.objective = objective
         self.args = args
         self.function_args = self.args.get_function_args()
 
@@ -148,11 +149,17 @@ class KernelBackend:
     def extract_param_names(self, gridsize):
         return [node.id for node in ast.walk(ast.parse(gridsize)) if isinstance(node, ast.Name)]
 
+
     def wrap_variables_in_gridsize(self, gridsize, paramnames):
         for paramname in paramnames:
-            # prevents multiple occurrences and avoids matching substrings
-            if not re.search(f"\b{paramname}\b", gridsize):
-                gridsize = gridsize.replace(paramname, f"p['{paramname}']")
+            # Using a regular expression to ensure that whole words are matched
+            pattern = r'\b' + re.escape(paramname) + r'\b'
+            replacement = f"p['{paramname}']"
+
+            # Check if the parameter name is already wrapped
+            wrapped_pattern = f"p\\['{paramname}'\\]"
+            if not re.search(wrapped_pattern, gridsize):
+                gridsize = re.sub(pattern, replacement, gridsize)
         return gridsize
 
     def validate_problemsize_length(self, problemsizes, gridsizes):
@@ -164,6 +171,7 @@ class KernelBackend:
         result.validity = msg
         result.correctness = 0
         result.runtimes = [0]
+        result.objective = 10000 if self.minimize else 0
         if error:
             result.error = error
         return result
@@ -172,7 +180,9 @@ class KernelBackend:
     def update_result(self, result, kt_result):
         result.runtimes = [t/1000 for t in kt_result["times"]]
         result.runtime = sum(result.runtimes)
-        result.objective = kt_result[self.objective]/1000
+        result.objective = kt_result[self.objective]
+        if self.objective == self.TIME:
+            result.objective /= 1000
         result.compile_time = kt_result["compile_time"]/1000
         #result.time = kt_result["verification_time"]
         #result.time = kt_result["benchmark_time"]
@@ -189,6 +199,7 @@ class KernelBackend:
                    self.opts["compiler_options"], None, self.opts["block_size_names"],
                    self.opts["quiet"], None)
         answer_list = [None] * len(res)
+
         for key in self.args.output_args:
             idx = self.args.args[key]["index"]
             self.args.add_reference_value(key, res[idx])

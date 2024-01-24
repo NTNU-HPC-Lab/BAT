@@ -43,12 +43,13 @@ class CUDAProblem(Problem):
     """
     def __init__(self, kernel_name: str, spec: Optional[Dict[str, Any]] = None,
                  run_settings: Optional[Dict[str, Any]] = None,
-                 cuda_backend="Cupy", runner="KT") -> None:
+                 cuda_backend="Cupy", runner="KT", metrics=None) -> None:
         super().__init__()
         self._kernel_name = kernel_name
         self._program = CUDAProgram(kernel_name)
         self._language = "CUDA"
         self.cuda_backend = cuda_backend
+        self.metrics = metrics
 
         self.spec = spec if spec is not None else {}
         self.spec["BenchmarkConfig"] = { "iterations": 10 }
@@ -56,8 +57,9 @@ class CUDAProblem(Problem):
             self._config_space = ConfigSpace(self.spec["ConfigurationSpace"])
             self.args = ArgHandler(self.spec).populate_args()
             if runner == "KT":
-                self.runner = KernelBackend(self.spec, self.config_space, 
-                                            self.args, cuda_backend=self.cuda_backend)
+                self.runner = KernelBackend(self.spec, self.config_space,
+                                            self.args, cuda_backend=self.cuda_backend,
+                                            metrics=metrics)
             else:
                 self.runner = CudaKernelRunner(self.spec, self.config_space)
         self.run_settings = run_settings if run_settings is not None else {}

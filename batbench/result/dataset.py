@@ -20,11 +20,13 @@ warnings.filterwarnings('ignore', category=NaturalNameWarning)
 
 
 class Dataset:
-    def __init__(self, experiment_settings, benchmark_name):
+    def __init__(self, experiment_settings, benchmark_name, objective, minimize):
         self.files = []
         self.cache_df = pd.DataFrame({})
         self.writes = 0
         self.write_interval = 10
+        self.objective = objective
+        self.minimize = minimize
 
         self.root_path = "./results"
         self.input_zip = "input-data.zip"
@@ -151,8 +153,8 @@ class Dataset:
         #df = pd.read_hdf(self.cache_results_path, "Results")
         df = pd.read_csv(self.cache_results_path)
         df.reset_index(drop=True, inplace=True)
-        min_index = df['objective'].idxmin()
-        best_row = df.loc[min_index]
+        best_index = df['objective'].idxmin() if self.minimize else df['objective'].idxmax()
+        best_row = df.loc[best_index]
         return best_row
 
     def add_result(self, result):
@@ -188,7 +190,7 @@ class Dataset:
         #df_iter = df if df is not None else pd.read_hdf(self.cache_results_path, "Results")
         df_iter = df if df is not None else pd.read_csv(self.cache_results_path)
         df_iter.reset_index(drop=True, inplace=True)
-        print(df_iter)
+        print(df_iter, self.output_results_path)
         if self.output_format == "csv":
             df_iter.to_csv(self.output_results_path, mode='w')
         elif self.output_format == "json":

@@ -15,6 +15,9 @@ class KernelTuner:
         self.prog_args = args
         self.manager = Manager(args)
         self.f_evals = self.manager.budget_trials
+        DEFAULT_OBJECTIVE = "time"
+        self.objective = self.manager.problem.spec['General'].get('Objective', DEFAULT_OBJECTIVE)
+        self.minimize = self.manager.problem.spec['General'].get('Minimize', True)
         strategy_options = {"max_fevals": self.f_evals}
         return self.tune(args.gpu_name, strategy_options=strategy_options)
 
@@ -78,7 +81,7 @@ class KernelTuner:
 
             result = Result(config=new_conf)
 
-            if isinstance(kt_result["time"], ErrorConfig):
+            if isinstance(kt_result[self.objective], ErrorConfig):
                 results.append(self.invalid_result(result, "Compile exception"))
                 continue
 
@@ -86,7 +89,9 @@ class KernelTuner:
 
             result.runtimes = [t/unit for t in kt_result["times"]]
             result.runtime = sum(result.runtimes)
-            result.objective = kt_result["time"]/unit
+            result.objective = kt_result[self.objective]
+            if self.objective == "time":
+                result.objective /= 1000
             result.compile_time = kt_result["compile_time"]/unit
             result.framework_time = kt_result["framework_time"]/unit
             result.algorithm_time = kt_result["strategy_time"]/unit
@@ -171,7 +176,8 @@ class KernelTuner:
             compiler_options=compiler_options,
             strategy=strategy,
             strategy_options=strategy_options,
-            simulation_mode=simulation_mode)
+            simulation_mode=simulation_mode,
+            metrics=self.manager.problem.metrics)
 
 
     def tune(self,

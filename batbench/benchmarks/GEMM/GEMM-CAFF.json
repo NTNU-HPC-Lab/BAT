@@ -1,7 +1,9 @@
 {
     "General": {
         "BenchmarkName": "GEMM",
-        "OutputFormat": "JSON"
+        "OutputFormat": "JSON",
+        "Objective": "GFLOPs",
+        "Minimize": false
     },
     "ConfigurationSpace": {
         "TuningParameters": [
@@ -68,25 +70,25 @@
             {
                 "Name": "STRM",
                 "Type": "int",
-                "Values": "[0, 1]",
+                "Values": "[0]",
                 "Default": 0 
             },
             {
                 "Name": "STRN",
                 "Type": "int",
-                "Values": "[0, 1]",
+                "Values": "[0]",
                 "Default": 0 
             },
             {
                 "Name": "SA",
                 "Type": "int",
-                "Values": "[0]",
+                "Values": "[0, 1]",
                 "Default": 0 
             },
             {
                 "Name": "SB",
                 "Type": "int",
-                "Values": "[0]",
+                "Values": "[0, 1]",
                 "Default": 0 
             },
             {
@@ -102,20 +104,20 @@
                 "Parameters": ["KWG", "KWI"]
             },
             {
-                "Expression": "(MWG % (MDIMC * VWM)) == 0",
-                "Parameters": ["MWG", "MDIMC", "VWM"]
+                "Expression": "(MWG % MDIMC) == 0",
+                "Parameters": ["MWG", "MDIMC"]
             },
             {
-                "Expression": "(NWG % (NDIMC * VWN)) == 0",
-                "Parameters": ["NWG", "NDIMC", "VWN"]
+                "Expression": "(NWG % NDIMC) == 0",
+                "Parameters": ["NWG", "NDIMC"]
             },
             {
-                "Expression": "(MWG % (MDIMA * VWM)) == 0",
-                "Parameters": ["MWG", "MDIMA", "VWM"]
+                "Expression": "(MWG % MDIMA) == 0",
+                "Parameters": ["MWG", "MDIMA"]
             },
             {
-                "Expression": "(NWG % (NDIMB * VWN)) == 0",
-                "Parameters": ["NWG", "NDIMB", "VWN"]
+                "Expression": "(NWG % NDIMB) == 0",
+                "Parameters": ["NWG", "NDIMB"]
             },
             {
                 "Expression": "(KWG % ((MDIMC * NDIMC) // MDIMA)) == 0",
@@ -145,11 +147,11 @@
             "Z": "1"
         },
         "GlobalSize": {
-            "X": "(16384 * MDIMC) // MWG",
-            "Y": "(16384 * NDIMC) // NWG",
+            "X": "4096 // MWG",
+            "Y": "4096 // NWG",
             "Z": "1"
         },
-        "SharedMemory": 16384,
+        "SharedMemory": 49152,
         "Stream": null,
         "Arguments": [
         {
@@ -157,28 +159,28 @@
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 16384 
+            "FillValue": 4096 
         },
         {
             "Name": "kSizeN",
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 16384 
+            "FillValue": 4096 
         },
         {
             "Name": "kSizeK",
             "Type": "int32",
             "MemoryType": "Scalar",
             "AccessType": "ReadOnly",
-            "FillValue": 16384 
+            "FillValue": 4096 
         },
         {
             "Name": "agm",
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 16384,
+            "Size": 16777216,
             "FillType": "Random",
             "FillValue": 1.0
         },
@@ -187,7 +189,7 @@
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "ReadOnly",
-            "Size": 16384,
+            "Size":  16777216,
             "FillType": "Random",
             "FillValue": 1.0
         },
@@ -196,7 +198,7 @@
             "Type": "float",
             "MemoryType": "Vector",
             "AccessType": "WriteOnly",
-            "Size": 16384,
+            "Size":  16777216,
             "FillType": "Constant",
             "FillValue": 0.0,
             "Output": 1

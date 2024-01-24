@@ -51,7 +51,10 @@ class Manager:
         self.problem = benchmark_map[args.benchmark](experiment_settings)
         self.config_space = self.problem.config_space
         self.budget_trials = experiment_settings["Budget"][0]["BudgetValue"]
-        self.dataset = Dataset(experiment_settings, args.benchmark)
+        print(f"General: {self.problem.spec['General']}")
+        self.objective = self.problem.spec['General']['Objective'], 
+        self.minimize = self.problem.spec['General']['Minimize']
+        self.dataset = Dataset(experiment_settings, args.benchmark, self.objective, self.minimize)
         self.trial = 0
         self.total_time = 0
 
@@ -71,6 +74,7 @@ class Manager:
         Zenodo(datasets).upload()
 
     def finished(self):
+        self.cleanup = False
         if self.cleanup:
             self.dataset.delete_files()
 
@@ -83,6 +87,7 @@ class Manager:
             raise KeyboardInterrupt
         if list(tuning_config.values()) not in self.problem.config_space:
             result.validity = "KnownConstraintsViolated"
+            result.objective = 10000 if self.minimize else 0
             result.correctness = 0.0
         else:
             result = self.problem.run(tuning_config, result)

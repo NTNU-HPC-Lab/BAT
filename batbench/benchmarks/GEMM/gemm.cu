@@ -82,159 +82,16 @@
 // Settings
 #define USE_VECTOR_MAD 1              // Don't unroll the vector MAD computation
 #define USE_CL_MAD 0                  // Uses the non-IEEE754 compliant OpenCL mad() (if above is 0)
-
-// =================================================================================================
-
-// Data-type: single or double precision
-#if PRECISION == 32
-  typedef float real;
-  typedef float2 real2;
-  typedef float4 real4;
-  #define ZERO 0.0f
-#elif PRECISION == 64
-  #if __OPENCL_VERSION__ <= CL_VERSION_1_1 // This the default on OpenCL 1.2 or higher
-     #pragma OPENCL EXTENSION cl_khr_fp64: enable
-  #endif
-  typedef double real;
-  typedef double2 real2;
-  typedef double4 real4;
-  #define ZERO 0.0
-#endif
-
-// =================================================================================================
-
-// Data-widths in dimension M
-#if VWM == 1
-    typedef real realM;
-#elif VWM == 2
-    typedef real2 realM;
-#elif VWM == 4
-    typedef real4 realM;
-#endif
-
-// Data-widths in dimension N
-#if VWN == 1
-    typedef real realN;
-#elif VWN == 2
-    typedef real2 realN;
-#elif VWN == 4
-    typedef real4 realN;
-#endif
+#define ZERO 0.0f
 
 extern "C" {  // Needed by CUPY for Python-based tuners
 
-
-inline __device__ float2 make_float2(float s)
-{
-    return make_float2(s, s);
-}
-
-inline __device__ float4 make_float4(float s)
-{
-    return make_float4(s, s, s, s);
-}
-
-/*
-
-inline __device__ float2 operator+(float2 a, float2 b)
-{
-    return make_float2(a.x + b.x, a.y + b.y);
-}
-
-inline __device__ float4 operator+(float4 a, float4 b)
-{
-    return make_float4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
-}
-
-inline __device__ float2 operator+(float2 a, float b)
-{
-    return make_float2(a.x + b, a.y + b);
-}
-
-inline __device__ float4 operator+(float4 a, float b)
-{
-    return make_float4(a.x + b, a.y + b, a.z + b,  a.w + b);
-}
-
-inline __host__ __device__ void operator+=(float2 &a, float2 b)
-{
-    a.x += b.x;
-    a.y += b.y;
-}
-
-inline __host__ __device__ void operator+=(float4 &a, float4 b)
-{
-    a.x += b.x;
-    a.y += b.y;
-    a.z += b.z;
-    a.w += b.w;
-}
-
-inline __device__ float2 operator-(float2 a, float2 b)
-{
-    return make_float2(a.x - b.x, a.y - b.y);
-}
-
-inline __device__ float4 operator-(float4 a, float4 b)
-{
-    return make_float4(a.x - b.x, a.y - b.y, a.z - b.z,  a.w - b.w);
-}
-
-inline __device__ float2 operator-(float2 a, float b)
-{
-    return make_float2(a.x - b, a.y - b);
-}
-
-inline __device__ float4 operator-(float4 a, float b)
-{
-    return make_float4(a.x - b, a.y - b, a.z - b,  a.w - b);
-}
-
-inline __device__ float2 operator*(float2 a, float2 b)
-{
-    return make_float2(a.x * b.x, a.y * b.y);
-}
-
-inline __device__ float4 operator*(float4 a, float4 b)
-{
-    return make_float4(a.x * b.x, a.y * b.y, a.z * b.z,  a.w * b.w);
-}
-
-inline __device__ float2 operator*(float2 a, float b)
-{
-    return make_float2(a.x * b, a.y * b);
-}
-
-inline __device__ float4 operator*(float4 a, float b)
-{
-    return make_float4(a.x * b, a.y * b, a.z * b,  a.w * b);
-}
-
-inline __device__ float2 operator*(float b, float2 a)
-{
-    return make_float2(b * a.x, b * a.y);
-}
-
-inline __device__ float4 operator*(float b, float4 a)
-{
-    return make_float4(b * a.x, b * a.y, b * a.z, b * a.w);
-}
-
-inline __device__ float2 rsqrtf(float2 x){
-    return make_float2(rsqrtf(x.x), rsqrtf(x.y));
-}
-
-inline __device__ float4 rsqrtf(float4 x){
-    return make_float4(rsqrtf(x.x), rsqrtf(x.y), rsqrtf(x.z), rsqrtf(x.w));
-}
-
-*/
 // =================================================================================================
 
 // Caches global off-chip memory into local (shared) memory on-chip. This function is specific for
 // caching the A input matrix.
 #if SA == 1
-inline __device__ void GlobalToLocalA(const realM* __restrict__ agm, realM* alm,
+inline __device__ void GlobalToLocalA(const float* __restrict__ agm, float* alm,
                            const int kSizeM, const int tid, const int kwg) {
   const int la0 = tid % MDIMA;
   const int la1 = tid / MDIMA;
@@ -264,7 +121,7 @@ inline __device__ void GlobalToLocalA(const realM* __restrict__ agm, realM* alm,
 
 // Same as above, but now for the B input matrix
 #if SB == 1
-inline __device__ void GlobalToLocalB(const  realN* __restrict__ bgm, realN* blm,
+inline __device__ void GlobalToLocalB(const  float* __restrict__ bgm, float* blm,
                            const int kSizeN, const int tid, const int kwg) {
   const int lb0 = tid % NDIMB;
   const int lb1 = tid / NDIMB;
@@ -297,7 +154,7 @@ inline __device__ void GlobalToLocalB(const  realN* __restrict__ bgm, realN* blm
 // Caches global off-chip memory directly into per-thread private memory (registers). This function
 // is specific for caching the A input matrix.
 #if SA == 0
-inline __device__ void GlobalToPrivateA(const  realM* __restrict__ agm, realM apm[MWI/VWM],
+inline __device__ void GlobalToPrivateA(const  float* __restrict__ agm, float apm[MWI/VWM],
                              const int kSizeM, const int idk, const int kwg) {
   #pragma unroll
   for (int mi=0; mi<MWI/VWM; ++mi) {
@@ -320,7 +177,7 @@ inline __device__ void GlobalToPrivateA(const  realM* __restrict__ agm, realM ap
 
 // Same as above, but now for the B input matrix
 #if SB == 0
-inline __device__ void GlobalToPrivateB(const  realN* __restrict__ bgm, realN bpm[NWI/VWN],
+inline __device__ void GlobalToPrivateB(const  float* __restrict__ bgm, float bpm[NWI/VWN],
                              const int kSizeN, const int idk) {
   #pragma unroll
   for (int ni=0; ni<NWI/VWN; ++ni) {
@@ -346,7 +203,7 @@ inline __device__ void GlobalToPrivateB(const  realN* __restrict__ bgm, realN bp
 // Caches on-chip local memory into per-thread private memory (registers). This function is specific
 // for caching the A input matrix.
 #if SA == 1
-inline __device__ void LocalToPrivateA(realM* alm, realM apm[MWI/VWM], const int kg) {
+inline __device__ void LocalToPrivateA(float* alm, float apm[MWI/VWM], const int kg) {
   #pragma unroll
   for (int mi=0; mi<MWI/VWM; ++mi) {
     #if STRM == 0
@@ -361,7 +218,7 @@ inline __device__ void LocalToPrivateA(realM* alm, realM apm[MWI/VWM], const int
 
 // Same as above, but now for the B input matrix
 #if SB == 1
-inline __device__ void LocalToPrivateB(realN* blm, realN bpm[NWI/VWN], const int kg) {
+inline __device__ void LocalToPrivateB(float* blm, float bpm[NWI/VWN], const int kg) {
   #pragma unroll
   for (int ni=0; ni<NWI/VWN; ++ni) {
     #if STRN == 0
@@ -377,28 +234,33 @@ inline __device__ void LocalToPrivateB(realN* blm, realN bpm[NWI/VWN], const int
 // =================================================================================================
 
 // Merges the results in Cpm with the global array in Cgm
-inline __device__ void StoreResults( realM* cgm, realM cpm[NWI][MWI/VWM], const int kSizeM) {
+inline __device__ void StoreResults( float* cgm, float cpm[NWI][MWI], const int kSizeM) {
   #pragma unroll
   for (int ni=0; ni<NWI; ++ni) {
     #pragma unroll
-    for (int mi=0; mi<MWI/VWM; ++mi) {
+    for (int mi=0; mi<MWI; ++mi) {
+      /*if(threadIdx.x == 0 && threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
+        printf("ni=%d, mi=%d\n", ni, mi);
+      }*/
       #if STRM == 0
-        int mg = mi + threadIdx.x*(MWI/VWM);
+        int mg = mi + threadIdx.x*MWI;
       #elif STRM == 1
         int mg = threadIdx.x + mi*MDIMC;
       #endif
       #if STRN == 0
         int ng = ni + threadIdx.y*NWI;
       #elif STRN == 1
-        int ng = ni%VWN + threadIdx.y*VWN + (ni/VWN)*VWN*NDIMC;
+        int ng = ni + threadIdx.y + ni*NDIMC;
       #endif
-      int idm = mg + blockIdx.x*(MWG/VWM);
+      int idm = mg + blockIdx.x*MWG;
       int idn = ng + blockIdx.y*NWG;
-      int index = idn*(kSizeM/VWM) + idm;
+      int index = idn*(kSizeM) + idm;
       cgm[index] = cpm[ni][mi];
+      //cgm[index] = 1.5f;
     }
   }
 }
+
 
 // =================================================================================================
 
@@ -410,94 +272,20 @@ inline __device__ void StoreResults( realM* cgm, realM cpm[NWI][MWI/VWM], const 
 #endif
 
 // The vectorised multiply-add function
-inline __device__ realM MultiplyAddVector(realM cvec, const realM avec, const real bval) {
-  #if USE_VECTOR_MAD == 1
-    cvec += avec * bval;
-  #else
-    #if VWM == 1
-      MultiplyAdd(cvec,    avec,    bval);
-    #elif VWM == 2
-      MultiplyAdd(cvec.x , avec.x,  bval);
-      MultiplyAdd(cvec.y , avec.y,  bval);
-    #elif VWM == 4
-      MultiplyAdd(cvec.x , avec.x,  bval);
-      MultiplyAdd(cvec.y , avec.y,  bval);
-      MultiplyAdd(cvec.z , avec.z,  bval);
-      MultiplyAdd(cvec.w , avec.w,  bval);
-    #elif VWM == 8
-      MultiplyAdd(cvec.s0, avec.s0, bval);
-      MultiplyAdd(cvec.s1, avec.s1, bval);
-      MultiplyAdd(cvec.s2, avec.s2, bval);
-      MultiplyAdd(cvec.s3, avec.s3, bval);
-      MultiplyAdd(cvec.s4, avec.s4, bval);
-      MultiplyAdd(cvec.s5, avec.s5, bval);
-      MultiplyAdd(cvec.s6, avec.s6, bval);
-      MultiplyAdd(cvec.s7, avec.s7, bval);
-    #elif VWM == 16
-      MultiplyAdd(cvec.s0, avec.s0, bval);
-      MultiplyAdd(cvec.s1, avec.s1, bval);
-      MultiplyAdd(cvec.s2, avec.s2, bval);
-      MultiplyAdd(cvec.s3, avec.s3, bval);
-      MultiplyAdd(cvec.s4, avec.s4, bval);
-      MultiplyAdd(cvec.s5, avec.s5, bval);
-      MultiplyAdd(cvec.s6, avec.s6, bval);
-      MultiplyAdd(cvec.s7, avec.s7, bval);
-      MultiplyAdd(cvec.s8, avec.s8, bval);
-      MultiplyAdd(cvec.s9, avec.s9, bval);
-      MultiplyAdd(cvec.sA, avec.sA, bval);
-      MultiplyAdd(cvec.sB, avec.sB, bval);
-      MultiplyAdd(cvec.sC, avec.sC, bval);
-      MultiplyAdd(cvec.sD, avec.sD, bval);
-      MultiplyAdd(cvec.sE, avec.sE, bval);
-      MultiplyAdd(cvec.sF, avec.sF, bval);
-    #endif
-  #endif
+inline __device__ float MultiplyAddVector(float cvec, const float avec, const float bval) {
+  cvec += avec * bval;
   return cvec;
 }
 
 // Performs the actual computation: Cpm += Apm * Bpm
-inline __device__ void MultiplyAccumulate(realM cpm[NWI][MWI/VWM], realM apm[MWI/VWM], realN bpm[NWI/VWN]) {
+inline __device__ void MultiplyAccumulate(float cpm[NWI][MWI], float apm[MWI], float bpm[NWI]) {
   #pragma unroll
-  for (int ni=0; ni<NWI/VWN; ++ni) {
+  for (int ni=0; ni<NWI; ++ni) {
     #pragma unroll
-    for (int mi=0; mi<MWI/VWM; ++mi) {
-      #if VWN == 1
-        cpm[ni*VWN + 0][mi] = MultiplyAddVector(cpm[ni*VWN + 0][mi], apm[mi], bpm[ni]);
-      #elif VWN == 2
-        cpm[ni*VWN + 0][mi] = MultiplyAddVector(cpm[ni*VWN + 0][mi], apm[mi], bpm[ni].x);
-        cpm[ni*VWN + 1][mi] = MultiplyAddVector(cpm[ni*VWN + 1][mi], apm[mi], bpm[ni].y);
-      #elif VWN == 4
-        cpm[ni*VWN + 0][mi] = MultiplyAddVector(cpm[ni*VWN + 0][mi], apm[mi], bpm[ni].x);
-        cpm[ni*VWN + 1][mi] = MultiplyAddVector(cpm[ni*VWN + 1][mi], apm[mi], bpm[ni].y);
-        cpm[ni*VWN + 2][mi] = MultiplyAddVector(cpm[ni*VWN + 2][mi], apm[mi], bpm[ni].z);
-        cpm[ni*VWN + 3][mi] = MultiplyAddVector(cpm[ni*VWN + 3][mi], apm[mi], bpm[ni].w);
-      #elif VWN == 8
-        cpm[ni*VWN + 0][mi] = MultiplyAddVector(cpm[ni*VWN + 0][mi], apm[mi], bpm[ni].s0);
-        cpm[ni*VWN + 1][mi] = MultiplyAddVector(cpm[ni*VWN + 1][mi], apm[mi], bpm[ni].s1);
-        cpm[ni*VWN + 2][mi] = MultiplyAddVector(cpm[ni*VWN + 2][mi], apm[mi], bpm[ni].s2);
-        cpm[ni*VWN + 3][mi] = MultiplyAddVector(cpm[ni*VWN + 3][mi], apm[mi], bpm[ni].s3);
-        cpm[ni*VWN + 4][mi] = MultiplyAddVector(cpm[ni*VWN + 4][mi], apm[mi], bpm[ni].s4);
-        cpm[ni*VWN + 5][mi] = MultiplyAddVector(cpm[ni*VWN + 5][mi], apm[mi], bpm[ni].s5);
-        cpm[ni*VWN + 6][mi] = MultiplyAddVector(cpm[ni*VWN + 6][mi], apm[mi], bpm[ni].s6);
-        cpm[ni*VWN + 7][mi] = MultiplyAddVector(cpm[ni*VWN + 7][mi], apm[mi], bpm[ni].s7);
-      #elif VWN == 16
-        cpm[ni*VWN + 0 ][mi] = MultiplyAddVector(cpm[ni*VWN + 0 ][mi], apm[mi], bpm[ni].s0);
-        cpm[ni*VWN + 1 ][mi] = MultiplyAddVector(cpm[ni*VWN + 1 ][mi], apm[mi], bpm[ni].s1);
-        cpm[ni*VWN + 2 ][mi] = MultiplyAddVector(cpm[ni*VWN + 2 ][mi], apm[mi], bpm[ni].s2);
-        cpm[ni*VWN + 3 ][mi] = MultiplyAddVector(cpm[ni*VWN + 3 ][mi], apm[mi], bpm[ni].s3);
-        cpm[ni*VWN + 4 ][mi] = MultiplyAddVector(cpm[ni*VWN + 4 ][mi], apm[mi], bpm[ni].s4);
-        cpm[ni*VWN + 5 ][mi] = MultiplyAddVector(cpm[ni*VWN + 5 ][mi], apm[mi], bpm[ni].s5);
-        cpm[ni*VWN + 6 ][mi] = MultiplyAddVector(cpm[ni*VWN + 6 ][mi], apm[mi], bpm[ni].s6);
-        cpm[ni*VWN + 7 ][mi] = MultiplyAddVector(cpm[ni*VWN + 7 ][mi], apm[mi], bpm[ni].s7);
-        cpm[ni*VWN + 8 ][mi] = MultiplyAddVector(cpm[ni*VWN + 8 ][mi], apm[mi], bpm[ni].s8);
-        cpm[ni*VWN + 9 ][mi] = MultiplyAddVector(cpm[ni*VWN + 9 ][mi], apm[mi], bpm[ni].s9);
-        cpm[ni*VWN + 10][mi] = MultiplyAddVector(cpm[ni*VWN + 10][mi], apm[mi], bpm[ni].sA);
-        cpm[ni*VWN + 11][mi] = MultiplyAddVector(cpm[ni*VWN + 11][mi], apm[mi], bpm[ni].sB);
-        cpm[ni*VWN + 12][mi] = MultiplyAddVector(cpm[ni*VWN + 12][mi], apm[mi], bpm[ni].sC);
-        cpm[ni*VWN + 13][mi] = MultiplyAddVector(cpm[ni*VWN + 13][mi], apm[mi], bpm[ni].sD);
-        cpm[ni*VWN + 14][mi] = MultiplyAddVector(cpm[ni*VWN + 14][mi], apm[mi], bpm[ni].sE);
-        cpm[ni*VWN + 15][mi] = MultiplyAddVector(cpm[ni*VWN + 15][mi], apm[mi], bpm[ni].sF);
-      #endif
+    for (int mi=0; mi<MWI; ++mi) {
+
+        cpm[ni][mi] += apm[mi] * bpm[ni];
+        //cpm[ni][mi] += 1.02 * 1.6;
     }
   }
 }
@@ -507,9 +295,13 @@ inline __device__ void MultiplyAccumulate(realM cpm[NWI][MWI/VWM], realM apm[MWI
 // Main entry of the kernel. This function contains the basic skeleton, the functionality is
 // provided by the inlined functions above.
 __global__ void gemm_fast(int kSizeM, int kSizeN, int kSizeK,
-                        realM* agm,
-                        realN* bgm,
-                        realM* cgm) {
+                        float* agm,
+                        float* bgm,
+                        float* cgm) {
+  // Allocates workitem-private memory (registers)
+  float apm[MWI];
+  float bpm[NWI];
+  float cpm[NWI][MWI];
   // Combined thread identifier
   #if SA == 1 || SB == 1
     volatile int tid = threadIdx.x + MDIMC*threadIdx.y;
@@ -517,29 +309,18 @@ __global__ void gemm_fast(int kSizeM, int kSizeN, int kSizeK,
 
   // Allocates workgroup-private memory (local memory)
   #if SA == 1
-    __shared__ realM alm[KWG * MWG/VWM];
+    __shared__ float alm[KWG * MWG];
   #endif
   #if SB == 1
-    __shared__ realN blm[KWG * NWG/VWN];
+    __shared__ float blm[KWG * NWG];
   #endif
-  
-  // Allocates workitem-private memory (registers)
-  realM apm[MWI/VWM];
-  realN bpm[NWI/VWN];
-  realM cpm[NWI][MWI/VWM];
 
   // Initializes the accumulation registers
   #pragma unroll
-  for (int mi=0; mi<MWI/VWM; ++mi) {
+  for (int mi=0; mi<MWI; ++mi) {
     #pragma unroll
     for (int ni=0; ni<NWI; ++ni) {
-      #if VWM == 1
-        cpm[ni][mi] = (realM)ZERO;
-      #elif VWM == 2
-        cpm[ni][mi] = make_float2(ZERO, ZERO); // XXX float hardcoded
-      #elif VWM == 4
-        cpm[ni][mi] = make_float4(ZERO, ZERO, ZERO, ZERO); // XXX float hardcoded 
-      #endif
+        cpm[ni][mi] = (float)ZERO;
     }
   }
 
@@ -559,6 +340,7 @@ __global__ void gemm_fast(int kSizeM, int kSizeN, int kSizeK,
     #if SA == 1 || SB == 1
       __syncthreads();
     #endif
+
     // Loops over all workitem tiles, unrolled by a factor KWI
     for (int pwi=0; pwi<KWG; pwi+=KWI) {
       #pragma unroll
@@ -566,6 +348,7 @@ __global__ void gemm_fast(int kSizeM, int kSizeN, int kSizeK,
         #if SA == 0 || SB == 0
           int idk = kwg + pwi + pit;
         #endif
+
         #if SA == 1 || SB == 1
           int kg = pwi+pit;
         #endif
@@ -590,15 +373,15 @@ __global__ void gemm_fast(int kSizeM, int kSizeN, int kSizeK,
         MultiplyAccumulate(cpm, apm, bpm);
       }
     }
-
     // Synchronizes all threads in a workgroup
     #if SA == 1 || SB == 1
       __syncthreads();
     #endif
+
   }
 
   // Stores an MWG * NWG tile of results
-  // StoreResults(cgm, cpm, kSizeM);
+  StoreResults(cgm, cpm, kSizeM);
 }
 
 } // Extern C
