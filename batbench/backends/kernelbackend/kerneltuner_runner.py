@@ -37,12 +37,14 @@ class KernelBackend:
         self.validate_kernel_spec()
         tune_params = OrderedDict(self.config_space.get_parameters())
         block_size_names = self.get_block_size_names()
+        print(f"Block_size: {block_size_names}")
         self.validate_params(tune_params, block_size_names)
         self.extend_block_size_names(block_size_names)
 
         problem_size, grid_div_x, grid_div_y = self.get_problem_size_and_grid_div()
         data_args, cmem_args = self.function_args
 
+        print(f"Block_size: {block_size_names}")
         self.opts = self.create_opts(data_args, tune_params, block_size_names, cmem_args, problem_size, grid_div_x, grid_div_y, cuda_backend)
         self.create_kernelsource(cuda_backend)
         self.create_option_bags()
@@ -50,7 +52,7 @@ class KernelBackend:
 
     def validate_kernel_spec(self) -> None:
         """Validate the kernel specification language."""
-        if self.kernel_spec["Language"] != self.CUDA:
+        if self.kernel_spec["Language"] not in (self.CUDA, "HIP"):
             raise NotImplementedError(
                 "Currently only CUDA kernels have been implemented")
 
@@ -63,7 +65,9 @@ class KernelBackend:
         util.check_block_size_params_names_list(block_size_names, tune_params)
 
     def extend_block_size_names(self, block_size_names):
-        util.append_default_block_size_names(block_size_names)
+        if len(block_size_names) < 3:
+            block_size_names.extend(["block_size_z"])
+        #util.append_default_block_size_names(block_size_names)
 
     def get_problem_size_and_grid_div(self):
         if self.kernel_spec.get("ProblemSize"):
@@ -117,6 +121,9 @@ class KernelBackend:
         return Options([(k, opts.get(k, None)) for k in opt_keys.keys()])
 
     def setup_sequential_runner(self):
+        # Prints the types of arguments
+        t = [type(self.kernel_options["arguments"][i]) for i in range(len(self.kernel_options["arguments"]))]
+        print(t)
         self.runner = SequentialRunner(self.kernelsource, self.kernel_options,
                                        self.device_options, self.opts["iterations"], None)
         self.runner.warmed_up = True  # disable warm up for this test

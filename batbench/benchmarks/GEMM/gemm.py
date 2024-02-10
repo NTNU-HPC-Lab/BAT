@@ -13,5 +13,5 @@ class GEMM(CUDAProblem):
             
         metrics["GFLOPs"] = lambda p : (matrix_bytes/1e9) / (p["time"] / 1e3)
 
-        super().__init__("GEMM", spec, metrics=metrics)
+        super().__init__("GEMM", spec, metrics=metrics, cuda_backend="HIP")
         self.runner.run_reference(self.config_space.default_config)

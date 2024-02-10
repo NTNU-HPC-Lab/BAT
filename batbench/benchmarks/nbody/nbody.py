@@ -1,4 +1,3 @@
-from batbench.backends.cuda_kernel_runner.cuda_kernel_runner import CudaKernelRunner
 from batbench.config_space.cuda_problem import CUDAProblem
 from batbench.util import get_spec_by_name
 

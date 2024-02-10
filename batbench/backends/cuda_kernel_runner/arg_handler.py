@@ -93,7 +93,8 @@ class ArgHandler:
     def __init__(self, spec):
         self.spec = spec
         self.args = Arguments(spec["KernelSpecification"]["KernelName"])
-        self.args.set_backend("CUDA")
+        self.backend = spec["KernelSpecification"]["Language"]
+        self.args.set_backend(self.backend)
         self.spec_args = spec["KernelSpecification"]["Arguments"]
         self.cmem_args = {}
 
@@ -130,7 +131,12 @@ class ArgHandler:
             arr = np.arange(0, size_length)
             return f_vec(arr)
 
-        return cp.asarray(self.type_conv_vec(arg_data, arg))
+        arr = []
+        if self.backend == "CUDA":
+            arr = cp.asarray(self.type_conv_vec(arg_data, arg))
+        else:
+            arr = np.asarray(self.type_conv_vec(arg_data, arg))
+        return arr
 
     def type_conv_scalar(self, arg_data, arg):
         if arg["Type"] in type_conv_dict:

@@ -135,11 +135,11 @@
             "Type": "ConfigurationCount"
         },
     "KernelSpecification": {
-        "Language": "CUDA",
+        "Language": "HIP",
         "CompilerOptions": ["-std=c++11"],
         "BenchmarkName": "GEMM",
         "KernelName": "gemm_fast",
-        "KernelFile": "gemm.cu",
+        "KernelFile": "gemm.hip",
         "GlobalSizeType": "CUDA",
         "LocalSize": {
             "X": "MDIMC",

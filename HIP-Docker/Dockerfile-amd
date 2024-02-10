@@ -1,0 +1,53 @@
+# Use Nvidia CUDA 12.3.1 with Ubuntu 22.04 as the base image
+FROM nvcr.io/nvidia/cuda:12.3.1-devel-ubuntu22.04
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+#COPY . /app
+# Set debconf to non-interactive mode to avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Preseed debconf with keyboard configuration values
+RUN echo 'keyboard-configuration keyboard-configuration/modelcode select pc105' | debconf-set-selections && \
+    echo 'keyboard-configuration keyboard-configuration/layoutcode select us' | debconf-set-selections
+
+# Install any needed packages specified in requirements.txt
+# Make the directory if it doesn't exist yet.
+# This location is recommended by the distribution maintainers.
+RUN mkdir --parents --mode=0755 /etc/apt/keyrings
+
+# Download the key, convert the signing-key to a full
+# keyring required by apt and store in the keyring directory
+RUN apt-get update && apt-get install -y wget curl vim git cmake apt-utils lsb-release software-properties-common gnupg  g++ python3 python3-pip
+RUN apt install "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)"
+# See prerequisites. Adding current user to Video and Render groups
+RUN usermod -a -G render,video $LOGNAME
+RUN wget https://repo.radeon.com/amdgpu-install/6.0.2/ubuntu/jammy/amdgpu-install_6.0.60002-1_all.deb
+RUN apt install ./amdgpu-install_6.0.60002-1_all.deb
+RUN apt update
+RUN apt install amdgpu-dkms
+RUN apt install rocm-hip-libraries
+RUN echo Please reboot system for all settings to take effect.
+
+#RUN wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | \
+#    gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null
+
+#RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.0/ubuntu jammy main" \
+#    | tee /etc/apt/sources.list.d/amdgpu.list
+#RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.0 jammy main" \
+#    | tee --append /etc/apt/sources.list.d/rocm.list
+#RUN apt-get update && apt-get install -y hip-runtime-nvidia hip-dev
+#RUN /opt/rocm/bin/hipconfig --full
+
+#RUN wget https://apt.llvm.org/llvm.sh
+#RUN chmod u+x llvm.sh
+#RUN ./llvm.sh 17
+
+#RUN ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so
+
+WORKDIR /app
+RUN curl https://pyenv.run | bash
+RUN export PYENV_ROOT="$HOME/.pyenv" && command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH" && eval "$(pyenv init -)"
+

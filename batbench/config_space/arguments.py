@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import cupy as cp
@@ -34,7 +34,7 @@ class Arguments():
         assert key in self.output_args
         self.reference_values[key] = np.copy(value)
 
-    def add(self, key: str, value: np.ndarray | np.generic, 
+    def add(self, key: str, value: Union[np.ndarray, np.generic], 
             cmem=False, output=False, index: int = -1) -> None:
         if output:
             self.output_args.add(key)
@@ -64,6 +64,9 @@ class Arguments():
             val = self.args[key]["value"]
             if self.backend == "CUDA":
                 val: np.ndarray = cp.asnumpy(val)
+            else:
+                val:np.ndarray = np.asarray(val)
+            print(f"val type: {type(val)}")
             assert isinstance(val, np.ndarray)
             temp_d[key] = val
         return temp_d

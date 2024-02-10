@@ -6,105 +6,117 @@
     "ConfigurationSpace": {
         "TuningParameters": [
             {
-                "Name": "BLOCK_SIZE_X",
+                "Name": "block_size_x",
                 "Type": "int",
                 "Values": "[1, 2, 4, 8, 16] + list(range(32, 1024+1, 32))",
                 "Default": 256
             },
             {
-                "Name": "BLOCK_SIZE_Y",
+                "Name": "block_size_y",
                 "Type": "int",
                 "Values": "[2**i for i in range(0, 6)]",
                 "Default": 1
             },
             {
-                "Name": "BLOCK_SIZE_Z",
+                "Name": "block_size_z",
                 "Type": "int",
                 "Values": "[1]",
                 "Default": 1
             },
             {
-                "Name": "TILE_SIZE_X",
+                "Name": "tile_size_x",
                 "Type": "int",
                 "Values": "[i for i in range(1, 11)]",
                 "Default": 1
             },
             {
-                "Name": "TILE_SIZE_Y",
+                "Name": "tile_size_y",
                 "Type": "int",
                 "Values": "[i for i in range(1, 11)]",
                 "Default": 1
             },
             {
-                "Name": "TEMPORAL_TILING_FACTOR",
+                "Name": "temporal_tiling_factor",
                 "Type": "int",
                 "Values": "[i for i in range(1, 11)]",
                 "Default": 1
             },
             {
-                "Name": "MAX_TFACTOR",
+                "Name": "max_tfactor",
                 "Type": "int",
                 "Values": "[10]",
                 "Default": 1
             },
             {
-                "Name": "LOOP_UNROLL_FACTOR_T",
+                "Name": "loop_unroll_factor_t",
                 "Type": "int",
                 "Values": "[i for i in range(1, 10+1)]",
                 "Default": 2
             },
             {
-                "Name": "SH_POWER",
+                "Name": "sh_power",
                 "Type": "int",
                 "Values": "[0, 1]",
                 "Default": 1
             },
             {
-                "Name": "BLOCKS_PER_SM",
+                "Name": "blocks_per_sm",
                 "Type": "int",
                 "Values": "[0, 1, 2, 3, 4]",
                 "Default": 1
             },
             {
-                "Name": "MAX_THREADS",
+                "Name": "max_threads",
                 "Type": "int",
                 "Values": "[1024]",
                 "Default": 1
             },
             {
-                "Name": "MAX_SHARED_MEMORY_BLOCK",
+                "Name": "max_shared_memory_block",
                 "Type": "int",
                 "Values": "[49152]",
                 "Default": 1
             },
             {
-                "Name": "MAX_SHARED_MEMORY",
+                "Name": "max_shared_memory",
                 "Type": "int",
                 "Values": "[102400]",
                 "Default": 1
+            },
+            {
+                "Name": "grid_width",
+                "Type": "int",
+                "Values": "[4096]",
+                "Default": 4096
+            },
+            {
+                "Name": "grid_height",
+                "Type": "int",
+                "Values": "[4096]",
+                "Default": 4096
             }
         ],
 		"Conditions": [
             {
-                "Expression": "BLOCK_SIZE_X*BLOCK_SIZE_Y>= 32",
-                "Parameters": ["BLOCK_SIZE_X", "BLOCK_SIZE_Y"]
+                "Expression": "block_size_x*block_size_y>= 32",
+                "Parameters": ["block_size_x", "block_size_y"]
             },
             {
             
-                "Expression": "TEMPORAL_TILING_FACTOR % LOOP_UNROLL_FACTOR_T == 0",
-                "Parameters": ["TEMPORAL_TILING_FACTOR", "LOOP_UNROLL_FACTOR_T"]
+                "Expression": "temporal_tiling_factor % loop_unroll_factor_t == 0",
+                "Parameters": ["temporal_tiling_factor", "loop_unroll_factor_t"]
             },
             {
-                "Expression": "BLOCK_SIZE_X*BLOCK_SIZE_Y <= MAX_THREADS",
-                "Parameters": ["BLOCK_SIZE_X", "BLOCK_SIZE_Y", "MAX_THREADS"]
+                "Expression": "block_size_x*block_size_y <= max_threads",
+                "Parameters": ["block_size_x", "block_size_y", "max_threads"]
             },
             {
-                "Expression": "(BLOCK_SIZE_X*TILE_SIZE_X+ TEMPORAL_TILING_FACTOR * 2) * (BLOCK_SIZE_Y*TILE_SIZE_Y+ TEMPORAL_TILING_FACTOR * 2) * (2+SH_POWER) * 4 <= MAX_SHARED_MEMORY_BLOCK",
-                "Parameters": ["BLOCK_SIZE_X", "TILE_SIZE_X", "TEMPORAL_TILING_FACTOR", "BLOCK_SIZE_Y", "TILE_SIZE_Y", "SH_POWER", "MAX_SHARED_MEMORY_BLOCK"]
+                "Expression": "(block_size_x*tile_size_x+ temporal_tiling_factor * 2) * (block_size_y*tile_size_y+ temporal_tiling_factor * 2) * (2+sh_power) * 4 <= max_shared_memory_block",
+                "Parameters": ["block_size_x", "tile_size_x", "temporal_tiling_factor", "block_size_y", "tile_size_y", "sh_power", "max_shared_memory_block"]
             },
             {
-                "Expression": "BLOCKS_PER_SM == 0 or (((BLOCK_SIZE_X * TILE_SIZE_X + TEMPORAL_TILING_FACTOR * 2) * (BLOCK_SIZE_Y*TILE_SIZE_Y +  TEMPORAL_TILING_FACTOR * 2) * (2+SH_POWER) * 4) * BLOCKS_PER_SM <= MAX_SHARED_MEMORY)",
-                "Parameters": ["BLOCKS_PER_SM", "BLOCK_SIZE_X", "TILE_SIZE_X", "TEMPORAL_TILING_FACTOR", "BLOCK_SIZE_Y", "TILE_SIZE_Y", "SH_POWER", "MAX_SHARED_MEMORY"]
+                "Expression": "blocks_per_sm == 0 or (((block_size_x * tile_size_x + temporal_tiling_factor * 2) * (block_size_y*tile_size_y +  temporal_tiling_factor * 2) * (2+sh_power) * 4) * blocks_per_sm <= max_shared_memory)",
+                "Parameters": ["blocks_per_sm", "block_size_x", "tile_size_x", "temporal_tiling_factor", "block_size_y", "tile_size_y", "sh_power", "max_shared_memory"]
             }
             
             
@@ -113,9 +125,9 @@
     "BenchmarkConfig": {
       "dataSize": 4096,
       "iterations": 10,
-      "MAX_THREADS": 1024,
-      "MAX_SHARED_MEMORY_BLOCK": 49152,
-      "MAX_SHARED_MEMORY": 102400
+      "max_threads": 1024,
+      "max_shared_memory_block": 49152,
+      "max_shared_memory": 102400
     },
     "KernelSpecification": {
         "Language": "CUDA",
@@ -125,13 +137,13 @@
         "KernelFile": "hotspot_kernel.cu",
         "GlobalSizeType": "OpenCL",
         "LocalSize": {
-            "X": "BLOCK_SIZE_X",
-            "Y": "BLOCK_SIZE_Y",
+            "X": "block_size_x",
+            "Y": "block_size_y",
             "Z": "1"
         },
         "GlobalSize": {
             "X": "4096",
-            "Y": "1",
+            "Y": "4096",
             "Z": "1"
         },
         "SharedMemory": 0,

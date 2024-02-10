@@ -57,6 +57,8 @@ class CUDAProblem(Problem):
             self._config_space = ConfigSpace(self.spec["ConfigurationSpace"])
             self.args = ArgHandler(self.spec).populate_args()
             if runner == "KT":
+                t = [type(t) for t in self.args.get_function_args()[0]]
+                print(f"T: {t}")
                 self.runner = KernelBackend(self.spec, self.config_space,
                                             self.args, cuda_backend=self.cuda_backend,
                                             metrics=metrics)
