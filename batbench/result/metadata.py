@@ -25,11 +25,13 @@ class Metadata:
     @staticmethod
     def get_hardware_metadata():
         metadata = {}
-        nvidia_smi_out = subprocess.run(["nvidia-smi", "--query", "-x"],
+        nvidia = False
+        if nvidia:
+            nvidia_smi_out = subprocess.run(["nvidia-smi", "--query", "-x"],
                                         check=True, capture_output=True)
-        nvidia_smi = xmltodict.parse(nvidia_smi_out.stdout)
-        del nvidia_smi["nvidia_smi_log"]["gpu"]["processes"]
-        metadata["nvidia_query"] = nvidia_smi
+            nvidia_smi = xmltodict.parse(nvidia_smi_out.stdout)
+            del nvidia_smi["nvidia_smi_log"]["gpu"]["processes"]
+            metadata["nvidia_query"] = nvidia_smi
         metadata["lshw"] = Metadata.get_lshw()
         lscpu_out = subprocess.run(["lscpu", "--json"], check=True, capture_output=True)
         metadata["lscpu"] = json.loads(lscpu_out.stdout)

@@ -3,7 +3,10 @@ import math
 import copy
 import logging
 
-import cupy as cp
+try:
+    import cupy as cp
+except:
+    print("No cuda found")
 from batbench.config_space.config_space import ConfigSpace
 from batbench.util import get_kernel_path
 

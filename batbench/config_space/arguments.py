@@ -3,7 +3,10 @@ import logging
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import cupy as cp
+try:
+    import cupy as cp
+except:
+    print("No cuda found")
 
 class Arguments():
     def __init__(self, kernel_name: str, args: Optional[Dict[str, Dict]] = None) -> None:

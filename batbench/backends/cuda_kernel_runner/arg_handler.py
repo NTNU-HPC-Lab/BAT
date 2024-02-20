@@ -1,7 +1,10 @@
 import logging
 from enum import Enum
 import numpy as np
-import cupy as cp
+try:
+    import cupy as cp
+except:
+    print("No cuda found")
 
 from batbench.config_space.arguments import Arguments
 

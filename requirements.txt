@@ -10,5 +10,6 @@ xmltodict==0.13.0
 requests==2.28.2
 tables==3.8.0
 pipreqs==0.4.13
-cupy==13.0.0
+#cupy==13.0.0a1
 pyhip-interface==0.1.2
+kernel_tuner==1.0.0b6

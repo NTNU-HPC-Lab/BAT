@@ -32,10 +32,11 @@ class Dataset:
         self.input_zip = "input-data.zip"
         self.metadata_filename = "metadata.json"
         self.results_zip = "results.zip"
+        self.nvidia = False
 
         self.metadata = Metadata.get_metadata()
         #self.metadata["spec"] = self.spec
-        self.validate_schema(self.metadata)
+        #self.validate_schema(self.metadata)
 
         #self.kernel_path = get_kernel_path(self.spec)
 
@@ -96,26 +97,27 @@ class Dataset:
             del hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["timestamp"]
         except KeyError:
             pass
-        gpu_log = hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]
-        try:
-            del gpu_log["fan_speed"]
-            del gpu_log["clocks_throttle_reasons"]
-            del gpu_log["performance_state"]
-            del gpu_log["fb_memory_usage"]
-            del gpu_log["bar1_memory_usage"]
-            del gpu_log["utilization"]
-            del gpu_log["temperature"]
-            del gpu_log["power_readings"]
-            del gpu_log["clocks"]
-            del gpu_log["applications_clocks"]
-            del gpu_log["default_applications_clocks"]
-            del gpu_log["voltage"]
-            del gpu_log["pci"]["rx_util"]
-            del gpu_log["pci"]["tx_util"]
-            del gpu_log["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
-            del gpu_log["pci"]["pci_gpu_link_info"]["pcie_gen"]["device_current_link_gen"]
-        except KeyError:
-            pass
+        if self.nvidia:
+            gpu_log = hash_set["hardware"]["nvidia_query"]["nvidia_smi_log"]["gpu"]
+            try:
+                del gpu_log["fan_speed"]
+                del gpu_log["clocks_throttle_reasons"]
+                del gpu_log["performance_state"]
+                del gpu_log["fb_memory_usage"]
+                del gpu_log["bar1_memory_usage"]
+                del gpu_log["utilization"]
+                del gpu_log["temperature"]
+                del gpu_log["power_readings"]
+                del gpu_log["clocks"]
+                del gpu_log["applications_clocks"]
+                del gpu_log["default_applications_clocks"]
+                del gpu_log["voltage"]
+                del gpu_log["pci"]["rx_util"]
+                del gpu_log["pci"]["tx_util"]
+                del gpu_log["pci"]["pci_gpu_link_info"]["pcie_gen"]["current_link_gen"]
+                del gpu_log["pci"]["pci_gpu_link_info"]["pcie_gen"]["device_current_link_gen"]
+            except KeyError:
+                pass
         return hash_set
 
     def calculate_hash(self, hash_set: dict) -> str:

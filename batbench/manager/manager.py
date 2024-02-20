@@ -83,7 +83,9 @@ class Manager:
 
     def run(self, tuning_config, result):
         dur = (datetime.datetime.now() - self.timestamp).total_seconds()
-        if dur > 600.0 or self.trial == self.budget_trials:
+        #if dur > 600.0 or self.trial == self.budget_trials:
+        if dur > 60000.0 or self.trial == self.budget_trials:
+            print(dur, self.trial, self.budget_trials)
             raise KeyboardInterrupt
         if list(tuning_config.values()) not in self.problem.config_space:
             result.validity = "KnownConstraintsViolated"

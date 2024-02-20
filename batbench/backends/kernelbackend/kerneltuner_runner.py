@@ -220,7 +220,10 @@ class KernelBackend:
         result.config = tuning_config
         searchspace = [ tuning_config.values() ]
         try:
-            results, _ = self.runner.run(searchspace, self.kernel_options, self.tuning_options)
+            #results, _ = self.runner.run(searchspace, 
+            results = self.runner.run(searchspace, 
+                    #self.kernel_options, 
+                    self.tuning_options)
         except RuntimeError:
             return self.update_invalid_result(result, "RuntimeError")
         kt_result = results[0]
