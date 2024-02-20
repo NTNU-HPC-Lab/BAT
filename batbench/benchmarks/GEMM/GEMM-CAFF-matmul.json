@@ -1,0 +1,96 @@
+{
+    "General": {
+        "BenchmarkName": "GEMM",
+        "OutputFormat": "JSON"
+    },
+    "ConfigurationSpace": {
+        "TuningParameters": [
+            {
+                "Name": "block_size_x",
+                "Type": "int",
+                "Values": "[32]",
+                "Default": 16 
+            },
+            {
+                "Name": "block_size_y",
+                "Type": "int",
+                "Values": "[8]",
+                "Default": 16 
+            },
+            {
+                "Name": "tile_size_x",
+                "Type": "int",
+                "Values": "[4]",
+                "Default": 32 
+            },
+            {
+                "Name": "tile_size_y",
+                "Type": "int",
+                "Values": "[4]",
+                "Default": 16 
+            }
+        ],
+		"Conditions": [
+            {
+                "Expression": "block_size_x == block_size_y*tile_size_y",
+                "Parameters": ["block_size_x", "block_size_y", "tile_size_y"]
+            }
+        ]
+    },
+    "Budget": 
+        {
+            "BudgetValue": 200,
+            "Type": "ConfigurationCount"
+        },
+    "KernelSpecification": {
+        "Language": "CUDA",
+        "CompilerOptions": ["-std=c++11"],
+        "BenchmarkName": "GEMM",
+        "KernelName": "matmul_kernel",
+        "KernelFile": "matmul.cu",
+        "GlobalSizeType": "CUDA",
+        "LocalSize": {
+            "X": "block_size_x",
+            "Y": "block_size_y",
+            "Z": "1"
+        },
+        "GlobalSize": {
+            "X": "(2048 + block_size_x * tile_size_x - 1) // (block_size_x * tile_size_x)",
+            "Y": "(2048 + block_size_y * tile_size_y - 1) // (block_size_y * tile_size_y)",
+            "Z": "1"
+        },
+        "SharedMemory": 0,
+        "Stream": null,
+        "Arguments": [
+        {
+            "Name": "C",
+            "Type": "float",
+            "MemoryType": "Vector",
+            "AccessType": "WriteOnly",
+            "Size": 4194304,
+            "FillType": "Constant",
+            "FillValue": 0.0,
+            "Output": 1
+        },
+        {
+            "Name": "A",
+            "Type": "float",
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "Size": 4194304,
+            "FillType": "Random",
+            "FillValue": 1.0
+        },
+        {
+            "Name": "B",
+            "Type": "float",
+            "MemoryType": "Vector",
+            "AccessType": "ReadOnly",
+            "Size": 4194304,
+            "FillType": "Random",
+            "FillValue": 1.0
+        }
+      ]
+    }
+}
+  

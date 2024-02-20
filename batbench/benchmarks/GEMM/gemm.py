@@ -10,8 +10,9 @@ class GEMM(CUDAProblem):
         matrix_bytes = 1
         for i in range(0, 3):
             matrix_bytes *= spec["KernelSpecification"]["Arguments"][i]["FillValue"]
-            
+
         metrics["GFLOPs"] = lambda p : (matrix_bytes/1e9) / (p["time"] / 1e3)
 
+        print(run_settings)
         super().__init__("GEMM", spec, metrics=metrics, cuda_backend="HIP")
         self.runner.run_reference(self.config_space.default_config)
